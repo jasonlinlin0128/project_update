@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多功能整合儀表板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', 'Noto Sans TC', sans-serif; background-color: #f0f2f5; }
+        .kanban-column-content::-webkit-scrollbar, .table-container::-webkit-scrollbar { width: 6px; height: 6px; }
+        .kanban-column-content::-webkit-scrollbar-track, .table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .kanban-column-content::-webkit-scrollbar-thumb, .table-container::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        .kanban-column-content::-webkit-scrollbar-thumb:hover, .table-container::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .dashboard-tab { padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s ease; font-weight: 500; color: #6b7280; }
+        .dashboard-tab:hover { color: #1f2937; background-color: #f3f4f6; }
+        .dashboard-tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+        .hidden { display: none; }
+        /* Calendar Styles */
+        #calendar-grid { grid-template-rows: repeat(6, minmax(0, 1fr)); }
+        .calendar-day { min-height: 100px; }
+        .calendar-day.other-month { background-color: #f9fafb; color: #9ca3af; }
+        .calendar-task { font-size: 0.75rem; padding: 2px 4px; border-radius: 4px; margin-top: 2px; }
+        /* Details Summary Styling for Past Sharings */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details .summary-icon { transition: transform 0.2s; }
+        details[open] .summary-icon { transform: rotate(90deg); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Navigation Tabs -->
+        <nav class="bg-white rounded-t-lg shadow-sm">
+            <div id="tab-container" class="flex border-b border-gray-200 overflow-x-auto">
+                <button data-target="dashboard-ai" class="dashboard-tab active flex-shrink-0">AI 專案進度</button>
+                <button data-target="dashboard-routine" class="dashboard-tab flex-shrink-0">例行公事</button>
+                <button data-target="dashboard-sharing" class="dashboard-tab flex-shrink-0">分享會</button>
+                <button data-target="dashboard-events" class="dashboard-tab flex-shrink-0">活動參與</button>
+                <button data-target="dashboard-contacts" class="dashboard-tab flex-shrink-0">接洽企業</button>
+            </div>
+        </nav>
+
+        <!-- Dashboard Content Area -->
+        <main class="bg-white p-6 rounded-b-lg shadow-sm min-h-[80vh]">
+            <!-- 1. AI Project Dashboard -->
+            <div id="dashboard-ai" class="dashboard-content">
+                <header class="md:flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800">AI 專案進度儀表板</h1>
+                        <p class="text-gray-500 mt-1">概覽所有進行中與構思中的 AI 導入專案。</p>
+                    </div>
+                    <div class="mt-4 md:mt-0">
+                        <label for="month-filter" class="text-sm font-medium text-gray-700 mr-2">依成立月份篩選:</label>
+                        <select id="month-filter" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></select>
+                    </div>
+                </header>
+                <div id="ai-summary-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
+                <div id="ai-kanban-board" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6"></div>
+            </div>
+
+            <!-- 2. Routine Tasks Dashboard -->
+            <div id="dashboard-routine" class="dashboard-content hidden">
+                 <header class="mb-8">
+                     <h1 class="text-3xl font-bold text-gray-800">例行公事儀表板</h1>
+                     <p class="text-gray-500 mt-1">追蹤每日、每週、每月的重複性任務。</p>
+                 </header>
+                 <div id="routine-tasks-content" class="space-y-8"></div>
+                 <div class="mt-12">
+                     <div id="calendar-header" class="flex items-center justify-between mb-4"></div>
+                     <div id="calendar-body"></div>
+                 </div>
+            </div>
+
+            <!-- 3. Sharing Session Dashboard -->
+            <div id="dashboard-sharing" class="dashboard-content hidden">
+                 <header class="mb-8">
+                     <h1 class="text-3xl font-bold text-gray-800">分享會儀表板</h1>
+                     <p class="text-gray-500 mt-1">規劃與回顧內部 AI 新知分享會。</p>
+                 </header>
+                 <div id="sharing-session-content"></div>
+            </div>
+
+            <!-- 4. Event Participation Dashboard -->
+            <div id="dashboard-events" class="dashboard-content hidden">
+                 <header class="mb-8">
+                     <h1 class="text-3xl font-bold text-gray-800">活動參與儀表板</h1>
+                     <p class="text-gray-500 mt-1">記錄內外部活動的學習與收穫。</p>
+                 </header>
+                 <div id="event-participation-content" class="space-y-10"></div>
+            </div>
+
+            <!-- 5. Business Contact Dashboard -->
+            <div id="dashboard-contacts" class="dashboard-content hidden">
+                 <header class="mb-8">
+                     <h1 class="text-3xl font-bold text-gray-800">接洽企業儀表板</h1>
+                     <p class="text-gray-500 mt-1">管理與外部企業、廠商的合作與洽談紀錄。</p>
+                 </header>
+                 <div id="business-contacts-content" class="table-container overflow-x-auto"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- 資料區 ---
+        const projects = [
+            { id: 1, name: "籌料狀態數位化", department: "物管部 (王偉全、董光展)", startTime: "2025-08-19", dueDate: "2025-12-31", priority: "中", progress: 20, status: "開發中" },
+            { id: 2, name: "客製化軍品 AI 瑕疵檢測", department: "品保部 (徐世勇)", startTime: "2025-09-02", dueDate: "2025-12-31", priority: "低", progress: 10, status: "規劃中" },
+            { id: 3, name: "圖面繪製標準建議系統", department: "技術部 (林佳汝)", startTime: "2025-10-05", dueDate: "2026-06-30", priority: "中", progress: 0, status: "規劃中" },
+            { id: 4, name: "ERP+RPA交期提醒工具", department: "生管部 (王偉全)", startTime: "2025-08-04", dueDate: "2025-12-31", priority: "低", progress: 90, status: "測試中" },
+            { id: 5, name: "地端GPT開發", department: "經企室 (Porter)", startTime: "2025-07-01", dueDate: "2026-6-30", priority: "高", progress: 10, status: "開發中" },
+            { id: 6, name: "NFC工廠夜間巡檢", department: "管理部 (淑惠姊)", startTime: "2025-06-09", dueDate: "2025-10-01", priority: "高", progress: 80, status: "測試中" },
+            { id: 7, name: "機台數據", department: "加工部 (林昆弘)", startTime: "2025-05-05", dueDate: "2026-06-30", priority: "低", progress: 0, status: "構思中" },
+            { id: 8, name: "舊專案文件數位化與分析", department: "軍品業務部 (許振明)", startTime: "2025-06-30", dueDate: "2026-06-30", priority: "低", progress: 0, status: "構思中" },
+            { id: 9, name: "AI Agent潛在客戶推播系統", department: "壓鑄業務部 (陳瑩盈)", startTime: "2025-07-30", dueDate: "2025-08-01", priority: "低", progress: 100, status: "已完成" },
+            { id: 10, name: "資安Teams Bot建置", department: "資安小隊", startTime: "2025-05-30", dueDate: "2025-06-04", priority: "高", progress: 100, status: "已完成" },
+            { id: 11, name: "會議記錄逐字稿及重點整理工具", department: "會議記錄人員(薪桉)", startTime: "2025-04-30", dueDate: "2025-05-26", priority: "中", progress: 100, status: "已完成" },
+            { id: 12, name: "壓鑄機SCADA整合系統", department: "電控部(胡協理)", startTime: "2025-06-02", dueDate: "2026-05-31", priority: "高", progress: 5, status: "構思中" },
+            { id: 13, name: "壓鑄機射料曲線系統數據擷取分析", department: "電控部(胡協理)", startTime: "2025-06-15", dueDate: "2026-01-31", priority: "高", progress: 10, status: "構思中" },
+            { id: 14, name: "壓鑄機觸控型工業電腦", department: "電控部(胡協理)", startTime: "2025-07-01", dueDate: "2026-04-30", priority: "高", progress: 0, status: "構思中" },
+            { id: 15, name: "Dynabook-APS排程管理方案", department: "經企室(林佳賢)", startTime: "2025-08-01", dueDate: "2026-12-31", priority: "中", progress: 20, status: "構思中" },
+            { id: 16, name: " Google AgentSpace(Simhope KM+EIP開發)", department: "經企室 (Porter)", startTime: "2025-07-26", dueDate: "2026-6-30", priority: "中", progress: 0, status: "規劃中" },
+        ];
+
+        // 2. 例行公事資料
+        const routineTasks = {
+            daily: [
+                { time: "8:00~8:15", task: "清潔洗手台 & 泡茶" },
+                { time: "13:00~13:30", task: "巡檢主辦公室 & 資訊辦公室 (各約15分鐘)" },
+                { time: "16:45~17:00", task: "倒垃圾" },
+            ],
+            threeWeeks: [
+                { time: "8:00~8:15", task: "掃地", lastDate: "2025-08-25"},
+            ],
+            monthly: [
+                { day: 15, task: "技術部電腦巡檢 (若遇假日則調整)" },
+                { day: 'manual', task: "打掃廁所", dates: {} }, // 手動輸入日期，格式：{ "2025-09": 20, "2025-10": 15 }
+            ],
+            bimonthly: [
+                { task: "至餐廳備餐", dates: {} }, // 手動輸入日期，格式：{ "2025-09": "2025-09-15", "2025-11": "2025-11-20" }
+            ]
+        };
+        
+        // 3. 分享會資料
+        const sharingSessions = [
+            { date: "2025-09-25", theme: "LLM實戰分享會", speaker: "我", status: "upcoming", schedule: [ 
+                "16:00-16:05 開場與介紹", 
+                "16:05-16:30 解決各部門提出的一項問題", 
+                "16:30-16:45 Q&A 與交流", 
+            ]},
+            { date: "2025-09-02", theme: "AI應用分享-1", speaker: "我", status: "upcoming", schedule: [
+                "11:30-11:50 AI時代的知識管理利器：Google NotebookLM",
+                "16:05-16:30 解決各部門提出的一項問題",
+                "16:30-16:45 Q&A 與交流",
+            ]},
+            { date: "2025-05-29", theme: "ChatGPT教學", speaker: "我", status: "past", schedule: [
+                "10:00～10:20 雱姐（請假）、光展✅、詩瑩✅、佳瑜✅、玫娟✅、冠閔✅",
+                "10:30～10:50（無進階）珮心（休假）、廠長（沒來）、文隆✅、瑞文✅、俊宇✅、鎧稻✅",
+                "11:00～11:20 技術部全員✅",
+                "11:30～11:50 瑩盈（請假）、ivy✅、瑄萱✅、姿玲✅",
+                "13:10～13:30 大頭（沒來）、小白✅（到13:40那場聽）、勇哥（沒來）、許協理✅、明燕✅、銘賢✅",
+                "13:40～14:00 小井✅、育誠✅、淑惠姐✅、胡協理✅、俞儒（請假）、治廷✅",
+                "ChatGPT的使用指南.pdf",
+                "https://drive.google.com/file/d/13zZ9O94R-mv7jYv8YapqYnP_f8CsCmBq/view?usp=sharing",
+                "ChatGPT的進階使用指南.pdf",
+                "https://drive.google.com/file/d/19pvc_N3LX5Du9cMvLUmw5qy1h8VcyvFJ/view?usp=sharing",
+            ]},
+            { date: "2025-06-04", theme: "ChatGPT教學", speaker: "我", status: "past", schedule: [
+                "11:20～11:50 珮心、彥隆、廠長、俞儒、允嶺、胡協理、瑩盈",
+                "ChatGPT的使用指南.pdf",
+                "https://drive.google.com/file/d/13zZ9O94R-mv7jYv8YapqYnP_f8CsCmBq/view?usp=sharing",
+                "ChatGPT的進階使用指南.pdf",
+                "https://drive.google.com/file/d/19pvc_N3LX5Du9cMvLUmw5qy1h8VcyvFJ/view?usp=sharing",
+            ]},
+            { date: "2025-06-19", theme: "AI年會心得分享", speaker: "我", status: "past", schedule: [
+                 "16:00-16:05 活動簡介", 
+                 "16:05-16:40 精選講者案例分享",
+                 "16:40-16:50 SimHope + AI 賦能我們的製造業", 
+                 "16:50-17:00 總結&填寫問券", 
+                 "https://drive.google.com/file/d/1MSy-GSn5R4eo8hRH6PUwRv3o6bh5I6aY/view?usp=drive_link", 
+            ]},
+            { date: "2025-08-26", theme: "每月AI分享會-2025台灣富士軟片資訊品牌日心得分享", speaker: "我", status: "past", schedule: [
+                "4:00~4:05 淺談台灣富士",
+                "4:05~4:10 解決共同問題",
+                "工具多效率未必提升&跨部門溝通效率低&數據分散難以統整&不確定性、快速變化、跨部門協作",
+                "4:10~4:15 RPA流程自動化",
+                "4:15~4:20 雲端辦公室整合應用",
+                "4:20~4:25 數位印刷&事務機高校文件管理",
+                "4:25~4:30 LINE WORKS",
+                "4:30~4:45 QA",
+                "2025.08.26台灣富士心得分享.pptx",
+                "https://docs.google.com/presentation/d/1vbjK-yru45hqQGAn5ZkPsLqCH4Ne8zxH/edit?usp=sharing&ouid=115036627200290147413&rtpof=true&sd=true",
+            ]},
+        ];
+        
+        // 4. 活動參與資料
+        const eventsAttended = [
+            { 
+                eventName: "勞工安全教育訓練", 
+                date: "2025-04-29", 
+                summary: "114年度 勞工安全教育訓練。", 
+                learnings: [
+                    "工廠安全注意事項。",
+                    "工業電腦 (IPC) 結合邊緣 AI 的解決方案。",
+                ], 
+                files: [
+                    { name: "展場地圖.pdf", link: "#" },
+                ], 
+                type: "internal", 
+            },
+            { 
+                eventName: "Computex 2025", 
+                date: "2025-05-21",
+                summary: "全球指標性的資通訊產業大展，今年 AI 硬體與邊緣運算為最大亮點。",
+                learnings: [
+                    "打造企業專屬 Chatbot 需要深入了解業務流程。",
+                    "所羅門結合AR技術(META-aivi)與高速學習型AI提升視覺檢測準確度。",
+                    "資安與智慧製造的整合需全面考量。從硬體設備到軟體系統,建立多層次防護機制至關重要。",
+                ],
+                files: [
+                    { name: "2025-COMPUTEX.pdf", link: "https://drive.google.com/file/d/1e3ZJAmIpGYxudfIBhnVS0yhcJveP1TET/view?usp=sharing" },
+                ], 
+                type: "external", 
+            },
+            { 
+                eventName: "2025 台灣 AI 年會", 
+                date: "2025-05-24",
+                summary: "年度最大的 AI 技術與應用交流盛會，匯集了國內外頂尖專家與企業。",
+                learnings: [
+                    "大型語言模型 (LLM) 在製造業的落地應用案例。",
+                    "多模態 AI 的最新進展，特別是影像與文字的結合分析。",
+                    "企業導入 AI 的倫理與法規考量。",
+                ],
+                files: [
+                    { name: "年會議程.pdf", link: "#" },
+                    { name: "重點講者簡報.zip", link: "#" },
+                ], 
+                type: "external", 
+            },
+            { 
+                eventName: "2025台灣富士軟片資訊品牌日", 
+                date: "2025-07-17",
+                summary: "年度最大的 AI 技術與應用交流盛會，匯集了國內外頂尖專家與企業。",
+                learnings: [
+                    "大型語言模型 (LLM) 在製造業的落地應用案例。",
+                    "多模態 AI 的最新進展，特別是影像與文字的結合分析。",
+                    "企業導入 AI 的倫理與法規考量。",
+                ],
+                files: [
+                    { name: "年會議程.pdf", link: "#" },
+                    { name: "重點講者簡報.zip", link: "#" },
+                ], 
+                type: "external", 
+            },
+            { 
+                eventName: "AI 智慧大工廠系列論壇-台中場", 
+                date: "2025-07-23",
+                summary: "年度最大的 AI 技術與應用交流盛會，匯集了國內外頂尖專家與企業。",
+                learnings: [
+                    "CloudMile如何透過AgentSpace打造企業 AI 大腦。",
+                    "多模態 AI 的最新進展，特別是影像與文字的結合分析。",
+                    "核心的需求不用AI，但是如果有[要是xxx在就好了]的事情可能就可以用AI。",
+                ],
+                files: [
+                    { name: "年會議程.pdf", link: "#" },
+                    { name: "重點講者簡報.zip", link: "#" },
+                ], 
+                type: "external", 
+            },
+            { 
+                eventName: "中小企業轉型AI應用研習班", 
+                date: "2025-07-27",
+                summary: "年度最大的 AI 技術與應用交流盛會，匯集了國內外頂尖專家與企業。",
+                learnings: [
+                    "大型語言模型 (LLM) 在製造業的落地應用案例。",
+                    "多模態 AI 的最新進展，特別是影像與文字的結合分析。",
+                    "企業導入 AI 的倫理與法規考量。",
+                ],
+                files: [
+                    { name: "年會議程.pdf", link: "#" },
+                    { name: "重點講者簡報.zip", link: "#" },
+                ], 
+                type: "external", 
+            },
+            { 
+                eventName: "「資訊安全通識課程」-誰在偷你的密碼?", 
+                date: "2025-07-29",
+                summary: "年度最大的 AI 技術與應用交流盛會，匯集了國内外頂尖專家與企業。",
+                learnings: [
+                    "大型語言模型 (LLM) 在製造業的落地應用案例。",
+                    "多模態 AI 的最新進展，特別是影像與文字的結合分析。",
+                    "企業導入 AI 的倫理與法規考量。",
+                ],
+                files: [
+                    { name: "信鋐工業_講義.pdf", link: "https://drive.google.com/file/d/147vVre8N1Qfqoz-XDUTychprXGzXjOQ5/view?usp=sharing" },
+                ], 
+                type: "internal", 
+            },
+            { 
+                eventName: "2025台灣文博會", 
+                date: "2025-08-08~ 2025-08-09",
+                summary: "透過觀摩 2025 台灣文博會，尋找在攤位設計、商品呈現及品牌溝通上表現傑出的廠商，作為信鋐未來規劃展會、提升品牌形象及產品設計的參考標的。",
+                learnings: [
+                    "台電文創將發電過程所產生的副產品、廢棄設備、回收資源，經過實驗與設計，再次投入製造循環中，喚起消費者對環境的意識。",
+                    "滾學球文具設計搭配各種傳說、歷史、人類故事，讓使用者與作品之間產生更多情感上的連結，以及文化上的認同感。",
+                    "美美工作室Suii Suii Lab 將電鍍處理從微小零組件放大至家飾品，讓色彩的暈染與層次 ，留存於每日所見生活景物。  讓每一個商品都是獨一無二，讓每一次霓彩都是如夢似幻。",
+                ],
+                files: [
+                    { name: "2025台灣文博會考察報告.pdf", link: "https://drive.google.com/file/d/1eyk8WHxXTkQI94Q-NuAwRfzae7Js2e0X/view?usp=sharing" },
+                    { name: "文博會官網", link: "https://creativexpo.tw/zh-TW" },
+                ], 
+                type: "external", 
+            },
+            { 
+                eventName: "開源AI：行政應用工作坊", 
+                date: "2025-08-27",
+                summary: "開源AI語音轉錄平臺&常見問答聊天機器人實作。",
+                learnings: [
+                    "透過手把手的安裝指令教學，更了解MS SQL資料庫如何串接前端(Go)與後端(Node.js、Python)。",
+                    "在實作出來的同時也能思考如何擴充SSO登入系統、各種前端服務(K8s、Nginx等...)。",
+                    "了解現今FAQ機器人建置架構，包括使用不同模型呈現的結果&環境變數如何設定。",
+                ],
+                files: [
+                    { name: "常見問答聊天機器人實作", link: "https://light-fish-nfk8h7n.gamma.site/" },
+                ], 
+                type: "external", 
+            },
+        ];
+        
+        // 5. 接洽企業資料
+        const businessContacts = [
+            { companyName: "超數科技HyperData", contactPerson: "張鈞程", date: "2025-07-07", topic: "了解公司目前AI規劃應用與挑戰。", files: [{ name: "超數科技簡介.pdf", link: "#" }] },
+            { companyName: "零次方", contactPerson: "林書凡", date: "2025-07-24", topic: "Porter的朋友-分享 AI 導入各種甲方經驗。", files: [] },
+            { companyName: "台灣富士軟片", contactPerson: "劉育杉", date: "2025-07-25", topic: "分享台灣富士在RPA、無紙化與高效文件管理、ESG永續發展方案、文件簽核與ISO文管Solution。", files: [] },
+            { companyName: "SEA - Business Development Representative Google Cloud Platform & Google Workspace", contactPerson: "Wai Jie Leong", date: "2025-07-31", topic: "詢問GCP、Vertex AI、Agentspace用途及未來規劃", files: [{ name: "產品規格書.pdf", link: "#" }, { name: "現場名片.jpg", link: "#" }] },
+            { companyName: "SEA - Business Development Representative Google Cloud Platform & Google Workspace", contactPerson: "Zac Miao", date: "2025-08-06", topic: "詢問GCP、Vertex AI、Agentspace用途及未來規劃2", files: [{ name: "產品規格書.pdf", link: "#" }, { name: "現場名片.jpg", link: "#" }] },
+            { companyName: "Dynabook", contactPerson: "Daisy Lin", date: "2025-08-12", topic: "能源管理、APS 及雲端會議方案", files: [] },
+        ];
+        
+        // --- 儀表板渲染與互動邏輯 ---
+        let calendarDate = new Date();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.dashboard-tab');
+            const contents = document.querySelectorAll('.dashboard-content');
+            tabs.forEach(tab => tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                contents.forEach(c => c.classList.add('hidden'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.target).classList.remove('hidden');
+            }));
+            
+            renderAiDashboard();
+            renderRoutineDashboard();
+            renderSharingDashboard();
+            renderEventsDashboard();
+            renderContactsDashboard();
+        });
+
+        // 1. AI 專案儀表板
+        function renderAiDashboard() {
+            const board = document.getElementById('ai-kanban-board');
+            const summaryContainer = document.getElementById('ai-summary-stats');
+            const monthFilter = document.getElementById('month-filter');
+            
+            // Populate month filter
+            const months = [...new Set(projects.map(p => p.startTime.substring(0, 7)))].sort().reverse();
+            monthFilter.innerHTML = '<option value="all">所有月份</option>';
+            months.forEach(m => monthFilter.innerHTML += `<option value="${m}">${m}</option>`);
+            monthFilter.addEventListener('change', () => displayProjects());
+
+            displayProjects(); // Initial render
+
+            function displayProjects() {
+                const selectedMonth = monthFilter.value;
+                const filteredProjects = selectedMonth === 'all' ? projects : projects.filter(p => p.startTime.startsWith(selectedMonth));
+                
+                board.innerHTML = ''; // Clear board
+                summaryContainer.innerHTML = ''; // Clear stats
+
+                const statuses = ["構思中", "規劃中", "開發中", "測試中", "已完成"];
+                const priorityColors = { '高': 'bg-red-100 text-red-800', '中': 'bg-yellow-100 text-yellow-800', '低': 'bg-green-100 text-green-800' };
+                const columnHeaderColors = { "構思中": "bg-purple-500", "規劃中": "bg-blue-500", "開發中": "bg-orange-500", "測試中": "bg-teal-500", "已完成": "bg-green-600" };
+
+                statuses.forEach(status => {
+                    const column = document.createElement('div');
+                    column.className = 'bg-gray-100 rounded-lg flex flex-col h-full';
+                    const projectsInStatus = filteredProjects.filter(p => p.status === status);
+                    column.innerHTML = `<div class="p-4 rounded-t-lg ${columnHeaderColors[status]} text-white flex justify-between items-center"><h2 class="font-bold text-lg">${status}</h2><span class="bg-white/30 text-white text-sm font-semibold rounded-full px-2 py-0.5">${projectsInStatus.length}</span></div><div class="kanban-column-content p-4 space-y-4 overflow-y-auto flex-grow" style="min-height: 400px;"></div>`;
+                    
+                    projectsInStatus.forEach(project => {
+                        const card = document.createElement('div');
+                        const borderColor = { '高': 'border-red-500', '中': 'border-yellow-500', '低': 'border-green-500' }[project.priority] || 'border-gray-300';
+                        card.className = `bg-white p-4 rounded-lg shadow-md border-l-4 ${borderColor}`;
+                        card.innerHTML = `<h3 class="font-bold text-gray-800">${project.name}</h3>
+                            <p class="text-sm text-gray-500 mt-1">${project.department}</p>
+                            <div class="text-xs text-gray-400 mt-2">
+                                <span>始: ${project.startTime}</span> | <span>終: ${project.dueDate}</span>
+                            </div>
+                            <div class="flex justify-end items-center mt-2">
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full ${priorityColors[project.priority]}">${project.priority}</span>
+                            </div>
+                            <div class="mt-2"><div class="flex justify-between items-center mb-1"><span class="text-sm font-medium text-gray-700">進度</span><span class="text-sm font-medium text-gray-700">${project.progress}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ${project.progress}%"></div></div></div>`;
+                        column.querySelector('.kanban-column-content').appendChild(card);
+                    });
+                    board.appendChild(column);
+                });
+
+                const total = filteredProjects.length, completed = filteredProjects.filter(p=>p.status==='已完成').length, inProgress = filteredProjects.filter(p=>['開發中','測試中'].includes(p.status)).length, planning = filteredProjects.filter(p=>['構思中','規劃中'].includes(p.status)).length;
+                [{ label: '總專案數', value: total, color: 'bg-blue-100 text-blue-800' },{ label: '進行中', value: inProgress, color: 'bg-orange-100 text-orange-800' },{ label: '規劃/構思中', value: planning, color: 'bg-purple-100 text-purple-800' },{ label: '已完成', value: completed, color: 'bg-green-100 text-green-800' }].forEach(stat => {
+                    const statCard = document.createElement('div');
+                    statCard.className = `p-4 rounded-lg shadow ${stat.color}`;
+                    statCard.innerHTML = `<div class="text-2xl font-bold">${stat.value}</div><div class="text-sm font-medium">${stat.label}</div>`;
+                    summaryContainer.appendChild(statCard);
+                });
+            }
+        }
+
+        // 2. 例行公事儀表板
+        function renderRoutineDashboard() {
+            const container = document.getElementById('routine-tasks-content');
+            if (container.childElementCount > 0) return;
+            
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            let todayTasksHtml = '';
+            
+            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                routineTasks.daily.forEach(t => {
+                    todayTasksHtml += `<div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0">
+                        <span class="text-blue-800 font-medium">${t.task}</span>
+                        <span class="text-blue-600 text-sm">${t.time}</span>
+                    </div>`;
+                });
+            } else {
+                todayTasksHtml = '<p class="text-blue-600">今日為假日，無例行公事。</p>';
+            }
+
+            const taskSections = [
+                { title: '每日任務 (週一至週五)', tasks: routineTasks.daily, icon: 'fa-calendar-day', color: 'blue' },
+                { title: '三週一次', tasks: routineTasks.threeWeeks, icon: 'fa-calendar-week', color: 'green' },
+                { title: '每月任務', tasks: routineTasks.monthly, icon: 'fa-calendar-alt', color: 'purple' },
+                { title: '雙月任務', tasks: routineTasks.bimonthly, icon: 'fa-calendar', color: 'orange' }
+            ];
+
+            const taskSectionsHtml = taskSections.map(section => {
+                const tasksHtml = section.tasks.map(t => {
+                    const timeDisplay = t.time ? `<span class="text-${section.color}-600 text-sm">${t.time}</span>` : '';
+                    const dayDisplay = t.day ? `<span class="text-${section.color}-600 text-sm">每月${t.day === 'random' ? '隨機' : t.day}日</span>` : '';
+                    return `<div class="flex justify-between items-center py-2 border-b border-${section.color}-100 last:border-b-0">
+                        <span class="text-${section.color}-800">${t.task}</span>
+                        ${timeDisplay}${dayDisplay}
+                    </div>`;
+                }).join('');
+
+                return `<div class="bg-${section.color}-50 p-4 rounded-lg border border-${section.color}-200">
+                    <h3 class="flex items-center text-lg font-bold text-${section.color}-800 mb-3">
+                        <i class="fas ${section.icon} mr-2"></i>${section.title}
+                    </h3>
+                    <div class="space-y-2">${tasksHtml}</div>
+                </div>`;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <h2 class="text-xl font-bold text-blue-800 mb-2">今日待辦</h2>
+                    <div class="space-y-2">${todayTasksHtml}</div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">${taskSectionsHtml}</div>
+            `;
+            renderCalendar();
+        }
+        
+        function renderCalendar() {
+            const header = document.getElementById('calendar-header');
+            const body = document.getElementById('calendar-body');
+            header.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <button id="prev-month" class="p-2 rounded-full hover:bg-gray-200"><i class="fas fa-chevron-left"></i></button>
+                    <h2 class="text-xl font-bold text-gray-800 w-32 text-center">${calendarDate.getFullYear()} / ${String(calendarDate.getMonth() + 1).padStart(2, '0')}</h2>
+                    <button id="next-month" class="p-2 rounded-full hover:bg-gray-200"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="text-sm text-gray-500">僅顯示「每日」與「每月15日」的固定任務。</div>
+            `;
+            
+            const month = calendarDate.getMonth();
+            const year = calendarDate.getFullYear();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDayOfWeek = firstDay.getDay();
+
+            let calendarHtml = `<div class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200">
+                ${['日', '一', '二', '三', '四', '五', '六'].map(d => `<div class="text-center font-semibold py-2 bg-gray-100">${d}</div>`).join('')}
+            </div>
+            <div id="calendar-grid" class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200">`;
+
+            for (let i = 0; i < startDayOfWeek; i++) {
+                calendarHtml += `<div class="calendar-day other-month"></div>`;
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const currentDate = new Date(year, month, day);
+                const dayOfWeek = currentDate.getDay();
+                let tasksHtml = '';
+                
+                // Daily tasks on weekdays
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                    routineTasks.daily.forEach(t => {
+                        const shortTask = t.task.length > 15 ? t.task.substring(0, 12) + '...' : t.task;
+                        tasksHtml += `<div class="calendar-task bg-blue-100 text-blue-800">${shortTask}</div>`;
+                    });
+                }
+                
+                // Monthly task
+                if (day === 15) {
+                    const monthlyTask = routineTasks.monthly.find(t => t.day === 15);
+                    if (monthlyTask) {
+                        const shortTask = monthlyTask.task.length > 15 ? monthlyTask.task.substring(0, 12) + '...' : monthlyTask.task;
+                        tasksHtml += `<div class="calendar-task bg-green-100 text-green-800">${shortTask}</div>`;
+                    }
+                }
+                
+                const isToday = new Date().toDateString() === currentDate.toDateString() ? 'bg-blue-100' : 'bg-white';
+                calendarHtml += `<div class="calendar-day p-2 ${isToday}">
+                    <div class="font-semibold text-right">${day}</div>
+                    ${tasksHtml}
+                </div>`;
+            }
+            
+            calendarHtml += `</div>`;
+            body.innerHTML = calendarHtml;
+
+            document.getElementById('prev-month').addEventListener('click', () => { 
+                calendarDate.setMonth(calendarDate.getMonth() - 1); 
+                renderCalendar(); 
+            });
+            document.getElementById('next-month').addEventListener('click', () => { 
+                calendarDate.setMonth(calendarDate.getMonth() + 1); 
+                renderCalendar(); 
+            });
+        }
+
+        // 3. 渲染分享會儀表板
+        function renderSharingDashboard() {
+            const container = document.getElementById('sharing-session-content');
+            if (container.childElementCount > 0) return;
+            
+            const upcoming = sharingSessions.filter(s => s.status === 'upcoming');
+            const past = sharingSessions.filter(s => s.status === 'past');
+            
+            let upcomingHtml = `<p class="text-gray-500">目前沒有已排程的分享會。</p>`;
+            
+            if (upcoming.length > 0) {
+                upcomingHtml = upcoming.map(s => {
+                    const scheduleHtml = s.schedule.map(item => `<li class="text-gray-600">${item}</li>`).join('');
+                    return `<div class="bg-green-50 border border-green-200 p-6 rounded-lg">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-green-800">${s.theme}</h3>
+                                <p class="text-green-600 mt-1">日期：${s.date} | 講者：${s.speaker}</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">即將舉行</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">議程安排：</h4>
+                            <ul class="list-disc list-inside space-y-1">${scheduleHtml}</ul>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+            
+            const pastHtml = past.map(s => {
+                const content = s.schedule.map(item => {
+                    if (item.startsWith('http')) return `<li><a href="${item}" target="_blank" class="text-blue-600 hover:underline break-all"><i class="fas fa-link mr-2"></i>連結</a></li>`;
+                    if (/\.(pdf|pptx|zip|jpg)/i.test(item)) return `<li><i class="fas fa-file mr-2 text-gray-400"></i>${item}</li>`;
+                    return `<li>${item}</li>`;
+                }).join('');
+                
+                return `<details class="p-4 border-b last:border-b-0">
+                    <summary class="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <div>
+                            <p class="text-sm text-gray-500">${s.date}</p>
+                            <p class="font-semibold text-gray-700">${s.theme}</p>
+                        </div>
+                        <i class="fas fa-chevron-right summary-icon text-gray-400"></i>
+                    </summary>
+                    <div class="mt-4 pl-4 border-l-2 border-gray-200">
+                        <ul class="list-disc list-inside space-y-1 text-gray-600">${content}</ul>
+                    </div>
+                </details>`;
+            }).join('');
+            
+            container.innerHTML = `
+                <h2 class="text-xl font-bold text-gray-800 mb-4">即將舉行的分享會</h2>
+                ${upcomingHtml}
+                <h2 class="text-xl font-bold text-gray-800 mt-10 mb-4">過往分享會紀錄</h2>
+                <div class="border rounded-lg bg-gray-50">${pastHtml}</div>
+            `;
+        }
+        
+        // 4. 渲染活動參與儀表板
+        function renderEventsDashboard() {
+            const container = document.getElementById('event-participation-content');
+            if (container.childElementCount > 0) return;
+            
+            const internalEvents = eventsAttended.filter(e => e.type === 'internal');
+            const externalEvents = eventsAttended.filter(e => e.type === 'external');
+            
+            const renderEventSection = (title, events) => {
+                if(events.length === 0) return '';
+                
+                const eventsHtml = events.map(event => {
+                    const learningsHtml = event.learnings.map(learning => `<li class="text-gray-600">${learning}</li>`).join('');
+                    const filesHtml = event.files.map(file => {
+                        if (file.link === '#') {
+                            return `<span class="inline-block bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm mr-2 mb-2">
+                                <i class="fas fa-file mr-1"></i>${file.name}
+                            </span>`;
+                        } else {
+                            return `<a href="${file.link}" target="_blank" class="inline-block bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1 rounded-full text-sm mr-2 mb-2 transition-colors">
+                                <i class="fas fa-download mr-1"></i>${file.name}
+                            </a>`;
+                        }
+                    }).join('');
+                    
+                    return `<div class="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">${event.eventName}</h3>
+                                <p class="text-gray-500 mt-1">${event.date}</p>
+                            </div>
+                            <span class="bg-${event.type === 'external' ? 'blue' : 'green'}-100 text-${event.type === 'external' ? 'blue' : 'green'}-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                ${event.type === 'external' ? '外部活動' : '內部活動'}
+                            </span>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="font-semibold text-gray-800 mb-2">活動概述：</h4>
+                            <p class="text-gray-600">${event.summary}</p>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="font-semibold text-gray-800 mb-2">主要學習與收穫：</h4>
+                            <ul class="list-disc list-inside space-y-1">${learningsHtml}</ul>
+                        </div>
+                        ${event.files.length > 0 ? `
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">相關資料：</h4>
+                            <div class="flex flex-wrap">${filesHtml}</div>
+                        </div>` : ''}
+                    </div>`;
+                }).join('');
+                
+                return `<section>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">${title}</h2>
+                    <div class="space-y-6">${eventsHtml}</div>
+                </section>`;
+            };
+            
+            container.innerHTML = renderEventSection('外部活動', externalEvents) + renderEventSection('內部活動', internalEvents);
+        }
+
+        // 5. 渲染接洽企業儀表板
+        function renderContactsDashboard() {
+            const container = document.getElementById('business-contacts-content');
+            if (container.childElementCount > 0) return;
+            
+            const tableRows = businessContacts.map(contact => {
+                const filesHtml = contact.files.map(file => {
+                    if (file.link === '#') {
+                        return `<span class="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs mr-1 mb-1">
+                            <i class="fas fa-file mr-1"></i>${file.name}
+                        </span>`;
+                    } else {
+                        return `<a href="${file.link}" target="_blank" class="inline-block bg-blue-100 text-blue-600 hover:bg-blue-200 px-2 py-1 rounded text-xs mr-1 mb-1 transition-colors">
+                            <i class="fas fa-download mr-1"></i>${file.name}
+                        </a>`;
+                    }
+                }).join('');
+                
+                return `<tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${contact.companyName}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${contact.contactPerson}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${contact.date}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900 max-w-xs">${contact.topic}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-wrap">${filesHtml || '<span class="text-sm text-gray-400">無</span>'}</div>
+                    </td>
+                </tr>`;
+            }).join('');
+            
+            container.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">企業名稱</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">聯絡人</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">接洽日期</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">洽談主題</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">相關資料</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
