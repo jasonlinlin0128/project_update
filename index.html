@@ -27,6 +27,72 @@
         details > summary::-webkit-details-marker { display: none; }
         details .summary-icon { transition: transform 0.2s; }
         details[open] .summary-icon { transform: rotate(90deg); }
+        /* Project Detail Modal Styles */
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0, 0, 0, 0.5); 
+            z-index: 1000; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content { 
+            background: white; 
+            border-radius: 12px; 
+            max-width: 90vw; 
+            max-height: 90vh; 
+            overflow-y: auto; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+        }
+        .project-card { cursor: pointer; transition: all 0.2s ease; }
+        .project-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .file-upload-area { 
+            border: 2px dashed #d1d5db; 
+            border-radius: 8px; 
+            padding: 20px; 
+            text-align: center; 
+            transition: all 0.2s ease; 
+        }
+        .file-upload-area:hover { border-color: #3b82f6; background-color: #f8fafc; }
+        .file-upload-area.dragover { border-color: #3b82f6; background-color: #eff6ff; }
+        /* Project Detail Modal Styles */
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0, 0, 0, 0.5); 
+            z-index: 1000; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-content { 
+            background: white; 
+            border-radius: 12px; 
+            max-width: 90vw; 
+            max-height: 90vh; 
+            overflow-y: auto; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+        }
+        .project-card { cursor: pointer; transition: all 0.2s ease; }
+        .project-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .file-upload-area { 
+            border: 2px dashed #d1d5db; 
+            border-radius: 8px; 
+            padding: 20px; 
+            text-align: center; 
+            transition: all 0.2s ease; 
+        }
+        .file-upload-area:hover { border-color: #3b82f6; background-color: #f8fafc; }
+        .file-upload-area.dragover { border-color: #3b82f6; background-color: #eff6ff; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -103,25 +169,217 @@
         </main>
     </div>
 
+    <!-- Project Detail Modal -->
+    <div id="project-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-4xl mx-4">
+            <div class="p-6">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 id="modal-project-name" class="text-2xl font-bold text-gray-800"></h2>
+                        <p id="modal-project-department" class="text-gray-600 mt-1"></p>
+                    </div>
+                    <button id="close-modal" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Project Basic Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-gray-800 mb-3">基本資訊</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">開始日期:</span>
+                                <span id="modal-start-date" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">預計完成:</span>
+                                <span id="modal-due-date" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">優先級:</span>
+                                <span id="modal-priority" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">狀態:</span>
+                                <span id="modal-status" class="font-medium"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-gray-800 mb-3">進度追蹤</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">完成進度</span>
+                                <span id="modal-progress-text" class="text-sm font-medium"></span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div id="modal-progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-300"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Progress Notes -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">專案進度說明</h3>
+                    <textarea id="project-notes" placeholder="在此輸入專案進度說明、遇到的問題、解決方案等詳細資訊..." class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                    <div class="flex justify-end mt-2">
+                        <button id="save-notes" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>儲存說明
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File Upload Section -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">相關文件</h3>
+                    <div id="file-upload-area" class="file-upload-area">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-600 mb-2">拖拽檔案到此處或點擊選擇檔案</p>
+                        <p class="text-sm text-gray-500">支援 PDF、Word、Excel、圖片等格式</p>
+                        <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
+                        <button id="select-files" class="mt-3 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                            <i class="fas fa-folder-open mr-2"></i>選擇檔案
+                        </button>
+                    </div>
+                    
+                    <!-- Uploaded Files List -->
+                    <div id="uploaded-files" class="mt-4">
+                        <h4 class="font-medium text-gray-800 mb-2">已上傳的檔案</h4>
+                        <div id="files-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button id="export-project" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>匯出專案資料
+                    </button>
+                    <button id="close-modal-btn" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Detail Modal -->
+    <div id="project-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-4xl mx-4">
+            <div class="p-6">
+                <!-- Modal Header -->
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 id="modal-project-name" class="text-2xl font-bold text-gray-800"></h2>
+                        <p id="modal-project-department" class="text-gray-600 mt-1"></p>
+                    </div>
+                    <button id="close-modal" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Project Basic Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-gray-800 mb-3">基本資訊</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">開始日期:</span>
+                                <span id="modal-start-date" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">預計完成:</span>
+                                <span id="modal-due-date" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">優先級:</span>
+                                <span id="modal-priority" class="font-medium"></span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">狀態:</span>
+                                <span id="modal-status" class="font-medium"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-gray-800 mb-3">進度追蹤</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">完成進度</span>
+                                <span id="modal-progress-text" class="text-sm font-medium"></span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div id="modal-progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-300"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Progress Notes -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">專案進度說明</h3>
+                    <textarea id="project-notes" placeholder="在此輸入專案進度說明、遇到的問題、解決方案等詳細資訊..." class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                    <div class="flex justify-end mt-2">
+                        <button id="save-notes" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>儲存說明
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File Upload Section -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">相關文件</h3>
+                    <div id="file-upload-area" class="file-upload-area">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-3"></i>
+                        <p class="text-gray-600 mb-2">拖拽檔案到此處或點擊選擇檔案</p>
+                        <p class="text-sm text-gray-500">支援 PDF、Word、Excel、圖片等格式</p>
+                        <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
+                        <button id="select-files" class="mt-3 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                            <i class="fas fa-folder-open mr-2"></i>選擇檔案
+                        </button>
+                    </div>
+                    
+                    <!-- Uploaded Files List -->
+                    <div id="uploaded-files" class="mt-4">
+                        <h4 class="font-medium text-gray-800 mb-2">已上傳的檔案</h4>
+                        <div id="files-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button id="export-project" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-download mr-2"></i>匯出專案資料
+                    </button>
+                    <button id="close-modal-btn" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- 資料區 ---
         const projects = [
-            { id: 1, name: "籌料狀態數位化", department: "物管部 (王偉全、董光展)", startTime: "2025-08-19", dueDate: "2025-12-31", priority: "中", progress: 20, status: "開發中" },
-            { id: 2, name: "客製化軍品 AI 瑕疵檢測", department: "品保部 (徐世勇)", startTime: "2025-09-02", dueDate: "2025-12-31", priority: "低", progress: 10, status: "規劃中" },
-            { id: 3, name: "圖面繪製標準建議系統", department: "技術部 (林佳汝)", startTime: "2025-10-05", dueDate: "2026-06-30", priority: "中", progress: 0, status: "規劃中" },
-            { id: 4, name: "ERP+RPA交期提醒工具", department: "生管部 (王偉全)", startTime: "2025-08-04", dueDate: "2025-12-31", priority: "低", progress: 90, status: "測試中" },
-            { id: 5, name: "地端GPT開發", department: "經企室 (Porter)", startTime: "2025-07-01", dueDate: "2026-6-30", priority: "高", progress: 10, status: "開發中" },
-            { id: 6, name: "NFC工廠夜間巡檢", department: "管理部 (淑惠姊)", startTime: "2025-06-09", dueDate: "2025-10-01", priority: "高", progress: 80, status: "測試中" },
-            { id: 7, name: "機台數據", department: "加工部 (林昆弘)", startTime: "2025-05-05", dueDate: "2026-06-30", priority: "低", progress: 0, status: "構思中" },
-            { id: 8, name: "舊專案文件數位化與分析", department: "軍品業務部 (許振明)", startTime: "2025-06-30", dueDate: "2026-06-30", priority: "低", progress: 0, status: "構思中" },
-            { id: 9, name: "AI Agent潛在客戶推播系統", department: "壓鑄業務部 (陳瑩盈)", startTime: "2025-07-30", dueDate: "2025-08-01", priority: "低", progress: 100, status: "已完成" },
-            { id: 10, name: "資安Teams Bot建置", department: "資安小隊", startTime: "2025-05-30", dueDate: "2025-06-04", priority: "高", progress: 100, status: "已完成" },
-            { id: 11, name: "會議記錄逐字稿及重點整理工具", department: "會議記錄人員(薪桉)", startTime: "2025-04-30", dueDate: "2025-05-26", priority: "中", progress: 100, status: "已完成" },
-            { id: 12, name: "壓鑄機SCADA整合系統", department: "電控部(胡協理)", startTime: "2025-06-02", dueDate: "2026-05-31", priority: "高", progress: 5, status: "構思中" },
-            { id: 13, name: "壓鑄機射料曲線系統數據擷取分析", department: "電控部(胡協理)", startTime: "2025-06-15", dueDate: "2026-01-31", priority: "高", progress: 10, status: "構思中" },
-            { id: 14, name: "壓鑄機觸控型工業電腦", department: "電控部(胡協理)", startTime: "2025-07-01", dueDate: "2026-04-30", priority: "高", progress: 0, status: "構思中" },
-            { id: 15, name: "Dynabook-APS排程管理方案", department: "經企室(林佳賢)", startTime: "2025-08-01", dueDate: "2026-12-31", priority: "中", progress: 20, status: "構思中" },
-            { id: 16, name: " Google AgentSpace(Simhope KM+EIP開發)", department: "經企室 (Porter)", startTime: "2025-07-26", dueDate: "2026-6-30", priority: "中", progress: 0, status: "規劃中" },
+            { id: 1, name: "籌料狀態數位化", department: "物管部 (王偉全、董光展)", startTime: "2025-08-19", dueDate: "2025-12-31", priority: "中", progress: 20, status: "開發中", notes: "", files: [] },
+            { id: 2, name: "客製化軍品 AI 瑕疵檢測", department: "品保部 (徐世勇)", startTime: "2025-09-02", dueDate: "2025-12-31", priority: "低", progress: 10, status: "規劃中", notes: "", files: [] },
+            { id: 3, name: "圖面繪製標準建議系統", department: "技術部 (林佳汝)", startTime: "2025-10-05", dueDate: "2026-06-30", priority: "中", progress: 0, status: "規劃中", notes: "", files: [] },
+            { id: 4, name: "ERP+RPA交期提醒工具", department: "生管部 (王偉全)", startTime: "2025-08-04", dueDate: "2025-12-31", priority: "低", progress: 90, status: "測試中", notes: "", files: [] },
+            { id: 5, name: "地端GPT開發", department: "經企室 (Porter)", startTime: "2025-07-01", dueDate: "2026-6-30", priority: "高", progress: 10, status: "開發中", notes: "", files: [] },
+            { id: 6, name: "NFC工廠夜間巡檢", department: "管理部 (淑惠姊)", startTime: "2025-06-09", dueDate: "2025-10-01", priority: "高", progress: 80, status: "測試中", notes: "", files: [] },
+            { id: 7, name: "機台數據", department: "加工部 (林昆弘)", startTime: "2025-05-05", dueDate: "2026-06-30", priority: "低", progress: 0, status: "構思中", notes: "", files: [] },
+            { id: 8, name: "舊專案文件數位化與分析", department: "軍品業務部 (許振明)", startTime: "2025-06-30", dueDate: "2026-06-30", priority: "低", progress: 0, status: "構思中", notes: "", files: [] },
+            { id: 9, name: "AI Agent潛在客戶推播系統", department: "壓鑄業務部 (陳瑩盈)", startTime: "2025-07-30", dueDate: "2025-08-01", priority: "低", progress: 100, status: "已完成", notes: "", files: [] },
+            { id: 10, name: "資安Teams Bot建置", department: "資安小隊", startTime: "2025-05-30", dueDate: "2025-06-04", priority: "高", progress: 100, status: "已完成", notes: "", files: [] },
+            { id: 11, name: "會議記錄逐字稿及重點整理工具", department: "會議記錄人員(薪桉)", startTime: "2025-04-30", dueDate: "2025-05-26", priority: "中", progress: 100, status: "已完成", notes: "", files: [] },
+            { id: 12, name: "壓鑄機SCADA整合系統", department: "電控部(胡協理)", startTime: "2025-06-02", dueDate: "2026-05-31", priority: "高", progress: 5, status: "構思中", notes: "", files: [] },
+            { id: 13, name: "壓鑄機射料曲線系統數據擷取分析", department: "電控部(胡協理)", startTime: "2025-06-15", dueDate: "2026-01-31", priority: "高", progress: 10, status: "構思中", notes: "", files: [] },
+            { id: 14, name: "壓鑄機觸控型工業電腦", department: "電控部(胡協理)", startTime: "2025-07-01", dueDate: "2026-04-30", priority: "高", progress: 0, status: "構思中", notes: "", files: [] },
+            { id: 15, name: "Dynabook-APS排程管理方案", department: "經企室(林佳賢)", startTime: "2025-08-01", dueDate: "2026-12-31", priority: "中", progress: 20, status: "構思中", notes: "", files: [] },
+            { id: 16, name: " Google AgentSpace(Simhope KM+EIP開發)", department: "經企室 (Porter)", startTime: "2025-07-26", dueDate: "2026-6-30", priority: "中", progress: 0, status: "規劃中", notes: "", files: [] },
         ];
 
         // 2. 例行公事資料
@@ -393,7 +651,7 @@
                     projectsInStatus.forEach(project => {
                         const card = document.createElement('div');
                         const borderColor = { '高': 'border-red-500', '中': 'border-yellow-500', '低': 'border-green-500' }[project.priority] || 'border-gray-300';
-                        card.className = `bg-white p-4 rounded-lg shadow-md border-l-4 ${borderColor}`;
+                        card.className = `bg-white p-4 rounded-lg shadow-md border-l-4 ${borderColor} project-card`;
                         card.innerHTML = `<h3 class="font-bold text-gray-800">${project.name}</h3>
                             <p class="text-sm text-gray-500 mt-1">${project.department}</p>
                             <div class="text-xs text-gray-400 mt-2">
@@ -403,6 +661,10 @@
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full ${priorityColors[project.priority]}">${project.priority}</span>
                             </div>
                             <div class="mt-2"><div class="flex justify-between items-center mb-1"><span class="text-sm font-medium text-gray-700">進度</span><span class="text-sm font-medium text-gray-700">${project.progress}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ${project.progress}%"></div></div></div>`;
+                        
+                        // 添加點擊事件
+                        card.addEventListener('click', () => openProjectModal(project));
+                        
                         column.querySelector('.kanban-column-content').appendChild(card);
                     });
                     board.appendChild(column);
@@ -717,6 +979,197 @@
                 </div>
             `;
         }
+        // === 專案詳情：互動邏輯 ===
+        let currentProjectId = null;
+
+        function openProjectModal(project) {
+            currentProjectId = project.id;
+
+            // 基本資訊
+            document.getElementById('modal-project-name').textContent = project.name;
+            document.getElementById('modal-project-department').textContent = project.department;
+            document.getElementById('modal-start-date').textContent = project.startTime;
+            document.getElementById('modal-due-date').textContent = project.dueDate;
+            document.getElementById('modal-priority').textContent = project.priority;
+            document.getElementById('modal-status').textContent = project.status;
+            document.getElementById('modal-progress-text').textContent = `${project.progress}%`;
+            const bar = document.getElementById('modal-progress-bar');
+            bar.style.width = `${project.progress}%`;
+
+            // 備註
+            const notesTextarea = document.getElementById('project-notes');
+            notesTextarea.value = project.notes || '';
+
+            // 檔案
+            renderFilesList(project.files || []);
+
+            // 顯示
+            document.getElementById('project-modal').classList.add('show');
+        }
+
+        function closeProjectModal() {
+            document.getElementById('project-modal').classList.remove('show');
+            currentProjectId = null;
+        }
+
+        function getProjectById(id) {
+            return projects.find(p => p.id === id);
+        }
+
+        function saveNotes() {
+            if (!currentProjectId) return;
+            const project = getProjectById(currentProjectId);
+            if (!project) return;
+            const val = document.getElementById('project-notes').value.trim();
+            project.notes = val;
+            persistProjects();
+        }
+
+        function renderFilesList(files) {
+            const list = document.getElementById('files-list');
+            list.innerHTML = '';
+            if (!files || files.length === 0) {
+                list.innerHTML = '<p class="text-sm text-gray-400">尚未上傳檔案</p>';
+                return;
+            }
+            files.forEach((file, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between bg-gray-50 border border-gray-200 rounded px-3 py-2';
+                row.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-file text-gray-400"></i>
+                        <span class="text-sm text-gray-700 break-all">${file.name}</span>
+                        ${file.size ? `<span class="text-xs text-gray-400">(${formatSize(file.size)})</span>` : ''}
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        ${file.url ? `<a href="${file.url}" target="_blank" class="text-blue-600 text-sm hover:underline">查看</a>` : ''}
+                        <button data-index="${idx}" class="delete-file text-red-600 text-sm">刪除</button>
+                    </div>
+                `;
+                list.appendChild(row);
+            });
+            // 綁定刪除
+            list.querySelectorAll('.delete-file').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = Number(e.currentTarget.getAttribute('data-index'));
+                    deleteFileAt(index);
+                });
+            });
+        }
+
+        function deleteFileAt(index) {
+            if (!currentProjectId) return;
+            const project = getProjectById(currentProjectId);
+            if (!project) return;
+            project.files.splice(index, 1);
+            persistProjects();
+            renderFilesList(project.files);
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes/1024).toFixed(1)} KB`;
+            return `${(bytes/1024/1024).toFixed(1)} MB`;
+        }
+
+        function persistProjects() {
+            try {
+                localStorage.setItem('ai_projects', JSON.stringify(projects));
+            } catch (e) {
+                console.warn('Persist projects failed:', e);
+            }
+        }
+
+        function restoreProjects() {
+            try {
+                const saved = localStorage.getItem('ai_projects');
+                if (!saved) return;
+                const parsed = JSON.parse(saved);
+                // 依 id 合併 notes/files 等動態欄位
+                parsed.forEach(sp => {
+                    const found = projects.find(p => p.id === sp.id);
+                    if (found) {
+                        found.notes = sp.notes || '';
+                        found.files = Array.isArray(sp.files) ? sp.files : [];
+                    }
+                });
+            } catch (e) {
+                console.warn('Restore projects failed:', e);
+            }
+        }
+
+        function exportCurrentProject() {
+            if (!currentProjectId) return;
+            const project = getProjectById(currentProjectId);
+            if (!project) return;
+            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(project, null, 2));
+            const a = document.createElement('a');
+            a.setAttribute('href', dataStr);
+            a.setAttribute('download', `${project.name}-details.json`);
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        // 檔案上傳（僅前端暫存，不上傳伺服器）
+        function setupFileUpload() {
+            const area = document.getElementById('file-upload-area');
+            const input = document.getElementById('file-input');
+            const selectBtn = document.getElementById('select-files');
+
+            selectBtn.addEventListener('click', () => input.click());
+            input.addEventListener('change', (e) => handleFiles(e.target.files));
+
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+            area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                if (e.dataTransfer && e.dataTransfer.files) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+        }
+
+        function handleFiles(fileList) {
+            if (!currentProjectId) return;
+            const project = getProjectById(currentProjectId);
+            if (!project) return;
+            const files = Array.from(fileList).map(f => ({ name: f.name, size: f.size, type: f.type, url: URL.createObjectURL(f) }));
+            project.files.push(...files);
+            persistProjects();
+            renderFilesList(project.files);
+        }
+
+        // 綁定全域事件（在 DOMContentLoaded 之後）
+        document.addEventListener('DOMContentLoaded', () => {
+            // 還原本地資料
+            restoreProjects();
+
+            // 關閉按鈕
+            document.getElementById('close-modal').addEventListener('click', closeProjectModal);
+            document.getElementById('close-modal-btn').addEventListener('click', closeProjectModal);
+            // ESC 退出
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeProjectModal();
+            });
+            // 點擊遮罩關閉
+            document.getElementById('project-modal').addEventListener('click', (e) => {
+                if (e.target && e.target.id === 'project-modal') closeProjectModal();
+            });
+
+            // 儲存備註
+            document.getElementById('save-notes').addEventListener('click', saveNotes);
+
+            // 匯出
+            document.getElementById('export-project').addEventListener('click', exportCurrentProject);
+
+            // 上傳
+            setupFileUpload();
+        });
     </script>
 </body>
 </html>
