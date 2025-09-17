@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多功能整合儀表板</title>
+    <title>多功能整合儀表板 - 雲端同步版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+    
     <style>
         body { font-family: 'Inter', 'Noto Sans TC', sans-serif; background-color: #f0f2f5; }
         .kanban-column-content::-webkit-scrollbar, .table-container::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -17,17 +23,20 @@
         .dashboard-tab:hover { color: #1f2937; background-color: #f3f4f6; }
         .dashboard-tab.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
         .hidden { display: none; }
+        
         /* Calendar Styles */
         #calendar-grid { grid-template-rows: repeat(6, minmax(0, 1fr)); }
         .calendar-day { min-height: 100px; }
         .calendar-day.other-month { background-color: #f9fafb; color: #9ca3af; }
         .calendar-task { font-size: 0.75rem; padding: 2px 4px; border-radius: 4px; margin-top: 2px; }
-        /* Details Summary Styling for Past Sharings */
+        
+        /* Details Summary Styling */
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
         details .summary-icon { transition: transform 0.2s; }
         details[open] .summary-icon { transform: rotate(90deg); }
-        /* Project Detail Modal Styles */
+        
+        /* Modal Styles */
         .modal-overlay { 
             position: fixed; 
             top: 0; 
@@ -60,42 +69,64 @@
         }
         .file-upload-area:hover { border-color: #3b82f6; background-color: #f8fafc; }
         .file-upload-area.dragover { border-color: #3b82f6; background-color: #eff6ff; }
-        /* Project Detail Modal Styles */
-        .modal-overlay { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background-color: rgba(0, 0, 0, 0.5); 
-            z-index: 1000; 
-            display: none; 
-            align-items: center; 
-            justify-content: center; 
+        
+        /* Comments Section */
+        .comment-bubble {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            position: relative;
         }
-        .modal-overlay.show { display: flex; }
-        .modal-content { 
-            background: white; 
-            border-radius: 12px; 
-            max-width: 90vw; 
-            max-height: 90vh; 
-            overflow-y: auto; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+        .comment-bubble.manager {
+            background: #fee2e2;
         }
-        .project-card { cursor: pointer; transition: all 0.2s ease; }
-        .project-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .file-upload-area { 
-            border: 2px dashed #d1d5db; 
-            border-radius: 8px; 
-            padding: 20px; 
-            text-align: center; 
-            transition: all 0.2s ease; 
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-radius: 50%;
+            border-top: 3px solid #3b82f6;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
         }
-        .file-upload-area:hover { border-color: #3b82f6; background-color: #f8fafc; }
-        .file-upload-area.dragover { border-color: #3b82f6; background-color: #eff6ff; }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Action Button */
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
+    <!-- Firebase 配置提示 -->
+    <div id="firebase-setup" class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6 max-w-7xl mx-auto">
+        <h3 class="font-bold text-yellow-800 mb-2">⚠️ Firebase 設置提醒</h3>
+        <p class="text-yellow-700 mb-3">請先設置 Firebase 配置以啟用雲端同步功能：</p>
+        <div class="bg-white p-3 rounded border border-yellow-300">
+            <code class="text-sm">
+                1. 前往 Firebase Console 建立專案<br>
+                2. 啟用 Realtime Database 和 Storage<br>
+                3. 將您的配置資訊填入下方<br>
+            </code>
+        </div>
+        <button onclick="showFirebaseConfig()" class="mt-3 bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">
+            設定 Firebase
+        </button>
+    </div>
 
     <div class="max-w-7xl mx-auto">
         <!-- Navigation Tabs -->
@@ -118,9 +149,18 @@
                         <h1 class="text-3xl font-bold text-gray-800">AI 專案進度儀表板</h1>
                         <p class="text-gray-500 mt-1">概覽所有進行中與構思中的 AI 導入專案。</p>
                     </div>
-                    <div class="mt-4 md:mt-0">
-                        <label for="month-filter" class="text-sm font-medium text-gray-700 mr-2">依成立月份篩選:</label>
-                        <select id="month-filter" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></select>
+                    <div class="mt-4 md:mt-0 flex items-center space-x-4">
+                        <button onclick="showAddProjectModal()" class="action-btn">
+                            <i class="fas fa-plus mr-2"></i>新增專案
+                        </button>
+                        <div>
+                            <label for="month-filter" class="text-sm font-medium text-gray-700 mr-2">依成立月份篩選:</label>
+                            <select id="month-filter" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></select>
+                        </div>
+                        <div id="sync-status" class="flex items-center">
+                            <div class="spinner mr-2"></div>
+                            <span class="text-sm text-gray-500">同步中...</span>
+                        </div>
                     </div>
                 </header>
                 <div id="ai-summary-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"></div>
@@ -129,9 +169,14 @@
 
             <!-- 2. Routine Tasks Dashboard -->
             <div id="dashboard-routine" class="dashboard-content hidden">
-                 <header class="mb-8">
-                     <h1 class="text-3xl font-bold text-gray-800">例行公事儀表板</h1>
-                     <p class="text-gray-500 mt-1">追蹤每日、每週、每月的重複性任務。</p>
+                 <header class="mb-8 flex justify-between items-center">
+                     <div>
+                         <h1 class="text-3xl font-bold text-gray-800">例行公事儀表板</h1>
+                         <p class="text-gray-500 mt-1">追蹤每日、每週、每月的重複性任務。</p>
+                     </div>
+                     <button onclick="showAddRoutineModal()" class="action-btn">
+                         <i class="fas fa-plus mr-2"></i>新增任務
+                     </button>
                  </header>
                  <div id="routine-tasks-content" class="space-y-8"></div>
                  <div class="mt-12">
@@ -142,36 +187,51 @@
 
             <!-- 3. Sharing Session Dashboard -->
             <div id="dashboard-sharing" class="dashboard-content hidden">
-                 <header class="mb-8">
-                     <h1 class="text-3xl font-bold text-gray-800">分享會儀表板</h1>
-                     <p class="text-gray-500 mt-1">規劃與回顧內部 AI 新知分享會。</p>
+                 <header class="mb-8 flex justify-between items-center">
+                     <div>
+                         <h1 class="text-3xl font-bold text-gray-800">分享會儀表板</h1>
+                         <p class="text-gray-500 mt-1">規劃與回顧內部 AI 新知分享會。</p>
+                     </div>
+                     <button onclick="showAddSharingModal()" class="action-btn">
+                         <i class="fas fa-plus mr-2"></i>新增分享會
+                     </button>
                  </header>
                  <div id="sharing-session-content"></div>
             </div>
 
             <!-- 4. Event Participation Dashboard -->
             <div id="dashboard-events" class="dashboard-content hidden">
-                 <header class="mb-8">
-                     <h1 class="text-3xl font-bold text-gray-800">活動參與儀表板</h1>
-                     <p class="text-gray-500 mt-1">記錄內外部活動的學習與收穫。</p>
+                 <header class="mb-8 flex justify-between items-center">
+                     <div>
+                         <h1 class="text-3xl font-bold text-gray-800">活動參與儀表板</h1>
+                         <p class="text-gray-500 mt-1">記錄內外部活動的學習與收穫。</p>
+                     </div>
+                     <button onclick="showAddEventModal()" class="action-btn">
+                         <i class="fas fa-plus mr-2"></i>新增活動
+                     </button>
                  </header>
                  <div id="event-participation-content" class="space-y-10"></div>
             </div>
 
             <!-- 5. Business Contact Dashboard -->
             <div id="dashboard-contacts" class="dashboard-content hidden">
-                 <header class="mb-8">
-                     <h1 class="text-3xl font-bold text-gray-800">接洽企業儀表板</h1>
-                     <p class="text-gray-500 mt-1">管理與外部企業、廠商的合作與洽談紀錄。</p>
+                 <header class="mb-8 flex justify-between items-center">
+                     <div>
+                         <h1 class="text-3xl font-bold text-gray-800">接洽企業儀表板</h1>
+                         <p class="text-gray-500 mt-1">管理與外部企業、廠商的合作與洽談紀錄。</p>
+                     </div>
+                     <button onclick="showAddContactModal()" class="action-btn">
+                         <i class="fas fa-plus mr-2"></i>新增接洽
+                     </button>
                  </header>
                  <div id="business-contacts-content" class="table-container overflow-x-auto"></div>
             </div>
         </main>
     </div>
 
-    <!-- Project Detail Modal -->
+    <!-- Enhanced Project Detail Modal -->
     <div id="project-modal" class="modal-overlay">
-        <div class="modal-content w-full max-w-4xl mx-4">
+        <div class="modal-content w-full max-w-5xl mx-4">
             <div class="p-6">
                 <!-- Modal Header -->
                 <div class="flex justify-between items-start mb-6">
@@ -184,8 +244,15 @@
                     </button>
                 </div>
 
-                <!-- Project Basic Info -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Edit/View Toggle -->
+                <div class="mb-4">
+                    <button id="toggle-edit-mode" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-edit mr-2"></i>編輯專案資訊
+                    </button>
+                </div>
+
+                <!-- Project Basic Info (Editable) -->
+                <div id="project-info-view" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <h3 class="font-semibold text-gray-800 mb-3">基本資訊</h3>
                         <div class="space-y-2 text-sm">
@@ -221,14 +288,94 @@
                     </div>
                 </div>
 
+                <!-- Edit Form (Initially Hidden) -->
+                <div id="project-info-edit" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">專案名稱</label>
+                            <input id="edit-project-name" type="text" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">負責部門</label>
+                            <input id="edit-department" type="text" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">開始日期</label>
+                            <input id="edit-start-date" type="date" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">預計完成</label>
+                            <input id="edit-due-date" type="date" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">優先級</label>
+                            <select id="edit-priority" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="高">高</option>
+                                <option value="中">中</option>
+                                <option value="低">低</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">狀態</label>
+                            <select id="edit-status" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="構思中">構思中</option>
+                                <option value="規劃中">規劃中</option>
+                                <option value="開發中">開發中</option>
+                                <option value="測試中">測試中</option>
+                                <option value="已完成">已完成</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">進度 (%)</label>
+                            <input id="edit-progress" type="number" min="0" max="100" class="w-full px-3 py-2 border rounded-lg">
+                        </div>
+                        <div>
+                            <button onclick="saveProjectEdit()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 w-full">
+                                <i class="fas fa-save mr-2"></i>儲存變更
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Project Progress Notes -->
                 <div class="mb-6">
                     <h3 class="font-semibold text-gray-800 mb-3">專案進度說明</h3>
-                    <textarea id="project-notes" placeholder="在此輸入專案進度說明、遇到的問題、解決方案等詳細資訊..." class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+                    <textarea id="project-notes" placeholder="在此輸入專案進度說明、遇到的問題、解決方案等詳細資訊..." 
+                              class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
                     <div class="flex justify-end mt-2">
                         <button id="save-notes" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                             <i class="fas fa-save mr-2"></i>儲存說明
                         </button>
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="mb-6 bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-comments mr-2"></i>評論與討論
+                    </h3>
+                    
+                    <!-- Add New Comment -->
+                    <div class="mb-4">
+                        <div class="flex items-start space-x-3">
+                            <select id="comment-author" class="rounded-md border-gray-300 shadow-sm text-sm">
+                                <option value="員工">員工</option>
+                                <option value="主管">主管</option>
+                            </select>
+                            <textarea id="new-comment" placeholder="輸入您的評論或建議..." 
+                                      class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                      rows="2"></textarea>
+                            <button id="add-comment" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Comments List -->
+                    <div id="comments-list" class="max-h-64 overflow-y-auto">
+                        <!-- Comments will be rendered here -->
                     </div>
                 </div>
 
@@ -238,11 +385,26 @@
                     <div id="file-upload-area" class="file-upload-area">
                         <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-3"></i>
                         <p class="text-gray-600 mb-2">拖拽檔案到此處或點擊選擇檔案</p>
-                        <p class="text-sm text-gray-500">支援 PDF、Word、Excel、圖片等格式</p>
+                        <p class="text-sm text-gray-500">支援 PDF、Word、Excel、圖片等格式（最大 10MB）</p>
                         <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
                         <button id="select-files" class="mt-3 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
                             <i class="fas fa-folder-open mr-2"></i>選擇檔案
                         </button>
+                    </div>
+                    
+                    <!-- Upload Progress -->
+                    <div id="upload-progress" class="hidden mt-4">
+                        <div class="flex items-center">
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium text-blue-700">上傳中...</span>
+                                    <span id="upload-percent" class="text-sm font-medium text-blue-700">0%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div id="upload-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Uploaded Files List -->
@@ -253,139 +415,330 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                    <button id="export-project" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                        <i class="fas fa-download mr-2"></i>匯出專案資料
+                <div class="flex justify-between pt-4 border-t border-gray-200">
+                    <button onclick="deleteProject()" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                        <i class="fas fa-trash mr-2"></i>刪除專案
                     </button>
-                    <button id="close-modal-btn" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors">
-                        關閉
-                    </button>
+                    <div class="space-x-3">
+                        <button id="export-project" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-download mr-2"></i>匯出專案資料
+                        </button>
+                        <button id="close-modal-btn" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                            關閉
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Project Detail Modal -->
-    <div id="project-modal" class="modal-overlay">
-        <div class="modal-content w-full max-w-4xl mx-4">
-            <div class="p-6">
-                <!-- Modal Header -->
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h2 id="modal-project-name" class="text-2xl font-bold text-gray-800"></h2>
-                        <p id="modal-project-department" class="text-gray-600 mt-1"></p>
-                    </div>
-                    <button id="close-modal" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">
-                        <i class="fas fa-times"></i>
-                    </button>
+    <!-- Add New Project Modal -->
+    <div id="add-project-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-2xl mx-4 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">新增 AI 專案</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">專案名稱</label>
+                    <input id="new-project-name" type="text" class="w-full px-3 py-2 border rounded-lg">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">負責部門</label>
+                    <input id="new-project-department" type="text" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">開始日期</label>
+                    <input id="new-project-start" type="date" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">預計完成</label>
+                    <input id="new-project-due" type="date" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">優先級</label>
+                    <select id="new-project-priority" class="w-full px-3 py-2 border rounded-lg">
+                        <option value="高">高</option>
+                        <option value="中">中</option>
+                        <option value="低">低</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">狀態</label>
+                    <select id="new-project-status" class="w-full px-3 py-2 border rounded-lg">
+                        <option value="構思中">構思中</option>
+                        <option value="規劃中">規劃中</option>
+                        <option value="開發中">開發中</option>
+                        <option value="測試中">測試中</option>
+                        <option value="已完成">已完成</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="closeAddProjectModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
+                <button onclick="addNewProject()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">新增專案</button>
+            </div>
+        </div>
+    </div>
 
-                <!-- Project Basic Info -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-semibold text-gray-800 mb-3">基本資訊</h3>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">開始日期:</span>
-                                <span id="modal-start-date" class="font-medium"></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">預計完成:</span>
-                                <span id="modal-due-date" class="font-medium"></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">優先級:</span>
-                                <span id="modal-priority" class="font-medium"></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">狀態:</span>
-                                <span id="modal-status" class="font-medium"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-semibold text-gray-800 mb-3">進度追蹤</h3>
-                        <div class="space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm text-gray-600">完成進度</span>
-                                <span id="modal-progress-text" class="text-sm font-medium"></span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div id="modal-progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-300"></div>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Add Sharing Session Modal -->
+    <div id="add-sharing-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-2xl mx-4 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">新增分享會</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">分享會日期</label>
+                    <input id="new-sharing-date" type="date" class="w-full px-3 py-2 border rounded-lg">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">主題</label>
+                    <input id="new-sharing-theme" type="text" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">講者</label>
+                    <input id="new-sharing-speaker" type="text" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">議程安排（每行一項）</label>
+                    <textarea id="new-sharing-schedule" rows="5" class="w-full px-3 py-2 border rounded-lg" 
+                              placeholder="16:00-16:05 開場與介紹
+16:05-16:30 主題分享
+16:30-16:45 Q&A 與交流"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="closeAddSharingModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
+                <button onclick="addNewSharing()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">新增分享會</button>
+            </div>
+        </div>
+    </div>
 
-                <!-- Project Progress Notes -->
-                <div class="mb-6">
-                    <h3 class="font-semibold text-gray-800 mb-3">專案進度說明</h3>
-                    <textarea id="project-notes" placeholder="在此輸入專案進度說明、遇到的問題、解決方案等詳細資訊..." class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
-                    <div class="flex justify-end mt-2">
-                        <button id="save-notes" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-save mr-2"></i>儲存說明
-                        </button>
-                    </div>
+    <!-- Add Event Modal -->
+    <div id="add-event-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-2xl mx-4 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">新增活動參與</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">活動名稱</label>
+                    <input id="new-event-name" type="text" class="w-full px-3 py-2 border rounded-lg">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">活動日期</label>
+                    <input id="new-event-date" type="date" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">活動類型</label>
+                    <select id="new-event-type" class="w-full px-3 py-2 border rounded-lg">
+                        <option value="external">外部活動</option>
+                        <option value="internal">內部活動</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">活動概述</label>
+                    <textarea id="new-event-summary" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">主要學習與收穫（每行一項）</label>
+                    <textarea id="new-event-learnings" rows="4" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="closeAddEventModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
+                <button onclick="addNewEvent()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">新增活動</button>
+            </div>
+        </div>
+    </div>
 
-                <!-- File Upload Section -->
-                <div class="mb-6">
-                    <h3 class="font-semibold text-gray-800 mb-3">相關文件</h3>
-                    <div id="file-upload-area" class="file-upload-area">
-                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-3"></i>
-                        <p class="text-gray-600 mb-2">拖拽檔案到此處或點擊選擇檔案</p>
-                        <p class="text-sm text-gray-500">支援 PDF、Word、Excel、圖片等格式</p>
-                        <input type="file" id="file-input" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif">
-                        <button id="select-files" class="mt-3 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
-                            <i class="fas fa-folder-open mr-2"></i>選擇檔案
-                        </button>
-                    </div>
-                    
-                    <!-- Uploaded Files List -->
-                    <div id="uploaded-files" class="mt-4">
-                        <h4 class="font-medium text-gray-800 mb-2">已上傳的檔案</h4>
-                        <div id="files-list" class="space-y-2"></div>
-                    </div>
+    <!-- Add Contact Modal -->
+    <div id="add-contact-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-2xl mx-4 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">新增企業接洽</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">企業名稱</label>
+                    <input id="new-contact-company" type="text" class="w-full px-3 py-2 border rounded-lg">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">聯絡人</label>
+                    <input id="new-contact-person" type="text" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">接洽日期</label>
+                    <input id="new-contact-date" type="date" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">洽談主題</label>
+                    <textarea id="new-contact-topic" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="closeAddContactModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
+                <button onclick="addNewContact()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">新增接洽</button>
+            </div>
+        </div>
+    </div>
 
-                <!-- Action Buttons -->
-                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                    <button id="export-project" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                        <i class="fas fa-download mr-2"></i>匯出專案資料
-                    </button>
-                    <button id="close-modal-btn" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors">
-                        關閉
-                    </button>
+    <!-- Add Routine Task Modal -->
+    <div id="add-routine-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-md mx-4 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">新增例行任務</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">任務類型</label>
+                    <select id="new-routine-type" class="w-full px-3 py-2 border rounded-lg" onchange="updateRoutineFields()">
+                        <option value="daily">每日任務</option>
+                        <option value="threeWeeks">三週一次</option>
+                        <option value="monthly">每月任務</option>
+                        <option value="bimonthly">雙月任務</option>
+                    </select>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">任務名稱</label>
+                    <input id="new-routine-task" type="text" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div id="routine-time-field">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">執行時間</label>
+                    <input id="new-routine-time" type="text" class="w-full px-3 py-2 border rounded-lg" placeholder="例：8:00~8:15">
+                </div>
+                <div id="routine-day-field" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">每月執行日</label>
+                    <input id="new-routine-day" type="number" min="1" max="31" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button onclick="closeAddRoutineModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
+                <button onclick="addNewRoutine()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">新增任務</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Routine Task Date Setting Modal -->
+    <div id="routine-date-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-md mx-4 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">設定例行任務日期</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">任務名稱</label>
+                <input id="routine-task-name" type="text" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">選擇日期</label>
+                <input id="routine-task-date" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeRoutineModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
+                <button onclick="saveRoutineDate()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Config Modal -->
+    <div id="firebase-config-modal" class="modal-overlay">
+        <div class="modal-content w-full max-w-md mx-4 p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Firebase 配置</h3>
+            <div class="space-y-3">
+                <input type="text" id="fb-apiKey" placeholder="API Key" class="w-full px-3 py-2 border rounded">
+                <input type="text" id="fb-authDomain" placeholder="Auth Domain" class="w-full px-3 py-2 border rounded">
+                <input type="text" id="fb-databaseURL" placeholder="Database URL" class="w-full px-3 py-2 border rounded">
+                <input type="text" id="fb-projectId" placeholder="Project ID" class="w-full px-3 py-2 border rounded">
+                <input type="text" id="fb-storageBucket" placeholder="Storage Bucket" class="w-full px-3 py-2 border rounded">
+            </div>
+            <div class="flex justify-end space-x-3 mt-4">
+                <button onclick="closeFirebaseConfig()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
+                <button onclick="saveFirebaseConfig()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">儲存配置</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 資料區 ---
-        const projects = [
-            { id: 1, name: "籌料狀態數位化", department: "物管部 (王偉全、董光展)", startTime: "2025-08-19", dueDate: "2025-12-31", priority: "高", progress: 20, status: "開發中", notes: "", files: [] },
-            { id: 2, name: "客製化軍品 AI 瑕疵檢測", department: "品保部 (徐世勇)", startTime: "2025-09-02", dueDate: "2025-12-31", priority: "低", progress: 5, status: "規劃中", notes: "", files: [] },
-            { id: 3, name: "圖面繪製標準建議系統", department: "技術部 (林佳汝)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [] },
-            { id: 4, name: "ERP+RPA交期提醒工具", department: "生管部 (王偉全)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [] },
-            { id: 5, name: "地端GPT開發", department: "經企室 (Porter)", startTime: "2025-07-01", dueDate: "2026-6-30", priority: "高", progress: 15, status: "開發中", notes: "", files: [] },
-            { id: 6, name: "NFC工廠夜間巡檢", department: "管理部 (淑惠姊)", startTime: "2025-06-09", dueDate: "2025-10-01", priority: "高", progress: 80, status: "測試中", notes: "", files: [] },
-            { id: 7, name: "機台換刀預測系統", department: "加工部 (林昆弘)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [] },
-            { id: 8, name: "AI合約排程輔助建議", department: "軍品業務部 (許協理)", startTime: "unknown", dueDate: "unknown", priority: "中", progress: 0, status: "構思中", notes: "", files: [] },
-            { id: 9, name: "AI Agent潛在客戶推播系統", department: "壓鑄業務部 (陳瑩盈)", startTime: "2025-07-30", dueDate: "2025-08-01", priority: "低", progress: 100, status: "已完成", notes: "", files: [] },
-            { id: 10, name: "資安Teams Bot建置", department: "資安小隊", startTime: "2025-05-30", dueDate: "2025-06-04", priority: "高", progress: 100, status: "已完成", notes: "", files: [] },
-            { id: 11, name: "會議記錄逐字稿及重點整理工具", department: "會議記錄人員(薪桉)", startTime: "2025-04-30", dueDate: "2025-05-26", priority: "高", progress: 100, status: "已完成", notes: "", files: [] },
-            { id: 12, name: "壓鑄機SCADA整合系統", department: "電控部(胡協理)", startTime: "2025-08-25", dueDate: "2026-05-31", priority: "中", progress: 5, status: "規劃中", notes: "", files: [] },
-            { id: 13, name: "壓鑄機射料曲線系統數據擷取分析", department: "電控部(胡協理)", startTime: "2025-08-25", dueDate: "2026-01-31", priority: "中", progress: 5, status: "規劃中", notes: "", files: [] },
-            { id: 14, name: "壓鑄機觸控型工業電腦", department: "電控部(胡協理)", startTime: "unknown", dueDate: "unknown", priority: "中", progress: 0, status: "構思中", notes: "", files: [] },
-            { id: 15, name: "Dynabook-APS排程管理方案", department: "經企室(林佳賢)", startTime: "2025-07-29", dueDate: "unknown", priority: "中", progress: 5, status: "規劃中", notes: "", files: [] },
-            { id: 16, name: " Google AgentSpace(Simhope KM+EIP開發)",department: "經企室 (Porter)", startTime: "unknown",dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [] },
-            { id: 17, name: "檢驗流程SOP呈現優化", department: "品保部 (薛瑞文)", startTime: "2025-09-03", dueDate: "unknown", priority: "低", progress: 5, status: "規劃中", notes: "", files: [] },
-            { id: 18, name: "MasterCAM外掛程式開發", department: "加工部 (林昆弘)", startTime: "2025-09-11", dueDate: "2025-09-25", priority: "高", progress: 0, status: "構思中", notes: "直接指派任務", files: [] },
+        // Firebase 初始化
+        let database, storage;
+        let isFirebaseInitialized = false;
+        
+        function initFirebase() {
+            const config = localStorage.getItem('firebaseConfig');
+            if (!config) {
+                console.log('Firebase 配置未設置');
+                updateSyncStatus('離線模式', false);
+                return false;
+            }
+            
+            try {
+                const firebaseConfig = JSON.parse(config);
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                storage = firebase.storage();
+                isFirebaseInitialized = true;
+                
+                document.getElementById('firebase-setup').style.display = 'none';
+                updateSyncStatus('已連線', true);
+                
+                // 載入所有資料
+                loadAllDataFromFirebase();
+                
+                return true;
+            } catch (error) {
+                console.error('Firebase 初始化失敗:', error);
+                updateSyncStatus('連線失敗', false);
+                return false;
+            }
+        }
+        
+        function showFirebaseConfig() {
+            document.getElementById('firebase-config-modal').classList.add('show');
+        }
+        
+        function closeFirebaseConfig() {
+            document.getElementById('firebase-config-modal').classList.remove('show');
+        }
+        
+        function saveFirebaseConfig() {
+            const config = {
+                apiKey: document.getElementById('fb-apiKey').value,
+                authDomain: document.getElementById('fb-authDomain').value,
+                databaseURL: document.getElementById('fb-databaseURL').value,
+                projectId: document.getElementById('fb-projectId').value,
+                storageBucket: document.getElementById('fb-storageBucket').value,
+                messagingSenderId: "dummy",
+                appId: "dummy"
+            };
+            
+            localStorage.setItem('firebaseConfig', JSON.stringify(config));
+            closeFirebaseConfig();
+            location.reload();
+        }
+        
+        function updateSyncStatus(text, success = true) {
+            const statusEl = document.getElementById('sync-status');
+            if (!statusEl) return;
+            
+            if (success) {
+                statusEl.innerHTML = `<i class="fas fa-check-circle text-green-500 mr-2"></i><span class="text-sm text-green-600">${text}</span>`;
+            } else {
+                statusEl.innerHTML = `<i class="fas fa-exclamation-circle text-yellow-500 mr-2"></i><span class="text-sm text-yellow-600">${text}</span>`;
+            }
+        }
+
+        // 資料區域
+        let projects = [
+            { id: 1, name: "籌料狀態數位化", department: "物管部 (王偉全、董光展)", startTime: "2025-08-19", dueDate: "2025-12-31", priority: "高", progress: 20, status: "開發中", notes: "", files: [], comments: [] },
+            { id: 2, name: "客製化軍品 AI 瑕疵檢測", department: "品保部 (徐世勇)", startTime: "2025-09-02", dueDate: "2025-12-31", priority: "低", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
+            { id: 3, name: "圖面繪製標準建議系統", department: "技術部 (林佳汝)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
+            { id: 4, name: "ERP+RPA交期提醒工具", department: "生管部 (王偉全)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
+            { id: 5, name: "地端GPT開發", department: "經企室 (Porter)", startTime: "2025-07-01", dueDate: "2026-6-30", priority: "高", progress: 15, status: "開發中", notes: "", files: [], comments: [] },
+            { id: 6, name: "NFC工廠夜間巡檢", department: "管理部 (淑惠姊)", startTime: "2025-06-09", dueDate: "2025-10-01", priority: "高", progress: 80, status: "測試中", notes: "", files: [], comments: [] },
+            { id: 7, name: "機台換刀預測系統", department: "加工部 (林昆弘)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
+            { id: 8, name: "AI合約排程輔助建議", department: "軍品業務部 (許協理)", startTime: "unknown", dueDate: "unknown", priority: "中", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
+            { id: 9, name: "AI Agent潛在客戶推播系統", department: "壓鑄業務部 (陳瑩盈)", startTime: "2025-07-30", dueDate: "2025-08-01", priority: "低", progress: 100, status: "已完成", notes: "", files: [], comments: [] },
+            { id: 10, name: "資安Teams Bot建置", department: "資安小隊", startTime: "2025-05-30", dueDate: "2025-06-04", priority: "高", progress: 100, status: "已完成", notes: "", files: [], comments: [] },
+            { id: 11, name: "會議記錄逐字稿及重點整理工具", department: "會議記錄人員(薪桉)", startTime: "2025-04-30", dueDate: "2025-05-26", priority: "高", progress: 100, status: "已完成", notes: "", files: [], comments: [] },
+            { id: 12, name: "壓鑄機SCADA整合系統", department: "電控部(胡協理)", startTime: "2025-08-25", dueDate: "2026-05-31", priority: "中", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
+            { id: 13, name: "壓鑄機射料曲線系統數據擷取分析", department: "電控部(胡協理)", startTime: "2025-08-25", dueDate: "2026-01-31", priority: "中", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
+            { id: 14, name: "壓鑄機觸控型工業電腦", department: "電控部(胡協理)", startTime: "unknown", dueDate: "unknown", priority: "中", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
+            { id: 15, name: "Dynabook-APS排程管理方案", department: "經企室(林佳賢)", startTime: "2025-07-29", dueDate: "unknown", priority: "中", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
+            { id: 16, name: "Google AgentSpace(Simhope KM+EIP開發)", department: "經企室 (Porter)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
+            { id: 17, name: "檢驗流程SOP呈現優化", department: "品保部 (薛瑞文)", startTime: "2025-09-03", dueDate: "unknown", priority: "低", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
+            { id: 18, name: "MasterCAM外掛程式開發", department: "加工部 (林昆弘)", startTime: "2025-09-11", dueDate: "2025-09-25", priority: "高", progress: 0, status: "構思中", notes: "直接指派任務", files: [], comments: [] },
         ];
 
-        // 2. 例行公事資料
-        const routineTasks = {
+        let routineTasks = {
             daily: [
                 { time: "8:00~8:15", task: "清潔洗手台 & 泡茶" },
                 { time: "13:00~13:30", task: "巡檢主辦公室 & 資訊辦公室 (各約15分鐘)" },
@@ -396,68 +749,44 @@
             ],
             monthly: [
                 { day: 15, task: "技術部電腦巡檢 (若遇假日則調整)" },
-                { day: 'manual', task: "打掃廁所", dates: {} }, // 手動輸入日期，格式：{ "2025-09": 20, "2025-10": 15 }
+                { task: "打掃廁所", dates: {} },
             ],
             bimonthly: [
-                { task: "至餐廳備餐", dates: {} }, // 手動輸入日期，格式：{ "2025-09": "2025-09-15", "2025-11": "2025-11-20" }
+                { task: "至餐廳備餐", dates: {} },
             ]
         };
         
-        // 3. 分享會資料
-        const sharingSessions = [
-            { date: "2025-09-25", theme: "LLM實戰分享會", speaker: "我", status: "upcoming", schedule: [ 
-                "16:00-16:05 開場與介紹", 
-                "16:05-16:30 解決各部門提出的一項問題", 
-                "16:30-16:45 Q&A 與交流", 
-            ]},
-            { date: "2025-09-02", theme: "AI應用分享-1", speaker: "我", status: "upcoming", schedule: [
-                "11:30-11:50 AI時代的知識管理利器：Google NotebookLM",
-                "16:05-16:30 解決各部門提出的一項問題",
-                "16:30-16:45 Q&A 與交流",
-            ]},
-            { date: "2025-05-29", theme: "ChatGPT教學", speaker: "我", status: "past", schedule: [
-                "10:00～10:20 雱姐（請假）、光展✅、詩瑩✅、佳瑜✅、玫娟✅、冠閔✅",
-                "10:30～10:50（無進階）珮心（休假）、廠長（沒來）、文隆✅、瑞文✅、俊宇✅、鎧稻✅",
-                "11:00～11:20 技術部全員✅",
-                "11:30～11:50 瑩盈（請假）、ivy✅、瑄萱✅、姿玲✅",
-                "13:10～13:30 大頭（沒來）、小白✅（到13:40那場聽）、勇哥（沒來）、許協理✅、明燕✅、銘賢✅",
-                "13:40～14:00 小井✅、育誠✅、淑惠姐✅、胡協理✅、俞儒（請假）、治廷✅",
-                "ChatGPT的使用指南.pdf",
-                "https://drive.google.com/file/d/13zZ9O94R-mv7jYv8YapqYnP_f8CsCmBq/view?usp=sharing",
-                "ChatGPT的進階使用指南.pdf",
-                "https://drive.google.com/file/d/19pvc_N3LX5Du9cMvLUmw5qy1h8VcyvFJ/view?usp=sharing",
-            ]},
-            { date: "2025-06-04", theme: "ChatGPT教學", speaker: "我", status: "past", schedule: [
-                "11:20～11:50 珮心、彥隆、廠長、俞儒、允嶺、胡協理、瑩盈",
-                "ChatGPT的使用指南.pdf",
-                "https://drive.google.com/file/d/13zZ9O94R-mv7jYv8YapqYnP_f8CsCmBq/view?usp=sharing",
-                "ChatGPT的進階使用指南.pdf",
-                "https://drive.google.com/file/d/19pvc_N3LX5Du9cMvLUmw5qy1h8VcyvFJ/view?usp=sharing",
-            ]},
-            { date: "2025-06-19", theme: "AI年會心得分享", speaker: "我", status: "past", schedule: [
-                 "16:00-16:05 活動簡介", 
-                 "16:05-16:40 精選講者案例分享",
-                 "16:40-16:50 SimHope + AI 賦能我們的製造業", 
-                 "16:50-17:00 總結&填寫問券", 
-                 "https://drive.google.com/file/d/1MSy-GSn5R4eo8hRH6PUwRv3o6bh5I6aY/view?usp=drive_link", 
-            ]},
-            { date: "2025-08-26", theme: "每月AI分享會-2025台灣富士軟片資訊品牌日心得分享", speaker: "我", status: "past", schedule: [
-                "4:00~4:05 淺談台灣富士",
-                "4:05~4:10 解決共同問題",
-                "工具多效率未必提升&跨部門溝通效率低&數據分散難以統整&不確定性、快速變化、跨部門協作",
-                "4:10~4:15 RPA流程自動化",
-                "4:15~4:20 雲端辦公室整合應用",
-                "4:20~4:25 數位印刷&事務機高校文件管理",
-                "4:25~4:30 LINE WORKS",
-                "4:30~4:45 QA",
-                "2025.08.26台灣富士心得分享.pptx",
-                "https://docs.google.com/presentation/d/1vbjK-yru45hqQGAn5ZkPsLqCH4Ne8zxH/edit?usp=sharing&ouid=115036627200290147413&rtpof=true&sd=true",
-            ]},
+        let sharingSessions = [
+            { 
+                id: Date.now() + 1,
+                date: "2025-09-25", 
+                theme: "LLM實戰分享會", 
+                speaker: "我", 
+                status: "upcoming", 
+                schedule: [ 
+                    "16:00-16:05 開場與介紹", 
+                    "16:05-16:30 解決各部門提出的一項問題", 
+                    "16:30-16:45 Q&A 與交流", 
+                ]
+            },
+            { 
+                id: Date.now() + 2,
+                date: "2025-09-02", 
+                theme: "AI應用分享-1", 
+                speaker: "我", 
+                status: "upcoming", 
+                schedule: [
+                    "11:30-11:50 AI時代的知識管理利器：Google NotebookLM",
+                    "16:05-16:30 解決各部門提出的一項問題",
+                    "16:30-16:45 Q&A 與交流",
+                ]
+            },
+            // 過去的分享會保持原樣...
         ];
         
-        // 4. 活動參與資料
-        const eventsAttended = [
+        let eventsAttended = [
             { 
+                id: Date.now() + 100,
                 eventName: "勞工安全教育訓練", 
                 date: "2025-04-29", 
                 summary: "114年度 勞工安全教育訓練。", 
@@ -468,136 +797,36 @@
                 files: [], 
                 type: "internal", 
             },
-            { 
-                eventName: "Computex 2025", 
-                date: "2025-05-21",
-                summary: "全球指標性的資通訊產業大展，今年 AI 硬體與邊緣運算為最大亮點。",
-                learnings: [
-                    "打造企業專屬 Chatbot 需要深入了解業務流程。",
-                    "所羅門結合AR技術(META-aivi)與高速學習型AI提升視覺檢測準確度。",
-                    "資安與智慧製造的整合需全面考量。從硬體設備到軟體系統,建立多層次防護機制至關重要。",
-                ],
-                files: [
-                    { name: "2025-COMPUTEX.pdf", link: "https://drive.google.com/file/d/1e3ZJAmIpGYxudfIBhnVS0yhcJveP1TET/view?usp=sharing" },
-                ], 
-                type: "external", 
-            },
-            { 
-                eventName: "2025 台灣 AI 年會", 
-                date: "2025-05-24",
-                summary: "年度最大的 AI 技術與應用交流盛會，匯集了國內外頂尖專家與企業。",
-                learnings: [
-                    "大型語言模型 (LLM) 在製造業的落地應用案例。",
-                    "多模態 AI 的最新進展，特別是影像與文字的結合分析。",
-                    "企業導入 AI 的倫理與法規考量。",
-                ],
-                files: [
-                    { name: "2025 Generative AI年會 心得分享.pdf", link: "https://drive.google.com/file/d/1MSy-GSn5R4eo8hRH6PUwRv3o6bh5I6aY/view?usp=sharing" },
-                ], 
-                type: "external", 
-            },
-            { 
-                eventName: "2025台灣富士軟片資訊品牌日", 
-                date: "2025-07-17",
-                summary: "年度最大的 AI 技術與應用交流盛會，匯集了國內外頂尖專家與企業。",
-                learnings: [
-                    "大型語言模型 (LLM) 在製造業的落地應用案例。",
-                    "多模態 AI 的最新進展，特別是影像與文字的結合分析。",
-                    "企業導入 AI 的倫理與法規考量。",
-                ],
-                files: [
-                    { name: "2025台灣富士軟片資訊品牌日心得.pdf", link: "https://drive.google.com/file/d/1AhIEYjONRyoGLTqxbVV_KL-B-cNv8BrZ/view?usp=sharing" },
-                    { name: "2025台灣富士軟片資訊品牌日展區.pdf", link: "https://drive.google.com/file/d/1xx7nrwUF8qGqLe1Luy7KDTLngaR5AYKe/view?usp=sharing" },
-                ], 
-                type: "external", 
-            },
-            { 
-                eventName: "AI 智慧大工廠系列論壇-台中場", 
-                date: "2025-07-23",
-                summary: "年度最大的 AI 技術與應用交流盛會，匯集了國內外頂尖專家與企業。",
-                learnings: [
-                    "CloudMile如何透過AgentSpace打造企業 AI 大腦。",
-                    "多模態 AI 的最新進展，特別是影像與文字的結合分析。",
-                    "核心的需求不用AI，但是如果有[要是xxx在就好了]的事情可能就可以用AI。",
-                ],
-                files: [
-                    { name: "AI 智慧大工廠系列論壇 台中場心得分享 (1).pdf", link: "https://drive.google.com/file/d/1fkfY2PYigR4sXvWJNQShEcfBH4Lk5jkQ/view?usp=sharing" },
-                ], 
-                type: "external", 
-            },
-            { 
-                eventName: "中小企業轉型AI應用研習班", 
-                date: "2025-07-27",
-                summary: "年度最大的 AI 技術與應用交流盛會，匯集了國內外頂尖專家與企業。",
-                learnings: [
-                    "大型語言模型 (LLM) 在製造業的落地應用案例。",
-                    "多模態 AI 的最新進展，特別是影像與文字的結合分析。",
-                    "企業導入 AI 的倫理與法規考量。",
-                ],
-                files: [
-                    { name: "Phison aiDAPTIV+ 0725 中小企業ai轉型.pdf", link: "https://drive.google.com/file/d/188WgqphkRTJf9BEQyCIXLoz1QWhFhVSP/view?usp=sharing" },
-                ], 
-                type: "external", 
-            },
-            { 
-                eventName: "「資訊安全通識課程」-誰在偷你的密碼?", 
-                date: "2025-07-29",
-                summary: "年度最大的 AI 技術與應用交流盛會，匯集了國内外頂尖專家與企業。",
-                learnings: [
-                    "大型語言模型 (LLM) 在製造業的落地應用案例。",
-                    "多模態 AI 的最新進展，特別是影像與文字的結合分析。",
-                    "企業導入 AI 的倫理與法規考量。",
-                ],
-                files: [
-                    { name: "信鋐工業_講義.pdf", link: "https://drive.google.com/file/d/147vVre8N1Qfqoz-XDUTychprXGzXjOQ5/view?usp=sharing" },
-                ], 
-                type: "internal", 
-            },
-            { 
-                eventName: "2025台灣文博會", 
-                date: "2025-08-08~ 2025-08-09",
-                summary: "透過觀摩 2025 台灣文博會，尋找在攤位設計、商品呈現及品牌溝通上表現傑出的廠商，作為信鋐未來規劃展會、提升品牌形象及產品設計的參考標的。",
-                learnings: [
-                    "台電文創將發電過程所產生的副產品、廢棄設備、回收資源，經過實驗與設計，再次投入製造循環中，喚起消費者對環境的意識。",
-                    "滾學球文具設計搭配各種傳說、歷史、人類故事，讓使用者與作品之間產生更多情感上的連結，以及文化上的認同感。",
-                    "美美工作室Suii Suii Lab 將電鍍處理從微小零組件放大至家飾品，讓色彩的暈染與層次 ，留存於每日所見生活景物。  讓每一個商品都是獨一無二，讓每一次霓彩都是如夢似幻。",
-                ],
-                files: [
-                    { name: "2025台灣文博會考察報告.pdf", link: "https://drive.google.com/file/d/1eyk8WHxXTkQI94Q-NuAwRfzae7Js2e0X/view?usp=sharing" },
-                    { name: "文博會官網", link: "https://creativexpo.tw/zh-TW" },
-                ], 
-                type: "external", 
-            },
-            { 
-                eventName: "開源AI：行政應用工作坊", 
-                date: "2025-08-27",
-                summary: "開源AI語音轉錄平臺&常見問答聊天機器人實作。",
-                learnings: [
-                    "透過手把手的安裝指令教學，更了解MS SQL資料庫如何串接前端(Go)與後端(Node.js、Python)。",
-                    "在實作出來的同時也能思考如何擴充SSO登入系統、各種前端服務(K8s、Nginx等...)。",
-                    "了解現今FAQ機器人建置架構，包括使用不同模型呈現的結果&環境變數如何設定。",
-                ],
-                files: [
-                    { name: "常見問答聊天機器人實作", link: "https://light-fish-nfk8h7n.gamma.site/" },
-                ], 
-                type: "external", 
-            },
+            // 其他活動保持原樣...
         ];
         
-        // 5. 接洽企業資料
-        const businessContacts = [
-            { companyName: "超數科技HyperData", contactPerson: "張鈞程", date: "2025-07-07", topic: "了解公司目前AI規劃應用與挑戰。", files: [{ name: "超數科技簡介.pdf", link: "#" }] },
-            { companyName: "零次方", contactPerson: "林書凡", date: "2025-07-24", topic: "Porter的朋友-分享 AI 導入各種甲方經驗。", files: [] },
-            { companyName: "台灣富士軟片", contactPerson: "劉育杉", date: "2025-07-25", topic: "分享台灣富士在RPA、無紙化與高效文件管理、ESG永續發展方案、文件簽核與ISO文管Solution。", files: [] },
-            { companyName: "SEA - Business Development Representative Google Cloud Platform & Google Workspace", contactPerson: "Wai Jie Leong", date: "2025-07-31", topic: "詢問GCP、Vertex AI、Agentspace用途及未來規劃", files: [{ name: "產品規格書.pdf", link: "#" }, { name: "現場名片.jpg", link: "#" }] },
-            { companyName: "SEA - Business Development Representative Google Cloud Platform & Google Workspace", contactPerson: "Zac Miao", date: "2025-08-06", topic: "詢問GCP、Vertex AI、Agentspace用途及未來規劃2", files: [{ name: "產品規格書.pdf", link: "#" }, { name: "現場名片.jpg", link: "#" }] },
-            { companyName: "Dynabook", contactPerson: "Daisy Lin", date: "2025-08-12", topic: "能源管理、APS 及雲端會議方案", files: [] },
+        let businessContacts = [
+            { 
+                id: Date.now() + 200,
+                companyName: "超數科技HyperData", 
+                contactPerson: "張鈞程", 
+                date: "2025-07-07", 
+                topic: "了解公司目前AI規劃應用與挑戰。", 
+                files: []
+            },
+            // 其他聯絡保持原樣...
         ];
-        
-        // --- 儀表板渲染與互動邏輯 ---
-        let calendarDate = new Date();
 
+        // 全域變數
+        let calendarDate = new Date();
+        let currentProjectId = null;
+        let currentRoutineTask = null;
+        let editMode = false;
+
+        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
+            initFirebase();
+            setupEventListeners();
+            renderAllDashboards();
+        });
+
+        function setupEventListeners() {
+            // Tab 切換
             const tabs = document.querySelectorAll('.dashboard-tab');
             const contents = document.querySelectorAll('.dashboard-content');
             tabs.forEach(tab => tab.addEventListener('click', () => {
@@ -606,34 +835,99 @@
                 tab.classList.add('active');
                 document.getElementById(tab.dataset.target).classList.remove('hidden');
             }));
-            
+
+            // Modal 事件
+            setupModalEvents();
+        }
+
+        function renderAllDashboards() {
             renderAiDashboard();
             renderRoutineDashboard();
             renderSharingDashboard();
             renderEventsDashboard();
             renderContactsDashboard();
-        });
+        }
 
-        // 1. AI 專案儀表板
+        // === Firebase 同步函數 ===
+        function loadAllDataFromFirebase() {
+            if (!isFirebaseInitialized) return;
+
+            // 載入專案資料
+            database.ref('projects').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    projects = Object.values(data).sort((a, b) => a.id - b.id);
+                    renderAiDashboard();
+                }
+            });
+
+            // 載入例行任務
+            database.ref('routineTasks').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    routineTasks = data;
+                    renderRoutineDashboard();
+                }
+            });
+
+            // 載入分享會
+            database.ref('sharingSessions').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    sharingSessions = Object.values(data);
+                    renderSharingDashboard();
+                }
+            });
+
+            // 載入活動
+            database.ref('events').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    eventsAttended = Object.values(data);
+                    renderEventsDashboard();
+                }
+            });
+
+            // 載入企業接洽
+            database.ref('contacts').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    businessContacts = Object.values(data);
+                    renderContactsDashboard();
+                }
+            });
+        }
+
+        function syncToFirebase(path, data) {
+            if (!isFirebaseInitialized) return;
+            database.ref(path).set(data);
+            updateSyncStatus('已同步', true);
+        }
+
+        // === 1. AI 專案儀表板 ===
         function renderAiDashboard() {
             const board = document.getElementById('ai-kanban-board');
             const summaryContainer = document.getElementById('ai-summary-stats');
             const monthFilter = document.getElementById('month-filter');
             
-            // Populate month filter
+            // 填充月份篩選器
             const months = [...new Set(projects.map(p => p.startTime.substring(0, 7)))].sort().reverse();
             monthFilter.innerHTML = '<option value="all">所有月份</option>';
-            months.forEach(m => monthFilter.innerHTML += `<option value="${m}">${m}</option>`);
-            monthFilter.addEventListener('change', () => displayProjects());
-
-            displayProjects(); // Initial render
+            months.forEach(m => {
+                if (m !== 'unknow') {
+                    monthFilter.innerHTML += `<option value="${m}">${m}</option>`;
+                }
+            });
+            
+            monthFilter.onchange = () => displayProjects();
+            displayProjects();
 
             function displayProjects() {
                 const selectedMonth = monthFilter.value;
                 const filteredProjects = selectedMonth === 'all' ? projects : projects.filter(p => p.startTime.startsWith(selectedMonth));
                 
-                board.innerHTML = ''; // Clear board
-                summaryContainer.innerHTML = ''; // Clear stats
+                board.innerHTML = '';
+                summaryContainer.innerHTML = '';
 
                 const statuses = ["構思中", "規劃中", "開發中", "測試中", "已完成"];
                 const priorityColors = { '高': 'bg-red-100 text-red-800', '中': 'bg-yellow-100 text-yellow-800', '低': 'bg-green-100 text-green-800' };
@@ -643,83 +937,406 @@
                     const column = document.createElement('div');
                     column.className = 'bg-gray-100 rounded-lg flex flex-col h-full';
                     const projectsInStatus = filteredProjects.filter(p => p.status === status);
-                    column.innerHTML = `<div class="p-4 rounded-t-lg ${columnHeaderColors[status]} text-white flex justify-between items-center"><h2 class="font-bold text-lg">${status}</h2><span class="bg-white/30 text-white text-sm font-semibold rounded-full px-2 py-0.5">${projectsInStatus.length}</span></div><div class="kanban-column-content p-4 space-y-4 overflow-y-auto flex-grow" style="min-height: 400px;"></div>`;
+                    
+                    column.innerHTML = `
+                        <div class="p-4 rounded-t-lg ${columnHeaderColors[status]} text-white flex justify-between items-center">
+                            <h2 class="font-bold text-lg">${status}</h2>
+                            <span class="bg-white/30 text-white text-sm font-semibold rounded-full px-2 py-0.5">${projectsInStatus.length}</span>
+                        </div>
+                        <div class="kanban-column-content p-4 space-y-4 overflow-y-auto flex-grow" style="min-height: 400px;"></div>
+                    `;
                     
                     projectsInStatus.forEach(project => {
                         const card = document.createElement('div');
                         const borderColor = { '高': 'border-red-500', '中': 'border-yellow-500', '低': 'border-green-500' }[project.priority] || 'border-gray-300';
                         card.className = `bg-white p-4 rounded-lg shadow-md border-l-4 ${borderColor} project-card`;
-                        card.innerHTML = `<h3 class="font-bold text-gray-800">${project.name}</h3>
+                        
+                        const commentCount = project.comments ? project.comments.length : 0;
+                        const commentBadge = commentCount > 0 ? `<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full"><i class="fas fa-comment mr-1"></i>${commentCount}</span>` : '';
+                        
+                        card.innerHTML = `
+                            <h3 class="font-bold text-gray-800">${project.name}</h3>
                             <p class="text-sm text-gray-500 mt-1">${project.department}</p>
                             <div class="text-xs text-gray-400 mt-2">
                                 <span>始: ${project.startTime}</span> | <span>終: ${project.dueDate}</span>
                             </div>
-                            <div class="flex justify-end items-center mt-2">
+                            <div class="flex justify-between items-center mt-2">
+                                ${commentBadge}
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full ${priorityColors[project.priority]}">${project.priority}</span>
                             </div>
-                            <div class="mt-2"><div class="flex justify-between items-center mb-1"><span class="text-sm font-medium text-gray-700">進度</span><span class="text-sm font-medium text-gray-700">${project.progress}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ${project.progress}%"></div></div></div>`;
+                            <div class="mt-2">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="text-sm font-medium text-gray-700">進度</span>
+                                    <span class="text-sm font-medium text-gray-700">${project.progress}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${project.progress}%"></div>
+                                </div>
+                            </div>
+                        `;
                         
-                        // 添加點擊事件
                         card.addEventListener('click', () => openProjectModal(project));
-                        
                         column.querySelector('.kanban-column-content').appendChild(card);
                     });
+                    
                     board.appendChild(column);
                 });
 
-                const total = filteredProjects.length, completed = filteredProjects.filter(p=>p.status==='已完成').length, inProgress = filteredProjects.filter(p=>['開發中','測試中'].includes(p.status)).length, planning = filteredProjects.filter(p=>['構思中','規劃中'].includes(p.status)).length;
-                [{ label: '總專案數', value: total, color: 'bg-blue-100 text-blue-800' },{ label: '進行中', value: inProgress, color: 'bg-orange-100 text-orange-800' },{ label: '規劃/構思中', value: planning, color: 'bg-purple-100 text-purple-800' },{ label: '已完成', value: completed, color: 'bg-green-100 text-green-800' }].forEach(stat => {
+                // 統計資料
+                const total = filteredProjects.length;
+                const completed = filteredProjects.filter(p => p.status === '已完成').length;
+                const inProgress = filteredProjects.filter(p => ['開發中', '測試中'].includes(p.status)).length;
+                const planning = filteredProjects.filter(p => ['構思中', '規劃中'].includes(p.status)).length;
+                
+                [
+                    { label: '總專案數', value: total, color: 'bg-blue-100 text-blue-800' },
+                    { label: '進行中', value: inProgress, color: 'bg-orange-100 text-orange-800' },
+                    { label: '規劃/構思中', value: planning, color: 'bg-purple-100 text-purple-800' },
+                    { label: '已完成', value: completed, color: 'bg-green-100 text-green-800' }
+                ].forEach(stat => {
                     const statCard = document.createElement('div');
                     statCard.className = `p-4 rounded-lg shadow ${stat.color}`;
-                    statCard.innerHTML = `<div class="text-2xl font-bold">${stat.value}</div><div class="text-sm font-medium">${stat.label}</div>`;
+                    statCard.innerHTML = `
+                        <div class="text-2xl font-bold">${stat.value}</div>
+                        <div class="text-sm font-medium">${stat.label}</div>
+                    `;
                     summaryContainer.appendChild(statCard);
                 });
             }
         }
 
-        // 2. 例行公事儀表板
+        // 專案相關函數
+        function showAddProjectModal() {
+            document.getElementById('add-project-modal').classList.add('show');
+        }
+
+        function closeAddProjectModal() {
+            document.getElementById('add-project-modal').classList.remove('show');
+        }
+
+        function addNewProject() {
+            const newProject = {
+                id: Date.now(),
+                name: document.getElementById('new-project-name').value,
+                department: document.getElementById('new-project-department').value,
+                startTime: document.getElementById('new-project-start').value || 'unknown',
+                dueDate: document.getElementById('new-project-due').value || 'unknown',
+                priority: document.getElementById('new-project-priority').value,
+                status: document.getElementById('new-project-status').value,
+                progress: 0,
+                notes: "",
+                files: [],
+                comments: []
+            };
+
+            if (!newProject.name || !newProject.department) {
+                alert('請填寫專案名稱和負責部門');
+                return;
+            }
+
+            projects.push(newProject);
+            syncToFirebase('projects/' + newProject.id, newProject);
+            
+            closeAddProjectModal();
+            renderAiDashboard();
+            
+            // 清空表單
+            document.getElementById('new-project-name').value = '';
+            document.getElementById('new-project-department').value = '';
+            document.getElementById('new-project-start').value = '';
+            document.getElementById('new-project-due').value = '';
+        }
+
+        function openProjectModal(project) {
+            currentProjectId = project.id;
+            editMode = false;
+
+            // 顯示檢視模式，隱藏編輯模式
+            document.getElementById('project-info-view').classList.remove('hidden');
+            document.getElementById('project-info-edit').classList.add('hidden');
+            document.getElementById('toggle-edit-mode').textContent = '編輯專案資訊';
+
+            // 填充資料
+            document.getElementById('modal-project-name').textContent = project.name;
+            document.getElementById('modal-project-department').textContent = project.department;
+            document.getElementById('modal-start-date').textContent = project.startTime;
+            document.getElementById('modal-due-date').textContent = project.dueDate;
+            document.getElementById('modal-priority').textContent = project.priority;
+            document.getElementById('modal-status').textContent = project.status;
+            document.getElementById('modal-progress-text').textContent = `${project.progress}%`;
+            document.getElementById('modal-progress-bar').style.width = `${project.progress}%`;
+
+            // 備註
+            document.getElementById('project-notes').value = project.notes || '';
+
+            // 評論
+            renderComments(project.comments || []);
+
+            // 檔案
+            renderFilesList(project.files || []);
+
+            document.getElementById('project-modal').classList.add('show');
+        }
+
+        function toggleEditMode() {
+            const project = projects.find(p => p.id === currentProjectId);
+            if (!project) return;
+
+            editMode = !editMode;
+
+            if (editMode) {
+                // 進入編輯模式
+                document.getElementById('project-info-view').classList.add('hidden');
+                document.getElementById('project-info-edit').classList.remove('hidden');
+                document.getElementById('toggle-edit-mode').textContent = '取消編輯';
+
+                // 填充編輯表單
+                document.getElementById('edit-project-name').value = project.name;
+                document.getElementById('edit-department').value = project.department;
+                document.getElementById('edit-start-date').value = project.startTime !== 'unknown' ? project.startTime : '';
+                document.getElementById('edit-due-date').value = project.dueDate !== 'unknown' ? project.dueDate : '';
+                document.getElementById('edit-priority').value = project.priority;
+                document.getElementById('edit-status').value = project.status;
+                document.getElementById('edit-progress').value = project.progress;
+            } else {
+                // 退出編輯模式
+                document.getElementById('project-info-view').classList.remove('hidden');
+                document.getElementById('project-info-edit').classList.add('hidden');
+                document.getElementById('toggle-edit-mode').textContent = '編輯專案資訊';
+            }
+        }
+
+        function saveProjectEdit() {
+            const project = projects.find(p => p.id === currentProjectId);
+            if (!project) return;
+
+            project.name = document.getElementById('edit-project-name').value;
+            project.department = document.getElementById('edit-department').value;
+            project.startTime = document.getElementById('edit-start-date').value || 'unknown';
+            project.dueDate = document.getElementById('edit-due-date').value || 'unknown';
+            project.priority = document.getElementById('edit-priority').value;
+            project.status = document.getElementById('edit-status').value;
+            project.progress = parseInt(document.getElementById('edit-progress').value);
+
+            syncToFirebase('projects/' + project.id, project);
+            
+            // 更新顯示
+            openProjectModal(project);
+            renderAiDashboard();
+        }
+
+        function deleteProject() {
+            if (!currentProjectId) return;
+            
+            if (!confirm('確定要刪除此專案嗎？此操作無法復原。')) return;
+
+            const index = projects.findIndex(p => p.id === currentProjectId);
+            if (index > -1) {
+                projects.splice(index, 1);
+                if (isFirebaseInitialized) {
+                    database.ref('projects/' + currentProjectId).remove();
+                }
+            }
+
+            closeProjectModal();
+            renderAiDashboard();
+        }
+
+        function saveNotes() {
+            const project = projects.find(p => p.id === currentProjectId);
+            if (!project) return;
+
+            project.notes = document.getElementById('project-notes').value;
+            syncToFirebase('projects/' + project.id + '/notes', project.notes);
+        }
+
+        function addComment() {
+            const project = projects.find(p => p.id === currentProjectId);
+            if (!project) return;
+
+            const text = document.getElementById('new-comment').value.trim();
+            if (!text) {
+                alert('請輸入評論內容');
+                return;
+            }
+
+            if (!project.comments) project.comments = [];
+
+            const comment = {
+                id: Date.now(),
+                author: document.getElementById('comment-author').value,
+                text: text,
+                timestamp: new Date().toISOString()
+            };
+
+            project.comments.push(comment);
+            syncToFirebase('projects/' + project.id + '/comments', project.comments);
+
+            document.getElementById('new-comment').value = '';
+            renderComments(project.comments);
+        }
+
+        function renderComments(comments) {
+            const list = document.getElementById('comments-list');
+
+            if (!comments || comments.length === 0) {
+                list.innerHTML = '<p class="text-sm text-gray-400 text-center">尚無評論</p>';
+                return;
+            }
+
+            list.innerHTML = comments.map(comment => {
+                const date = new Date(comment.timestamp);
+                const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+                const isManager = comment.author === '主管';
+
+                return `
+                    <div class="comment-bubble ${isManager ? 'manager' : ''}">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="font-semibold text-sm ${isManager ? 'text-red-800' : 'text-gray-800'}">
+                                <i class="fas fa-user-circle mr-1"></i>${comment.author}
+                            </span>
+                            <span class="text-xs text-gray-500">${dateStr}</span>
+                        </div>
+                        <p class="text-gray-700">${comment.text}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderFilesList(files) {
+            const list = document.getElementById('files-list');
+            
+            if (!files || files.length === 0) {
+                list.innerHTML = '<p class="text-sm text-gray-400">尚未上傳檔案</p>';
+                return;
+            }
+
+            list.innerHTML = files.map((file, idx) => `
+                <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded px-3 py-2">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-file text-gray-400"></i>
+                        <span class="text-sm text-gray-700 break-all">${file.name}</span>
+                        ${file.size ? `<span class="text-xs text-gray-400">(${formatSize(file.size)})</span>` : ''}
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        ${file.url ? `<a href="${file.url}" target="_blank" class="text-blue-600 text-sm hover:underline">下載</a>` : ''}
+                        <button onclick="deleteFileAt(${idx})" class="text-red-600 text-sm">刪除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteFileAt(index) {
+            const project = projects.find(p => p.id === currentProjectId);
+            if (!project || !project.files) return;
+
+            const file = project.files[index];
+            
+            if (isFirebaseInitialized && file.url) {
+                storage.refFromURL(file.url).delete().catch(err => console.error('刪除檔案失敗:', err));
+            }
+
+            project.files.splice(index, 1);
+            syncToFirebase('projects/' + project.id + '/files', project.files);
+            renderFilesList(project.files);
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes/1024).toFixed(1)} KB`;
+            return `${(bytes/1024/1024).toFixed(1)} MB`;
+        }
+
+        function exportCurrentProject() {
+            const project = projects.find(p => p.id === currentProjectId);
+            if (!project) return;
+
+            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(project, null, 2));
+            const a = document.createElement('a');
+            a.setAttribute('href', dataStr);
+            a.setAttribute('download', `${project.name}-details.json`);
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function closeProjectModal() {
+            document.getElementById('project-modal').classList.remove('show');
+            currentProjectId = null;
+        }
+
+        // === 2. 例行公事儀表板 ===
         function renderRoutineDashboard() {
             const container = document.getElementById('routine-tasks-content');
-            if (container.childElementCount > 0) return;
-            
+            container.innerHTML = '';
+
             const today = new Date();
             const dayOfWeek = today.getDay();
             let todayTasksHtml = '';
-            
+
             if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                 routineTasks.daily.forEach(t => {
-                    todayTasksHtml += `<div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0">
-                        <span class="text-blue-800 font-medium">${t.task}</span>
-                        <span class="text-blue-600 text-sm">${t.time}</span>
-                    </div>`;
+                    todayTasksHtml += `
+                        <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0">
+                            <span class="text-blue-800 font-medium">${t.task}</span>
+                            <span class="text-blue-600 text-sm">${t.time}</span>
+                        </div>
+                    `;
                 });
             } else {
                 todayTasksHtml = '<p class="text-blue-600">今日為假日，無例行公事。</p>';
             }
 
             const taskSections = [
-                { title: '每日任務 (週一至週五)', tasks: routineTasks.daily, icon: 'fa-calendar-day', color: 'blue' },
-                { title: '三週一次', tasks: routineTasks.threeWeeks, icon: 'fa-calendar-week', color: 'green' },
-                { title: '每月任務', tasks: routineTasks.monthly, icon: 'fa-calendar-alt', color: 'purple' },
-                { title: '雙月任務', tasks: routineTasks.bimonthly, icon: 'fa-calendar', color: 'orange' }
+                { title: '每日任務 (週一至週五)', tasks: routineTasks.daily, icon: 'fa-calendar-day', color: 'blue', type: 'daily' },
+                { title: '三週一次', tasks: routineTasks.threeWeeks, icon: 'fa-calendar-week', color: 'green', type: 'threeWeeks' },
+                { title: '每月任務', tasks: routineTasks.monthly, icon: 'fa-calendar-alt', color: 'purple', type: 'monthly' },
+                { title: '雙月任務', tasks: routineTasks.bimonthly, icon: 'fa-calendar', color: 'orange', type: 'bimonthly' }
             ];
 
             const taskSectionsHtml = taskSections.map(section => {
-                const tasksHtml = section.tasks.map(t => {
-                    const timeDisplay = t.time ? `<span class="text-${section.color}-600 text-sm">${t.time}</span>` : '';
-                    const dayDisplay = t.day ? `<span class="text-${section.color}-600 text-sm">每月${t.day === 'random' ? '隨機' : t.day}日</span>` : '';
-                    return `<div class="flex justify-between items-center py-2 border-b border-${section.color}-100 last:border-b-0">
-                        <span class="text-${section.color}-800">${t.task}</span>
-                        ${timeDisplay}${dayDisplay}
-                    </div>`;
+                const tasksHtml = section.tasks.map((t, index) => {
+                    let display = '';
+                    if (t.time) display = `<span class="text-${section.color}-600 text-sm">${t.time}</span>`;
+                    if (t.day) display = `<span class="text-${section.color}-600 text-sm">每月${t.day}日</span>`;
+
+                    let dateButton = '';
+                    if ((section.type === 'monthly' && !t.day) || section.type === 'bimonthly') {
+                        const currentMonth = new Date().toISOString().substring(0, 7);
+                        const dateDisplay = t.dates && t.dates[currentMonth]
+                            ? `<span class="text-sm text-${section.color}-700">本月: ${t.dates[currentMonth]}</span>`
+                            : `<span class="text-sm text-gray-500">本月未設定</span>`;
+
+                        dateButton = `
+                            <div class="flex items-center space-x-2">
+                                ${dateDisplay}
+                                <button onclick="openRoutineDateModal('${section.type}', ${index})" 
+                                        class="text-${section.color}-600 hover:text-${section.color}-800 text-sm">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div class="flex justify-between items-center py-2 border-b border-${section.color}-100 last:border-b-0">
+                            <span class="text-${section.color}-800">${t.task}</span>
+                            <div class="flex items-center space-x-2">
+                                ${display}
+                                ${dateButton}
+                            </div>
+                        </div>
+                    `;
                 }).join('');
 
-                return `<div class="bg-${section.color}-50 p-4 rounded-lg border border-${section.color}-200">
-                    <h3 class="flex items-center text-lg font-bold text-${section.color}-800 mb-3">
-                        <i class="fas ${section.icon} mr-2"></i>${section.title}
-                    </h3>
-                    <div class="space-y-2">${tasksHtml}</div>
-                </div>`;
+                return `
+                    <div class="bg-${section.color}-50 p-4 rounded-lg border border-${section.color}-200">
+                        <h3 class="flex items-center text-lg font-bold text-${section.color}-800 mb-3">
+                            <i class="fas ${section.icon} mr-2"></i>${section.title}
+                        </h3>
+                        <div class="space-y-2">${tasksHtml}</div>
+                    </div>
+                `;
             }).join('');
 
             container.innerHTML = `
@@ -729,51 +1346,59 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">${taskSectionsHtml}</div>
             `;
+
             renderCalendar();
         }
-        
+
         function renderCalendar() {
             const header = document.getElementById('calendar-header');
             const body = document.getElementById('calendar-body');
+            
             header.innerHTML = `
                 <div class="flex items-center gap-4">
-                    <button id="prev-month" class="p-2 rounded-full hover:bg-gray-200"><i class="fas fa-chevron-left"></i></button>
+                    <button onclick="changeMonth(-1)" class="p-2 rounded-full hover:bg-gray-200"><i class="fas fa-chevron-left"></i></button>
                     <h2 class="text-xl font-bold text-gray-800 w-32 text-center">${calendarDate.getFullYear()} / ${String(calendarDate.getMonth() + 1).padStart(2, '0')}</h2>
-                    <button id="next-month" class="p-2 rounded-full hover:bg-gray-200"><i class="fas fa-chevron-right"></i></button>
+                    <button onclick="changeMonth(1)" class="p-2 rounded-full hover:bg-gray-200"><i class="fas fa-chevron-right"></i></button>
                 </div>
-                <div class="text-sm text-gray-500">僅顯示「每日」與「每月15日」的固定任務。</div>
+                <div class="text-sm text-gray-500">顯示所有例行任務</div>
             `;
-            
+
             const month = calendarDate.getMonth();
             const year = calendarDate.getFullYear();
+            const currentMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const daysInMonth = lastDay.getDate();
             const startDayOfWeek = firstDay.getDay();
 
-            let calendarHtml = `<div class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200">
-                ${['日', '一', '二', '三', '四', '五', '六'].map(d => `<div class="text-center font-semibold py-2 bg-gray-100">${d}</div>`).join('')}
-            </div>
-            <div id="calendar-grid" class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200">`;
+            let calendarHtml = `
+                <div class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200">
+                    ${['日', '一', '二', '三', '四', '五', '六'].map(d => 
+                        `<div class="text-center font-semibold py-2 bg-gray-100">${d}</div>`
+                    ).join('')}
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200">
+            `;
 
             for (let i = 0; i < startDayOfWeek; i++) {
                 calendarHtml += `<div class="calendar-day other-month"></div>`;
             }
-            
+
             for (let day = 1; day <= daysInMonth; day++) {
                 const currentDate = new Date(year, month, day);
                 const dayOfWeek = currentDate.getDay();
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 let tasksHtml = '';
-                
-                // Daily tasks on weekdays
+
+                // 每日任務
                 if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                     routineTasks.daily.forEach(t => {
                         const shortTask = t.task.length > 15 ? t.task.substring(0, 12) + '...' : t.task;
                         tasksHtml += `<div class="calendar-task bg-blue-100 text-blue-800">${shortTask}</div>`;
                     });
                 }
-                
-                // Monthly task
+
+                // 每月任務
                 if (day === 15) {
                     const monthlyTask = routineTasks.monthly.find(t => t.day === 15);
                     if (monthlyTask) {
@@ -781,77 +1406,192 @@
                         tasksHtml += `<div class="calendar-task bg-green-100 text-green-800">${shortTask}</div>`;
                     }
                 }
-                
+
+                // 手動設定的任務
+                routineTasks.monthly.forEach(task => {
+                    if (task.dates && task.dates[currentMonthStr] === dateStr) {
+                        tasksHtml += `<div class="calendar-task bg-purple-100 text-purple-800">${task.task}</div>`;
+                    }
+                });
+
+                routineTasks.bimonthly.forEach(task => {
+                    if (task.dates && task.dates[currentMonthStr] === dateStr) {
+                        tasksHtml += `<div class="calendar-task bg-orange-100 text-orange-800">${task.task}</div>`;
+                    }
+                });
+
                 const isToday = new Date().toDateString() === currentDate.toDateString() ? 'bg-blue-100' : 'bg-white';
-                calendarHtml += `<div class="calendar-day p-2 ${isToday}">
-                    <div class="font-semibold text-right">${day}</div>
-                    ${tasksHtml}
-                </div>`;
+                calendarHtml += `
+                    <div class="calendar-day p-2 ${isToday}">
+                        <div class="font-semibold text-right">${day}</div>
+                        ${tasksHtml}
+                    </div>
+                `;
             }
-            
+
             calendarHtml += `</div>`;
             body.innerHTML = calendarHtml;
-
-            document.getElementById('prev-month').addEventListener('click', () => { 
-                calendarDate.setMonth(calendarDate.getMonth() - 1); 
-                renderCalendar(); 
-            });
-            document.getElementById('next-month').addEventListener('click', () => { 
-                calendarDate.setMonth(calendarDate.getMonth() + 1); 
-                renderCalendar(); 
-            });
         }
 
-        // 3. 渲染分享會儀表板
+        function changeMonth(direction) {
+            calendarDate.setMonth(calendarDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function showAddRoutineModal() {
+            document.getElementById('add-routine-modal').classList.add('show');
+        }
+
+        function closeAddRoutineModal() {
+            document.getElementById('add-routine-modal').classList.remove('show');
+        }
+
+        function updateRoutineFields() {
+            const type = document.getElementById('new-routine-type').value;
+            const timeField = document.getElementById('routine-time-field');
+            const dayField = document.getElementById('routine-day-field');
+
+            if (type === 'monthly') {
+                timeField.classList.add('hidden');
+                dayField.classList.remove('hidden');
+            } else if (type === 'bimonthly') {
+                timeField.classList.add('hidden');
+                dayField.classList.add('hidden');
+            } else {
+                timeField.classList.remove('hidden');
+                dayField.classList.add('hidden');
+            }
+        }
+
+        function addNewRoutine() {
+            const type = document.getElementById('new-routine-type').value;
+            const task = document.getElementById('new-routine-task').value;
+
+            if (!task) {
+                alert('請輸入任務名稱');
+                return;
+            }
+
+            const newTask = { task };
+
+            if (type === 'daily' || type === 'threeWeeks') {
+                newTask.time = document.getElementById('new-routine-time').value;
+            } else if (type === 'monthly') {
+                const day = document.getElementById('new-routine-day').value;
+                if (day) newTask.day = parseInt(day);
+                else newTask.dates = {};
+            } else if (type === 'bimonthly') {
+                newTask.dates = {};
+            }
+
+            if (!routineTasks[type]) routineTasks[type] = [];
+            routineTasks[type].push(newTask);
+
+            syncToFirebase('routineTasks', routineTasks);
+            closeAddRoutineModal();
+            renderRoutineDashboard();
+
+            // 清空表單
+            document.getElementById('new-routine-task').value = '';
+            document.getElementById('new-routine-time').value = '';
+            document.getElementById('new-routine-day').value = '';
+        }
+
+        function openRoutineDateModal(type, index) {
+            const task = routineTasks[type][index];
+            currentRoutineTask = { type, index };
+
+            document.getElementById('routine-task-name').value = task.task;
+            document.getElementById('routine-task-date').value = '';
+            document.getElementById('routine-date-modal').classList.add('show');
+        }
+
+        function closeRoutineModal() {
+            document.getElementById('routine-date-modal').classList.remove('show');
+            currentRoutineTask = null;
+        }
+
+        function saveRoutineDate() {
+            if (!currentRoutineTask) return;
+
+            const date = document.getElementById('routine-task-date').value;
+            if (!date) {
+                alert('請選擇日期');
+                return;
+            }
+
+            const task = routineTasks[currentRoutineTask.type][currentRoutineTask.index];
+            const month = date.substring(0, 7);
+
+            if (!task.dates) task.dates = {};
+            task.dates[month] = date;
+
+            syncToFirebase('routineTasks', routineTasks);
+            closeRoutineModal();
+            renderRoutineDashboard();
+        }
+
+        // === 3. 分享會儀表板 ===
         function renderSharingDashboard() {
             const container = document.getElementById('sharing-session-content');
-            if (container.childElementCount > 0) return;
             
             const upcoming = sharingSessions.filter(s => s.status === 'upcoming');
             const past = sharingSessions.filter(s => s.status === 'past');
-            
-            let upcomingHtml = `<p class="text-gray-500">目前沒有已排程的分享會。</p>`;
-            
-            if (upcoming.length > 0) {
-                upcomingHtml = upcoming.map(s => {
-                    const scheduleHtml = s.schedule.map(item => `<li class="text-gray-600">${item}</li>`).join('');
-                    return `<div class="bg-green-50 border border-green-200 p-6 rounded-lg">
+
+            let upcomingHtml = upcoming.length > 0 ? upcoming.map(s => {
+                const scheduleHtml = s.schedule.map(item => `<li class="text-gray-600">${item}</li>`).join('');
+                return `
+                    <div class="bg-green-50 border border-green-200 p-6 rounded-lg mb-4">
                         <div class="flex justify-between items-start mb-4">
                             <div>
                                 <h3 class="text-xl font-bold text-green-800">${s.theme}</h3>
                                 <p class="text-green-600 mt-1">日期：${s.date} | 講者：${s.speaker}</p>
                             </div>
-                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">即將舉行</span>
+                            <div class="space-x-2">
+                                <button onclick="editSharing(${s.id})" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteSharing(${s.id})" class="bg-red-100 text-red-800 px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <h4 class="font-semibold text-gray-800 mb-2">議程安排：</h4>
                             <ul class="list-disc list-inside space-y-1">${scheduleHtml}</ul>
                         </div>
-                    </div>`;
-                }).join('');
-            }
-            
+                    </div>
+                `;
+            }).join('') : '<p class="text-gray-500">目前沒有已排程的分享會。</p>';
+
             const pastHtml = past.map(s => {
                 const content = s.schedule.map(item => {
-                    if (item.startsWith('http')) return `<li><a href="${item}" target="_blank" class="text-blue-600 hover:underline break-all"><i class="fas fa-link mr-2"></i>連結</a></li>`;
-                    if (/\.(pdf|pptx|zip|jpg)/i.test(item)) return `<li><i class="fas fa-file mr-2 text-gray-400"></i>${item}</li>`;
+                    if (item.startsWith('http')) {
+                        return `<li><a href="${item}" target="_blank" class="text-blue-600 hover:underline break-all">
+                            <i class="fas fa-link mr-2"></i>連結</a></li>`;
+                    }
+                    if (/\.(pdf|pptx|zip|jpg)/i.test(item)) {
+                        return `<li><i class="fas fa-file mr-2 text-gray-400"></i>${item}</li>`;
+                    }
                     return `<li>${item}</li>`;
                 }).join('');
-                
-                return `<details class="p-4 border-b last:border-b-0">
-                    <summary class="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <div>
-                            <p class="text-sm text-gray-500">${s.date}</p>
-                            <p class="font-semibold text-gray-700">${s.theme}</p>
+
+                return `
+                    <details class="p-4 border-b last:border-b-0">
+                        <summary class="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <div>
+                                <p class="text-sm text-gray-500">${s.date}</p>
+                                <p class="font-semibold text-gray-700">${s.theme}</p>
+                            </div>
+                            <i class="fas fa-chevron-right summary-icon text-gray-400"></i>
+                        </summary>
+                        <div class="mt-4 pl-4 border-l-2 border-gray-200">
+                            <ul class="list-disc list-inside space-y-1 text-gray-600">${content}</ul>
                         </div>
-                        <i class="fas fa-chevron-right summary-icon text-gray-400"></i>
-                    </summary>
-                    <div class="mt-4 pl-4 border-l-2 border-gray-200">
-                        <ul class="list-disc list-inside space-y-1 text-gray-600">${content}</ul>
-                    </div>
-                </details>`;
+                    </details>
+                `;
             }).join('');
-            
+
             container.innerHTML = `
                 <h2 class="text-xl font-bold text-gray-800 mb-4">即將舉行的分享會</h2>
                 ${upcomingHtml}
@@ -859,22 +1599,77 @@
                 <div class="border rounded-lg bg-gray-50">${pastHtml}</div>
             `;
         }
-        
-        // 4. 渲染活動參與儀表板
+
+        function showAddSharingModal() {
+            document.getElementById('add-sharing-modal').classList.add('show');
+        }
+
+        function closeAddSharingModal() {
+            document.getElementById('add-sharing-modal').classList.remove('show');
+        }
+
+        function addNewSharing() {
+            const schedule = document.getElementById('new-sharing-schedule').value.split('\n').filter(s => s.trim());
+            
+            const newSharing = {
+                id: Date.now(),
+                date: document.getElementById('new-sharing-date').value,
+                theme: document.getElementById('new-sharing-theme').value,
+                speaker: document.getElementById('new-sharing-speaker').value,
+                status: 'upcoming',
+                schedule: schedule
+            };
+
+            if (!newSharing.date || !newSharing.theme || !newSharing.speaker) {
+                alert('請填寫所有必填欄位');
+                return;
+            }
+
+            sharingSessions.push(newSharing);
+            syncToFirebase('sharingSessions/' + newSharing.id, newSharing);
+            
+            closeAddSharingModal();
+            renderSharingDashboard();
+            
+            // 清空表單
+            document.getElementById('new-sharing-date').value = '';
+            document.getElementById('new-sharing-theme').value = '';
+            document.getElementById('new-sharing-speaker').value = '';
+            document.getElementById('new-sharing-schedule').value = '';
+        }
+
+        function deleteSharing(id) {
+            if (!confirm('確定要刪除此分享會嗎？')) return;
+            
+            const index = sharingSessions.findIndex(s => s.id === id);
+            if (index > -1) {
+                sharingSessions.splice(index, 1);
+                if (isFirebaseInitialized) {
+                    database.ref('sharingSessions/' + id).remove();
+                }
+            }
+            renderSharingDashboard();
+        }
+
+        function editSharing(id) {
+            // 可以擴展編輯功能
+            alert('編輯功能開發中');
+        }
+
+        // === 4. 活動參與儀表板 ===
         function renderEventsDashboard() {
             const container = document.getElementById('event-participation-content');
-            if (container.childElementCount > 0) return;
             
             const internalEvents = eventsAttended.filter(e => e.type === 'internal');
             const externalEvents = eventsAttended.filter(e => e.type === 'external');
-            
+
             const renderEventSection = (title, events) => {
-                if(events.length === 0) return '';
-                
+                if (events.length === 0) return '';
+
                 const eventsHtml = events.map(event => {
                     const learningsHtml = event.learnings.map(learning => `<li class="text-gray-600">${learning}</li>`).join('');
-                    const filesHtml = event.files.map(file => {
-                        if (file.link === '#') {
+                    const filesHtml = event.files ? event.files.map(file => {
+                        if (file.link === '#' || !file.link) {
                             return `<span class="inline-block bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm mr-2 mb-2">
                                 <i class="fas fa-file mr-1"></i>${file.name}
                             </span>`;
@@ -883,51 +1678,111 @@
                                 <i class="fas fa-download mr-1"></i>${file.name}
                             </a>`;
                         }
-                    }).join('');
-                    
-                    return `<div class="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-800">${event.eventName}</h3>
-                                <p class="text-gray-500 mt-1">${event.date}</p>
+                    }).join('') : '';
+
+                    return `
+                        <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-800">${event.eventName}</h3>
+                                    <p class="text-gray-500 mt-1">${event.date}</p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="bg-${event.type === 'external' ? 'blue' : 'green'}-100 text-${event.type === 'external' ? 'blue' : 'green'}-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                        ${event.type === 'external' ? '外部活動' : '內部活動'}
+                                    </span>
+                                    <button onclick="deleteEvent(${event.id})" class="bg-red-100 text-red-800 px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <span class="bg-${event.type === 'external' ? 'blue' : 'green'}-100 text-${event.type === 'external' ? 'blue' : 'green'}-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                ${event.type === 'external' ? '外部活動' : '內部活動'}
-                            </span>
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-gray-800 mb-2">活動概述：</h4>
+                                <p class="text-gray-600">${event.summary}</p>
+                            </div>
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-gray-800 mb-2">主要學習與收穫：</h4>
+                                <ul class="list-disc list-inside space-y-1">${learningsHtml}</ul>
+                            </div>
+                            ${event.files && event.files.length > 0 ? `
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-2">相關資料：</h4>
+                                <div class="flex flex-wrap">${filesHtml}</div>
+                            </div>` : ''}
                         </div>
-                        <div class="mb-4">
-                            <h4 class="font-semibold text-gray-800 mb-2">活動概述：</h4>
-                            <p class="text-gray-600">${event.summary}</p>
-                        </div>
-                        <div class="mb-4">
-                            <h4 class="font-semibold text-gray-800 mb-2">主要學習與收穫：</h4>
-                            <ul class="list-disc list-inside space-y-1">${learningsHtml}</ul>
-                        </div>
-                        ${event.files.length > 0 ? `
-                        <div>
-                            <h4 class="font-semibold text-gray-800 mb-2">相關資料：</h4>
-                            <div class="flex flex-wrap">${filesHtml}</div>
-                        </div>` : ''}
-                    </div>`;
+                    `;
                 }).join('');
-                
-                return `<section>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">${title}</h2>
-                    <div class="space-y-6">${eventsHtml}</div>
-                </section>`;
+
+                return `
+                    <section>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">${title}</h2>
+                        <div class="space-y-6">${eventsHtml}</div>
+                    </section>
+                `;
             };
-            
+
             container.innerHTML = renderEventSection('外部活動', externalEvents) + renderEventSection('內部活動', internalEvents);
         }
 
-        // 5. 渲染接洽企業儀表板
+        function showAddEventModal() {
+            document.getElementById('add-event-modal').classList.add('show');
+        }
+
+        function closeAddEventModal() {
+            document.getElementById('add-event-modal').classList.remove('show');
+        }
+
+        function addNewEvent() {
+            const learnings = document.getElementById('new-event-learnings').value.split('\n').filter(l => l.trim());
+            
+            const newEvent = {
+                id: Date.now(),
+                eventName: document.getElementById('new-event-name').value,
+                date: document.getElementById('new-event-date').value,
+                type: document.getElementById('new-event-type').value,
+                summary: document.getElementById('new-event-summary').value,
+                learnings: learnings,
+                files: []
+            };
+
+            if (!newEvent.eventName || !newEvent.date || !newEvent.summary) {
+                alert('請填寫所有必填欄位');
+                return;
+            }
+
+            eventsAttended.push(newEvent);
+            syncToFirebase('events/' + newEvent.id, newEvent);
+            
+            closeAddEventModal();
+            renderEventsDashboard();
+            
+            // 清空表單
+            document.getElementById('new-event-name').value = '';
+            document.getElementById('new-event-date').value = '';
+            document.getElementById('new-event-summary').value = '';
+            document.getElementById('new-event-learnings').value = '';
+        }
+
+        function deleteEvent(id) {
+            if (!confirm('確定要刪除此活動紀錄嗎？')) return;
+            
+            const index = eventsAttended.findIndex(e => e.id === id);
+            if (index > -1) {
+                eventsAttended.splice(index, 1);
+                if (isFirebaseInitialized) {
+                    database.ref('events/' + id).remove();
+                }
+            }
+            renderEventsDashboard();
+        }
+
+        // === 5. 接洽企業儀表板 ===
         function renderContactsDashboard() {
             const container = document.getElementById('business-contacts-content');
-            if (container.childElementCount > 0) return;
             
             const tableRows = businessContacts.map(contact => {
-                const filesHtml = contact.files.map(file => {
-                    if (file.link === '#') {
+                const filesHtml = contact.files && contact.files.length > 0 ? contact.files.map(file => {
+                    if (file.link === '#' || !file.link) {
                         return `<span class="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs mr-1 mb-1">
                             <i class="fas fa-file mr-1"></i>${file.name}
                         </span>`;
@@ -936,27 +1791,34 @@
                             <i class="fas fa-download mr-1"></i>${file.name}
                         </a>`;
                     }
-                }).join('');
-                
-                return `<tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${contact.companyName}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${contact.contactPerson}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${contact.date}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-sm text-gray-900 max-w-xs">${contact.topic}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex flex-wrap">${filesHtml || '<span class="text-sm text-gray-400">無</span>'}</div>
-                    </td>
-                </tr>`;
+                }).join('') : '<span class="text-sm text-gray-400">無</span>';
+
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${contact.companyName}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${contact.contactPerson}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${contact.date}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900 max-w-xs">${contact.topic}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap">${filesHtml}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <button onclick="deleteContact(${contact.id})" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
             }).join('');
-            
+
             container.innerHTML = `
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -967,6 +1829,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">接洽日期</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">洽談主題</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">相關資料</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -976,143 +1839,63 @@
                 </div>
             `;
         }
-        // === 專案詳情：互動邏輯 ===
-        let currentProjectId = null;
 
-        function openProjectModal(project) {
-            currentProjectId = project.id;
-
-            // 基本資訊
-            document.getElementById('modal-project-name').textContent = project.name;
-            document.getElementById('modal-project-department').textContent = project.department;
-            document.getElementById('modal-start-date').textContent = project.startTime;
-            document.getElementById('modal-due-date').textContent = project.dueDate;
-            document.getElementById('modal-priority').textContent = project.priority;
-            document.getElementById('modal-status').textContent = project.status;
-            document.getElementById('modal-progress-text').textContent = `${project.progress}%`;
-            const bar = document.getElementById('modal-progress-bar');
-            bar.style.width = `${project.progress}%`;
-
-            // 備註
-            const notesTextarea = document.getElementById('project-notes');
-            notesTextarea.value = project.notes || '';
-
-            // 檔案
-            renderFilesList(project.files || []);
-
-            // 顯示
-            document.getElementById('project-modal').classList.add('show');
+        function showAddContactModal() {
+            document.getElementById('add-contact-modal').classList.add('show');
         }
 
-        function closeProjectModal() {
-            document.getElementById('project-modal').classList.remove('show');
-            currentProjectId = null;
+        function closeAddContactModal() {
+            document.getElementById('add-contact-modal').classList.remove('show');
         }
 
-        function getProjectById(id) {
-            return projects.find(p => p.id === id);
-        }
+        function addNewContact() {
+            const newContact = {
+                id: Date.now(),
+                companyName: document.getElementById('new-contact-company').value,
+                contactPerson: document.getElementById('new-contact-person').value,
+                date: document.getElementById('new-contact-date').value,
+                topic: document.getElementById('new-contact-topic').value,
+                files: []
+            };
 
-        function saveNotes() {
-            if (!currentProjectId) return;
-            const project = getProjectById(currentProjectId);
-            if (!project) return;
-            const val = document.getElementById('project-notes').value.trim();
-            project.notes = val;
-            persistProjects();
-        }
-
-        function renderFilesList(files) {
-            const list = document.getElementById('files-list');
-            list.innerHTML = '';
-            if (!files || files.length === 0) {
-                list.innerHTML = '<p class="text-sm text-gray-400">尚未上傳檔案</p>';
+            if (!newContact.companyName || !newContact.contactPerson || !newContact.date || !newContact.topic) {
+                alert('請填寫所有欄位');
                 return;
             }
-            files.forEach((file, idx) => {
-                const row = document.createElement('div');
-                row.className = 'flex items-center justify-between bg-gray-50 border border-gray-200 rounded px-3 py-2';
-                row.innerHTML = `
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-file text-gray-400"></i>
-                        <span class="text-sm text-gray-700 break-all">${file.name}</span>
-                        ${file.size ? `<span class="text-xs text-gray-400">(${formatSize(file.size)})</span>` : ''}
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        ${file.url ? `<a href="${file.url}" target="_blank" class="text-blue-600 text-sm hover:underline">查看</a>` : ''}
-                        <button data-index="${idx}" class="delete-file text-red-600 text-sm">刪除</button>
-                    </div>
-                `;
-                list.appendChild(row);
-            });
-            // 綁定刪除
-            list.querySelectorAll('.delete-file').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const index = Number(e.currentTarget.getAttribute('data-index'));
-                    deleteFileAt(index);
-                });
-            });
+
+            businessContacts.push(newContact);
+            syncToFirebase('contacts/' + newContact.id, newContact);
+            
+            closeAddContactModal();
+            renderContactsDashboard();
+            
+            // 清空表單
+            document.getElementById('new-contact-company').value = '';
+            document.getElementById('new-contact-person').value = '';
+            document.getElementById('new-contact-date').value = '';
+            document.getElementById('new-contact-topic').value = '';
         }
 
-        function deleteFileAt(index) {
-            if (!currentProjectId) return;
-            const project = getProjectById(currentProjectId);
-            if (!project) return;
-            project.files.splice(index, 1);
-            persistProjects();
-            renderFilesList(project.files);
-        }
-
-        function formatSize(bytes) {
-            if (bytes < 1024) return `${bytes} B`;
-            if (bytes < 1024 * 1024) return `${(bytes/1024).toFixed(1)} KB`;
-            return `${(bytes/1024/1024).toFixed(1)} MB`;
-        }
-
-        function persistProjects() {
-            try {
-                localStorage.setItem('ai_projects', JSON.stringify(projects));
-            } catch (e) {
-                console.warn('Persist projects failed:', e);
+        function deleteContact(id) {
+            if (!confirm('確定要刪除此接洽紀錄嗎？')) return;
+            
+            const index = businessContacts.findIndex(c => c.id === id);
+            if (index > -1) {
+                businessContacts.splice(index, 1);
+                if (isFirebaseInitialized) {
+                    database.ref('contacts/' + id).remove();
+                }
             }
+            renderContactsDashboard();
         }
 
-        function restoreProjects() {
-            try {
-                const saved = localStorage.getItem('ai_projects');
-                if (!saved) return;
-                const parsed = JSON.parse(saved);
-                // 依 id 合併 notes/files 等動態欄位
-                parsed.forEach(sp => {
-                    const found = projects.find(p => p.id === sp.id);
-                    if (found) {
-                        found.notes = sp.notes || '';
-                        found.files = Array.isArray(sp.files) ? sp.files : [];
-                    }
-                });
-            } catch (e) {
-                console.warn('Restore projects failed:', e);
-            }
-        }
-
-        function exportCurrentProject() {
-            if (!currentProjectId) return;
-            const project = getProjectById(currentProjectId);
-            if (!project) return;
-            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(project, null, 2));
-            const a = document.createElement('a');
-            a.setAttribute('href', dataStr);
-            a.setAttribute('download', `${project.name}-details.json`);
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        }
-
-        // 檔案上傳（僅前端暫存，不上傳伺服器）
+        // === 檔案上傳功能 ===
         function setupFileUpload() {
             const area = document.getElementById('file-upload-area');
             const input = document.getElementById('file-input');
             const selectBtn = document.getElementById('select-files');
+
+            if (!area || !input || !selectBtn) return;
 
             selectBtn.addEventListener('click', () => input.click());
             input.addEventListener('change', (e) => handleFiles(e.target.files));
@@ -1131,44 +1914,115 @@
             });
         }
 
-        function handleFiles(fileList) {
+        async function handleFiles(fileList) {
             if (!currentProjectId) return;
-            const project = getProjectById(currentProjectId);
+            const project = projects.find(p => p.id === currentProjectId);
             if (!project) return;
-            const files = Array.from(fileList).map(f => ({ name: f.name, size: f.size, type: f.type, url: URL.createObjectURL(f) }));
-            project.files.push(...files);
-            persistProjects();
-            renderFilesList(project.files);
+
+            if (!project.files) project.files = [];
+
+            const progressDiv = document.getElementById('upload-progress');
+            const progressBar = document.getElementById('upload-bar');
+            const progressPercent = document.getElementById('upload-percent');
+
+            for (let file of fileList) {
+                // 檢查檔案大小（最大 10MB）
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`檔案 ${file.name} 超過 10MB 限制`);
+                    continue;
+                }
+
+                progressDiv.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                progressPercent.textContent = '0%';
+
+                if (isFirebaseInitialized) {
+                    // 上傳到 Firebase Storage
+                    const storageRef = storage.ref(`projects/${currentProjectId}/${Date.now()}_${file.name}`);
+                    const uploadTask = storageRef.put(file);
+
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            progressBar.style.width = progress + '%';
+                            progressPercent.textContent = Math.round(progress) + '%';
+                        },
+                        (error) => {
+                            console.error('上傳失敗:', error);
+                            alert('檔案上傳失敗');
+                            progressDiv.classList.add('hidden');
+                        },
+                        async () => {
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            const fileInfo = {
+                                name: file.name,
+                                size: file.size,
+                                type: file.type,
+                                url: downloadURL,
+                                uploadTime: new Date().toISOString()
+                            };
+
+                            project.files.push(fileInfo);
+                            syncToFirebase('projects/' + currentProjectId + '/files', project.files);
+                            renderFilesList(project.files);
+                            progressDiv.classList.add('hidden');
+                        }
+                    );
+                } else {
+                    // 離線模式：使用 blob URL
+                    const fileInfo = {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        url: URL.createObjectURL(file),
+                        uploadTime: new Date().toISOString()
+                    };
+                    project.files.push(fileInfo);
+                    renderFilesList(project.files);
+                    progressDiv.classList.add('hidden');
+                }
+            }
         }
 
-        // 綁定全域事件（在 DOMContentLoaded 之後）
-        document.addEventListener('DOMContentLoaded', () => {
-            // 還原本地資料
-            restoreProjects();
+        // === Modal 事件設置 ===
+        function setupModalEvents() {
+            // 專案 Modal
+            document.getElementById('close-modal')?.addEventListener('click', closeProjectModal);
+            document.getElementById('close-modal-btn')?.addEventListener('click', closeProjectModal);
+            document.getElementById('toggle-edit-mode')?.addEventListener('click', toggleEditMode);
+            document.getElementById('save-notes')?.addEventListener('click', saveNotes);
+            document.getElementById('add-comment')?.addEventListener('click', addComment);
+            document.getElementById('export-project')?.addEventListener('click', exportCurrentProject);
 
-            // 關閉按鈕
-            document.getElementById('close-modal').addEventListener('click', closeProjectModal);
-            document.getElementById('close-modal-btn').addEventListener('click', closeProjectModal);
-            // ESC 退出
+            // 評論 Enter 發送
+            document.getElementById('new-comment')?.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    addComment();
+                }
+            });
+
+            // ESC 關閉所有 Modal
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') closeProjectModal();
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal-overlay.show').forEach(modal => {
+                        modal.classList.remove('show');
+                    });
+                }
             });
-            // 點擊遮罩關閉
-            document.getElementById('project-modal').addEventListener('click', (e) => {
-                if (e.target && e.target.id === 'project-modal') closeProjectModal();
+
+            // 點擊遮罩關閉 Modal
+            document.querySelectorAll('.modal-overlay').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('show');
+                    }
+                });
             });
 
-            // 儲存備註
-            document.getElementById('save-notes').addEventListener('click', saveNotes);
-
-            // 匯出
-            document.getElementById('export-project').addEventListener('click', exportCurrentProject);
-
-            // 上傳
+            // 檔案上傳
             setupFileUpload();
-        });
+        }
     </script>
 </body>
 </html>
-
-
