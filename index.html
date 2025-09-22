@@ -1150,21 +1150,47 @@
 
         function saveProjectEdit() {
             const project = projects.find(p => p.id === currentProjectId);
-            if (!project) return;
+            if (!project) {
+                console.error('找不到專案');
+                return;
+            }
 
-            project.name = document.getElementById('edit-project-name').value;
-            project.department = document.getElementById('edit-department').value;
-            project.startTime = document.getElementById('edit-start-date').value || 'unknown';
-            project.dueDate = document.getElementById('edit-due-date').value || 'unknown';
-            project.priority = document.getElementById('edit-priority').value;
-            project.status = document.getElementById('edit-status').value;
-            project.progress = parseInt(document.getElementById('edit-progress').value);
+            // 檢查所有編輯欄位是否存在
+            const nameField = document.getElementById('edit-project-name');
+            const deptField = document.getElementById('edit-department');
+            const startField = document.getElementById('edit-start-date');
+            const dueField = document.getElementById('edit-due-date');
+            const priorityField = document.getElementById('edit-priority');
+            const statusField = document.getElementById('edit-status');
+            const progressField = document.getElementById('edit-progress');
 
+            if (!nameField || !deptField || !priorityField || !statusField || !progressField) {
+                console.error('編輯欄位不存在');
+                alert('編輯欄位載入錯誤，請重新開啟專案');
+                return;
+            }
+
+            // 更新專案資料
+            project.name = nameField.value;
+            project.department = deptField.value;
+            project.startTime = startField?.value || 'unknown';
+            project.dueDate = dueField?.value || 'unknown';
+            project.priority = priorityField.value;
+            project.status = statusField.value;
+            project.progress = parseInt(progressField.value) || 0;
+
+            // 同步到Firebase
             syncToFirebase('projects/' + project.id, project);
-            
+
+            // 切換回檢視模式
+            editMode = false;
+
             // 更新顯示
             openProjectModal(project);
             renderAiDashboard();
+
+            console.log('專案已更新:', project);
+            alert('專案資訊已儲存');
         }
 
         function deleteProject() {
@@ -1186,10 +1212,27 @@
 
         function saveNotes() {
             const project = projects.find(p => p.id === currentProjectId);
-            if (!project) return;
+            if (!project) {
+                console.error('找不到專案');
+                alert('找不到專案，請重新開啟');
+                return;
+            }
 
-            project.notes = document.getElementById('project-notes').value;
-            syncToFirebase('projects/' + project.id + '/notes', project.notes);
+            const notesField = document.getElementById('project-notes');
+            if (!notesField) {
+                console.error('找不到說明欄位');
+                alert('說明欄位載入錯誤');
+                return;
+            }
+
+            // 更新專案說明
+            project.notes = notesField.value;
+
+            // 同步到Firebase (同步整個專案以確保一致性)
+            syncToFirebase('projects/' + project.id, project);
+
+            console.log('說明已儲存:', project.notes);
+            alert('專案說明已儲存');
         }
 
         function addComment() {
@@ -1291,15 +1334,45 @@
 
         function exportCurrentProject() {
             const project = projects.find(p => p.id === currentProjectId);
-            if (!project) return;
+            if (!project) {
+                console.error('找不到專案');
+                alert('找不到專案，請重新開啟');
+                return;
+            }
 
-            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(project, null, 2));
-            const a = document.createElement('a');
-            a.setAttribute('href', dataStr);
-            a.setAttribute('download', `${project.name}-details.json`);
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
+            try {
+                // 準備匯出資料
+                const exportData = {
+                    ...project,
+                    exportTime: new Date().toISOString(),
+                    exportBy: '系統管理員'
+                };
+
+                // 創建JSON內容
+                const jsonContent = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonContent], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+
+                // 創建下載連結
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${project.name.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}-專案詳情-${new Date().toISOString().slice(0, 10)}.json`;
+
+                // 執行下載
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                // 清理URL
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+
+                console.log('專案已匯出:', project.name);
+                alert('專案匯出成功！');
+
+            } catch (error) {
+                console.error('匯出失敗:', error);
+                alert('匯出失敗，請稍後再試');
+            }
         }
 
         function closeProjectModal() {
@@ -1672,7 +1745,8 @@
             }
 
             sharingSessions.push(newSharing);
-            syncToFirebase('sharingSessions/' + newSharing.id, newSharing);
+            // 同步整個 sharingSessions 陣列以避免覆蓋問題
+            syncToFirebase('sharingSessions', sharingSessions);
             
             closeAddSharingModal();
             renderSharingDashboard();
@@ -1690,9 +1764,8 @@
             const index = sharingSessions.findIndex(s => s.id === id);
             if (index > -1) {
                 sharingSessions.splice(index, 1);
-                if (isFirebaseInitialized) {
-                    database.ref('sharingSessions/' + id).remove();
-                }
+                // 同步整個 sharingSessions 陣列以避免覆蓋問題
+                syncToFirebase('sharingSessions', sharingSessions);
             }
             renderSharingDashboard();
         }
@@ -1797,7 +1870,8 @@
             }
 
             eventsAttended.push(newEvent);
-            syncToFirebase('events/' + newEvent.id, newEvent);
+            // 同步整個 events 陣列以避免覆蓋問題
+            syncToFirebase('events', eventsAttended);
             
             closeAddEventModal();
             renderEventsDashboard();
@@ -1815,9 +1889,8 @@
             const index = eventsAttended.findIndex(e => e.id === id);
             if (index > -1) {
                 eventsAttended.splice(index, 1);
-                if (isFirebaseInitialized) {
-                    database.ref('events/' + id).remove();
-                }
+                // 同步整個 events 陣列以避免覆蓋問題
+                syncToFirebase('events', eventsAttended);
             }
             renderEventsDashboard();
         }
@@ -1910,7 +1983,8 @@
             }
 
             businessContacts.push(newContact);
-            syncToFirebase('contacts/' + newContact.id, newContact);
+            // 同步整個 contacts 陣列以避免覆蓋問題
+            syncToFirebase('contacts', businessContacts);
             
             closeAddContactModal();
             renderContactsDashboard();
@@ -1928,9 +2002,8 @@
             const index = businessContacts.findIndex(c => c.id === id);
             if (index > -1) {
                 businessContacts.splice(index, 1);
-                if (isFirebaseInitialized) {
-                    database.ref('contacts/' + id).remove();
-                }
+                // 同步整個 contacts 陣列以避免覆蓋問題
+                syncToFirebase('contacts', businessContacts);
             }
             renderContactsDashboard();
         }
