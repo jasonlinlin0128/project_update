@@ -324,6 +324,7 @@
                                 <option value="規劃中">規劃中</option>
                                 <option value="開發中">開發中</option>
                                 <option value="測試中">測試中</option>
+                                <option value="已終止">已終止</option>
                                 <option value="已完成">已完成</option>
                             </select>
                         </div>
@@ -468,6 +469,7 @@
                         <option value="規劃中">規劃中</option>
                         <option value="開發中">開發中</option>
                         <option value="測試中">測試中</option>
+                        <option value="已終止">已終止</option>
                         <option value="已完成">已完成</option>
                     </select>
                 </div>
@@ -718,7 +720,7 @@
 
         // 資料區域
         let projects = [
-            { id: 1, name: "籌料狀態數位化", department: "物管部 (王偉全、董光展)", startTime: "2025-08-19", dueDate: "2025-12-31", priority: "高", progress: 20, status: "開發中", notes: "", files: [], comments: [] },
+            { id: 1, name: "籌料狀態數位化", department: "物管部 (王偉全、董光展)", startTime: "2025-08-19", dueDate: "2025-09-19", priority: "高", progress: 100, status: "已終止", notes: "", files: [], comments: [] },
             { id: 2, name: "客製化軍品 AI 瑕疵檢測", department: "品保部 (徐世勇)", startTime: "2025-09-02", dueDate: "2025-12-31", priority: "低", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
             { id: 3, name: "圖面繪製標準建議系統", department: "技術部 (林佳汝)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
             { id: 4, name: "ERP+RPA交期提醒工具", department: "生管部 (王偉全)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
@@ -736,6 +738,7 @@
             { id: 16, name: "Google AgentSpace(Simhope KM+EIP開發)", department: "經企室 (Porter)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
             { id: 17, name: "檢驗流程SOP呈現優化", department: "品保部 (薛瑞文)", startTime: "2025-09-03", dueDate: "unknown", priority: "低", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
             { id: 18, name: "MasterCAM外掛程式開發", department: "加工部 (林昆弘)", startTime: "2025-09-11", dueDate: "2025-09-25", priority: "高", progress: 0, status: "構思中", notes: "直接指派任務", files: [], comments: [] },
+            { id: 19, name: "加工部日報表數位化", department: "加工部 (林昆弘)", startTime: "2025-09-11", dueDate: "2025-09-25", priority: "高", progress: 0, status: "構思中", notes: "直接指派任務", files: [], comments: [] },
         ];
 
         let routineTasks = {
@@ -929,9 +932,9 @@
                 board.innerHTML = '';
                 summaryContainer.innerHTML = '';
 
-                const statuses = ["構思中", "規劃中", "開發中", "測試中", "已完成"];
+                const statuses = ["構思中", "規劃中", "開發中", "測試中", "已終止", "已完成"];
                 const priorityColors = { '高': 'bg-red-100 text-red-800', '中': 'bg-yellow-100 text-yellow-800', '低': 'bg-green-100 text-green-800' };
-                const columnHeaderColors = { "構思中": "bg-purple-500", "規劃中": "bg-blue-500", "開發中": "bg-orange-500", "測試中": "bg-teal-500", "已完成": "bg-green-600" };
+                const columnHeaderColors = { "構思中": "bg-purple-500", "規劃中": "bg-blue-500", "開發中": "bg-orange-500", "測試中": "bg-teal-500", "已終止": "bg-red-500", "已完成": "bg-green-600" };
 
                 statuses.forEach(status => {
                     const column = document.createElement('div');
@@ -987,11 +990,12 @@
                 const completed = filteredProjects.filter(p => p.status === '已完成').length;
                 const inProgress = filteredProjects.filter(p => ['開發中', '測試中'].includes(p.status)).length;
                 const planning = filteredProjects.filter(p => ['構思中', '規劃中'].includes(p.status)).length;
-                
+                const shutdown = filteredProjects.filter(p => ['已終止'].includes(p.status)).length;
                 [
                     { label: '總專案數', value: total, color: 'bg-blue-100 text-blue-800' },
                     { label: '進行中', value: inProgress, color: 'bg-orange-100 text-orange-800' },
                     { label: '規劃/構思中', value: planning, color: 'bg-purple-100 text-purple-800' },
+                    { label: '已終止', value: completed, color: 'bg-red-100 text-red-800' }
                     { label: '已完成', value: completed, color: 'bg-green-100 text-green-800' }
                 ].forEach(stat => {
                     const statCard = document.createElement('div');
@@ -2026,3 +2030,4 @@
     </script>
 </body>
 </html>
+
