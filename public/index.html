@@ -920,10 +920,10 @@
                 { time: "16:45~17:00", task: "倒垃圾" },
             ],
             threeWeeks: [
-                { time: "8:00~8:15", task: "掃地", lastDate: "2025-10-08", nextDate: "2025-10-29" },
+                { time: "8:00~8:15", task: "掃地（週一至週五）", lastWeekStart: "2025-10-07", nextWeekStart: "2025-10-28" },
             ],
             monthly: [
-                { day: 15, task: "技術部電腦巡檢 (若遇假日則調整)" },
+                { task: "技術部電腦巡檢", dates: {} },
                 { task: "打掃廁所", dates: {} },
             ],
             bimonthly: [
@@ -1599,6 +1599,7 @@
             let todayTasksHtml = '';
 
             if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                // 每日任務
                 routineTasks.daily.forEach(t => {
                     todayTasksHtml += `
                         <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0">
@@ -1606,6 +1607,24 @@
                             <span class="text-blue-600 text-sm">${t.time}</span>
                         </div>
                     `;
+                });
+
+                // 檢查是否在掃地週內
+                routineTasks.threeWeeks.forEach(t => {
+                    if (t.nextWeekStart) {
+                        const weekStart = new Date(t.nextWeekStart);
+                        const weekEnd = new Date(weekStart);
+                        weekEnd.setDate(weekEnd.getDate() + 4); // 週五
+
+                        if (today >= weekStart && today <= weekEnd) {
+                            todayTasksHtml += `
+                                <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0">
+                                    <span class="text-green-800 font-medium">${t.task}</span>
+                                    <span class="text-green-600 text-sm">${t.time}</span>
+                                </div>
+                            `;
+                        }
+                    }
                 });
             } else {
                 todayTasksHtml = '<p class="text-blue-600">今日為假日，無例行公事。</p>';
@@ -1627,14 +1646,22 @@
                     // 顯示下次執行日期
                     let nextDateDisplay = '';
                     if (section.type === 'threeWeeks') {
-                        if (t.nextDate) {
-                            nextDateDisplay = `<span class="text-sm text-${section.color}-700 font-semibold">下次: ${t.nextDate}</span>`;
-                        } else if (t.lastDate) {
-                            // 如果沒有 nextDate 但有 lastDate，自動計算
-                            const lastDate = new Date(t.lastDate);
-                            lastDate.setDate(lastDate.getDate() + 21);
-                            const nextDate = lastDate.toISOString().split('T')[0];
-                            nextDateDisplay = `<span class="text-sm text-${section.color}-700 font-semibold">下次: ${nextDate}</span>`;
+                        if (t.nextWeekStart) {
+                            const weekStart = new Date(t.nextWeekStart);
+                            const weekEnd = new Date(weekStart);
+                            weekEnd.setDate(weekEnd.getDate() + 4); // 週五
+                            const startStr = weekStart.toISOString().split('T')[0];
+                            const endStr = weekEnd.toISOString().split('T')[0];
+                            nextDateDisplay = `<span class="text-sm text-${section.color}-700 font-semibold">下次掃地週: ${startStr} ~ ${endStr}</span>`;
+                        } else if (t.lastWeekStart) {
+                            // 自動計算下次掃地週（上次週一 + 21天）
+                            const lastStart = new Date(t.lastWeekStart);
+                            lastStart.setDate(lastStart.getDate() + 21);
+                            const weekEnd = new Date(lastStart);
+                            weekEnd.setDate(weekEnd.getDate() + 4);
+                            const startStr = lastStart.toISOString().split('T')[0];
+                            const endStr = weekEnd.toISOString().split('T')[0];
+                            nextDateDisplay = `<span class="text-sm text-${section.color}-700 font-semibold">下次掃地週: ${startStr} ~ ${endStr}</span>`;
                         } else {
                             nextDateDisplay = `<span class="text-sm text-gray-500">未設定</span>`;
                         }
@@ -1662,6 +1689,16 @@
                         `;
                     }
 
+                    // 編輯/刪除按鈕（僅專案管理師可見）
+                    const editDeleteButtons = !isReadOnly ? `
+                        <button onclick="editRoutineTask('${section.type}', ${index})" class="text-blue-600 hover:text-blue-800 text-sm">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteRoutineTask('${section.type}', ${index})" class="text-red-600 hover:text-red-800 text-sm">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    ` : '';
+
                     return `
                         <div class="flex justify-between items-center py-2 border-b border-${section.color}-100 last:border-b-0">
                             <div class="flex-1">
@@ -1671,12 +1708,7 @@
                             <div class="flex items-center space-x-2">
                                 ${display}
                                 ${dateButton}
-                                <button onclick="editRoutineTask('${section.type}', ${index})" class="text-blue-600 hover:text-blue-800 text-sm">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button onclick="deleteRoutineTask('${section.type}', ${index})" class="text-red-600 hover:text-red-800 text-sm">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                ${editDeleteButtons}
                             </div>
                         </div>
                     `;
@@ -1751,22 +1783,32 @@
                     });
                 }
 
-                // 三週一次任務
-                routineTasks.threeWeeks.forEach(task => {
-                    if (task.nextDate === dateStr) {
-                        const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
-                        tasksHtml += `<div class="calendar-task bg-green-100 text-green-800">${shortTask}</div>`;
-                    } else if (!task.nextDate && task.lastDate) {
-                        // 自動計算下次日期
-                        const lastDate = new Date(task.lastDate);
-                        lastDate.setDate(lastDate.getDate() + 21);
-                        const nextDate = lastDate.toISOString().split('T')[0];
-                        if (nextDate === dateStr) {
-                            const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
-                            tasksHtml += `<div class="calendar-task bg-green-100 text-green-800">${shortTask}</div>`;
+                // 三週一次任務（掃地週：週一到週五）
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                    routineTasks.threeWeeks.forEach(task => {
+                        if (task.nextWeekStart) {
+                            const weekStart = new Date(task.nextWeekStart);
+                            const weekEnd = new Date(weekStart);
+                            weekEnd.setDate(weekEnd.getDate() + 4); // 週五
+
+                            if (currentDate >= weekStart && currentDate <= weekEnd) {
+                                const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                                tasksHtml += `<div class="calendar-task bg-green-100 text-green-800">${shortTask}</div>`;
+                            }
+                        } else if (task.lastWeekStart) {
+                            // 自動計算下次掃地週
+                            const nextWeekStart = new Date(task.lastWeekStart);
+                            nextWeekStart.setDate(nextWeekStart.getDate() + 21);
+                            const weekEnd = new Date(nextWeekStart);
+                            weekEnd.setDate(weekEnd.getDate() + 4);
+
+                            if (currentDate >= nextWeekStart && currentDate <= weekEnd) {
+                                const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                                tasksHtml += `<div class="calendar-task bg-green-100 text-green-800">${shortTask}</div>`;
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
                 // 每月任務（固定日期）
                 if (day === 15) {
@@ -1834,6 +1876,10 @@
             const nextDateInput = document.getElementById('new-routine-next-date');
             const nextDateHint = document.getElementById('next-date-hint');
 
+            // 獲取標籤元素
+            const lastDateLabel = lastDateField.querySelector('label');
+            const nextDateLabel = nextDateField.querySelector('label');
+
             // 重置所有欄位
             timeField.classList.add('hidden');
             dayField.classList.add('hidden');
@@ -1844,23 +1890,27 @@
                 // 每日任務：顯示時間
                 timeField.classList.remove('hidden');
             } else if (type === 'threeWeeks') {
-                // 三週一次：顯示時間、上次日期、下次日期（自動計算）
+                // 三週一次：顯示時間、上次掃地週開始日、下次掃地週開始日（自動計算）
                 timeField.classList.remove('hidden');
                 lastDateField.classList.remove('hidden');
                 nextDateField.classList.remove('hidden');
+                lastDateLabel.textContent = '上次掃地週開始日（週一）';
+                nextDateLabel.textContent = '下次掃地週開始日（週一）';
                 nextDateInput.readOnly = true;
                 nextDateInput.classList.add('bg-gray-100');
-                nextDateHint.textContent = '系統自動計算（上次日期 + 21天），可編輯上次日期調整';
+                nextDateHint.textContent = '系統自動計算（上次掃地週開始日 + 21天 = 下次掃地週開始日）';
             } else if (type === 'monthly') {
                 // 每月任務：顯示每月執行日或下次日期（手動輸入）
                 dayField.classList.remove('hidden');
                 nextDateField.classList.remove('hidden');
+                nextDateLabel.textContent = '下次執行日期';
                 nextDateInput.readOnly = false;
                 nextDateInput.classList.remove('bg-gray-100');
                 nextDateHint.textContent = '若無固定日期，請手動輸入下次執行日期';
             } else if (type === 'bimonthly') {
                 // 雙月任務：顯示下次日期（手動輸入）
                 nextDateField.classList.remove('hidden');
+                nextDateLabel.textContent = '下次執行日期';
                 nextDateInput.readOnly = false;
                 nextDateInput.classList.remove('bg-gray-100');
                 nextDateHint.textContent = '請手動輸入下次執行日期';
@@ -1897,8 +1947,8 @@
                 taskData.time = document.getElementById('new-routine-time').value;
             } else if (type === 'threeWeeks') {
                 taskData.time = document.getElementById('new-routine-time').value;
-                taskData.lastDate = document.getElementById('new-routine-last-date').value;
-                taskData.nextDate = document.getElementById('new-routine-next-date').value;
+                taskData.lastWeekStart = document.getElementById('new-routine-last-date').value;
+                taskData.nextWeekStart = document.getElementById('new-routine-next-date').value;
             } else if (type === 'monthly') {
                 const day = document.getElementById('new-routine-day').value;
                 if (day) {
@@ -1921,9 +1971,9 @@
                 routineTasks[oldType][index] = taskData;
                 alert('任務已更新');
             } else {
-                // 新增模式：添加新任務
+                // 新增模式：添加新任務到列表最上方
                 if (!routineTasks[type]) routineTasks[type] = [];
-                routineTasks[type].push(taskData);
+                routineTasks[type].unshift(taskData);  // 使用 unshift 將新任務插入到開頭
                 alert('任務已新增');
             }
 
@@ -1997,10 +2047,18 @@
                 document.getElementById('new-routine-day').value = task.day;
             }
             if (task.lastDate) {
+                // 向後兼容舊的 lastDate 欄位
                 document.getElementById('new-routine-last-date').value = task.lastDate;
             }
+            if (task.lastWeekStart) {
+                document.getElementById('new-routine-last-date').value = task.lastWeekStart;
+            }
             if (task.nextDate) {
+                // 向後兼容舊的 nextDate 欄位
                 document.getElementById('new-routine-next-date').value = task.nextDate;
+            }
+            if (task.nextWeekStart) {
+                document.getElementById('new-routine-next-date').value = task.nextWeekStart;
             }
 
             updateRoutineFields();
@@ -2028,12 +2086,35 @@
         // === 3. 分享會儀表板 ===
         function renderSharingDashboard() {
             const container = document.getElementById('sharing-session-content');
-            
-            const upcoming = sharingSessions.filter(s => s.status === 'upcoming');
-            const past = sharingSessions.filter(s => s.status === 'past');
+
+            // 根據日期自動分類
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const upcoming = sharingSessions.filter(s => {
+                const sessionDate = new Date(s.date);
+                sessionDate.setHours(0, 0, 0, 0);
+                return sessionDate >= today;
+            });
+
+            const past = sharingSessions.filter(s => {
+                const sessionDate = new Date(s.date);
+                sessionDate.setHours(0, 0, 0, 0);
+                return sessionDate < today;
+            });
 
             let upcomingHtml = upcoming.length > 0 ? upcoming.map(s => {
                 const scheduleHtml = s.schedule.map(item => `<li class="text-gray-600">${item}</li>`).join('');
+                const editDeleteButtons = !isReadOnly ? `
+                    <div class="space-x-2">
+                        <button onclick="editSharing(${s.id})" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteSharing(${s.id})" class="bg-red-100 text-red-800 px-3 py-1 rounded text-sm">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ` : '';
                 return `
                     <div class="bg-green-50 border border-green-200 p-6 rounded-lg mb-4">
                         <div class="flex justify-between items-start mb-4">
@@ -2041,14 +2122,7 @@
                                 <h3 class="text-xl font-bold text-green-800">${s.theme}</h3>
                                 <p class="text-green-600 mt-1">日期：${s.date} | 講者：${s.speaker}</p>
                             </div>
-                            <div class="space-x-2">
-                                <button onclick="editSharing(${s.id})" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button onclick="deleteSharing(${s.id})" class="bg-red-100 text-red-800 px-3 py-1 rounded text-sm">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
+                            ${editDeleteButtons}
                         </div>
                         <div>
                             <h4 class="font-semibold text-gray-800 mb-2">議程安排：</h4>
@@ -2244,12 +2318,14 @@
                                     <span class="bg-${event.type === 'external' ? 'blue' : 'green'}-100 text-${event.type === 'external' ? 'blue' : 'green'}-800 px-3 py-1 rounded-full text-sm font-semibold">
                                         ${event.type === 'external' ? '外部活動' : '內部活動'}
                                     </span>
-                                    <button onclick="editEvent(${event.id})" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="deleteEvent(${event.id})" class="bg-red-100 text-red-800 px-3 py-1 rounded text-sm">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    ${!isReadOnly ? `
+                                        <button onclick="editEvent(${event.id})" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="deleteEvent(${event.id})" class="bg-red-100 text-red-800 px-3 py-1 rounded text-sm">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    ` : ''}
                                 </div>
                             </div>
                             <div class="mb-4">
@@ -2455,12 +2531,14 @@
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center space-x-2">
-                                <button onclick="editContact(${contact.id})" class="text-blue-600 hover:text-blue-800">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button onclick="deleteContact(${contact.id})" class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                ${!isReadOnly ? `
+                                    <button onclick="editContact(${contact.id})" class="text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteContact(${contact.id})" class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : '<span class="text-sm text-gray-400">-</span>'}
                             </div>
                         </td>
                     </tr>
