@@ -372,12 +372,14 @@
                     
                     <!-- Add New Comment -->
                     <div class="mb-4">
+                        <div class="mb-2">
+                            <span id="comment-role-indicator" class="inline-block px-3 py-1 rounded-full text-sm font-semibold">
+                                <i class="fas fa-user-circle mr-1"></i>以 <span id="comment-role-text">員工</span> 身份留言
+                            </span>
+                        </div>
                         <div class="flex items-start space-x-3">
-                            <select id="comment-author" class="rounded-md border-gray-300 shadow-sm text-sm">
-                                <option value="員工">員工</option>
-                                <option value="主管">主管</option>
-                            </select>
-                            <textarea id="new-comment" placeholder="輸入您的評論或建議..." 
+                            <input type="hidden" id="comment-author" value="員工">
+                            <textarea id="new-comment" placeholder="輸入您的評論或建議..."
                                       class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                       rows="2"></textarea>
                             <button id="add-comment" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
@@ -720,6 +722,15 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">每月執行日</label>
                     <input id="new-routine-day" type="number" min="1" max="31" class="w-full px-3 py-2 border rounded-lg">
                 </div>
+                <div id="routine-last-date-field" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">上次執行日期</label>
+                    <input id="new-routine-last-date" type="date" class="w-full px-3 py-2 border rounded-lg" onchange="calculateNextDate()">
+                </div>
+                <div id="routine-next-date-field" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">下次執行日期</label>
+                    <input id="new-routine-next-date" type="date" class="w-full px-3 py-2 border rounded-lg">
+                    <p id="next-date-hint" class="text-xs text-gray-500 mt-1"></p>
+                </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
                 <button onclick="closeAddRoutineModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
@@ -909,7 +920,7 @@
                 { time: "16:45~17:00", task: "倒垃圾" },
             ],
             threeWeeks: [
-                { time: "8:00~8:15", task: "掃地", lastDate: "2025-08-25"},
+                { time: "8:00~8:15", task: "掃地", lastDate: "2025-10-08", nextDate: "2025-10-29" },
             ],
             monthly: [
                 { day: 15, task: "技術部電腦巡檢 (若遇假日則調整)" },
@@ -1288,6 +1299,19 @@
             // 備註
             document.getElementById('project-notes').value = project.notes || '';
 
+            // 根據 URL 角色參數設定評論者身份
+            const commentAuthor = userRole === 'supervisor' ? '主管' : '員工';
+            document.getElementById('comment-author').value = commentAuthor;
+            document.getElementById('comment-role-text').textContent = commentAuthor;
+
+            // 設定身份標籤樣式
+            const roleIndicator = document.getElementById('comment-role-indicator');
+            if (commentAuthor === '主管') {
+                roleIndicator.className = 'inline-block px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-800';
+            } else {
+                roleIndicator.className = 'inline-block px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800';
+            }
+
             // 評論
             renderComments(project.comments || []);
 
@@ -1600,6 +1624,26 @@
                     if (t.time) display = `<span class="text-${section.color}-600 text-sm">${t.time}</span>`;
                     if (t.day) display = `<span class="text-${section.color}-600 text-sm">每月${t.day}日</span>`;
 
+                    // 顯示下次執行日期
+                    let nextDateDisplay = '';
+                    if (section.type === 'threeWeeks') {
+                        if (t.nextDate) {
+                            nextDateDisplay = `<span class="text-sm text-${section.color}-700 font-semibold">下次: ${t.nextDate}</span>`;
+                        } else if (t.lastDate) {
+                            // 如果沒有 nextDate 但有 lastDate，自動計算
+                            const lastDate = new Date(t.lastDate);
+                            lastDate.setDate(lastDate.getDate() + 21);
+                            const nextDate = lastDate.toISOString().split('T')[0];
+                            nextDateDisplay = `<span class="text-sm text-${section.color}-700 font-semibold">下次: ${nextDate}</span>`;
+                        } else {
+                            nextDateDisplay = `<span class="text-sm text-gray-500">未設定</span>`;
+                        }
+                    } else if (section.type === 'monthly' && t.nextDate) {
+                        nextDateDisplay = `<span class="text-sm text-${section.color}-700 font-semibold">下次: ${t.nextDate}</span>`;
+                    } else if (section.type === 'bimonthly' && t.nextDate) {
+                        nextDateDisplay = `<span class="text-sm text-${section.color}-700 font-semibold">下次: ${t.nextDate}</span>`;
+                    }
+
                     let dateButton = '';
                     if ((section.type === 'monthly' && !t.day) || section.type === 'bimonthly') {
                         const currentMonth = new Date().toISOString().substring(0, 7);
@@ -1610,7 +1654,7 @@
                         dateButton = `
                             <div class="flex items-center space-x-2">
                                 ${dateDisplay}
-                                <button onclick="openRoutineDateModal('${section.type}', ${index})" 
+                                <button onclick="openRoutineDateModal('${section.type}', ${index})"
                                         class="text-${section.color}-600 hover:text-${section.color}-800 text-sm">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -1620,7 +1664,10 @@
 
                     return `
                         <div class="flex justify-between items-center py-2 border-b border-${section.color}-100 last:border-b-0">
-                            <span class="text-${section.color}-800">${t.task}</span>
+                            <div class="flex-1">
+                                <span class="text-${section.color}-800">${t.task}</span>
+                                ${nextDateDisplay ? `<div class="mt-1">${nextDateDisplay}</div>` : ''}
+                            </div>
                             <div class="flex items-center space-x-2">
                                 ${display}
                                 ${dateButton}
@@ -1704,24 +1751,50 @@
                     });
                 }
 
-                // 每月任務
+                // 三週一次任務
+                routineTasks.threeWeeks.forEach(task => {
+                    if (task.nextDate === dateStr) {
+                        const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                        tasksHtml += `<div class="calendar-task bg-green-100 text-green-800">${shortTask}</div>`;
+                    } else if (!task.nextDate && task.lastDate) {
+                        // 自動計算下次日期
+                        const lastDate = new Date(task.lastDate);
+                        lastDate.setDate(lastDate.getDate() + 21);
+                        const nextDate = lastDate.toISOString().split('T')[0];
+                        if (nextDate === dateStr) {
+                            const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                            tasksHtml += `<div class="calendar-task bg-green-100 text-green-800">${shortTask}</div>`;
+                        }
+                    }
+                });
+
+                // 每月任務（固定日期）
                 if (day === 15) {
                     const monthlyTask = routineTasks.monthly.find(t => t.day === 15);
                     if (monthlyTask) {
                         const shortTask = monthlyTask.task.length > 15 ? monthlyTask.task.substring(0, 12) + '...' : monthlyTask.task;
-                        tasksHtml += `<div class="calendar-task bg-green-100 text-green-800">${shortTask}</div>`;
+                        tasksHtml += `<div class="calendar-task bg-purple-100 text-purple-800">${shortTask}</div>`;
                     }
                 }
 
-                // 手動設定的任務
+                // 每月任務（下次執行日期）
                 routineTasks.monthly.forEach(task => {
-                    if (task.dates && task.dates[currentMonthStr] === dateStr) {
+                    if (task.nextDate === dateStr) {
+                        const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                        tasksHtml += `<div class="calendar-task bg-purple-100 text-purple-800">${shortTask}</div>`;
+                    } else if (task.dates && task.dates[currentMonthStr] === dateStr) {
+                        // 舊的 dates 格式（向後兼容）
                         tasksHtml += `<div class="calendar-task bg-purple-100 text-purple-800">${task.task}</div>`;
                     }
                 });
 
+                // 雙月任務（下次執行日期）
                 routineTasks.bimonthly.forEach(task => {
-                    if (task.dates && task.dates[currentMonthStr] === dateStr) {
+                    if (task.nextDate === dateStr) {
+                        const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                        tasksHtml += `<div class="calendar-task bg-orange-100 text-orange-800">${shortTask}</div>`;
+                    } else if (task.dates && task.dates[currentMonthStr] === dateStr) {
+                        // 舊的 dates 格式（向後兼容）
                         tasksHtml += `<div class="calendar-task bg-orange-100 text-orange-800">${task.task}</div>`;
                     }
                 });
@@ -1756,17 +1829,57 @@
             const type = document.getElementById('new-routine-type').value;
             const timeField = document.getElementById('routine-time-field');
             const dayField = document.getElementById('routine-day-field');
+            const lastDateField = document.getElementById('routine-last-date-field');
+            const nextDateField = document.getElementById('routine-next-date-field');
+            const nextDateInput = document.getElementById('new-routine-next-date');
+            const nextDateHint = document.getElementById('next-date-hint');
 
-            if (type === 'monthly') {
-                timeField.classList.add('hidden');
-                dayField.classList.remove('hidden');
-            } else if (type === 'bimonthly') {
-                timeField.classList.add('hidden');
-                dayField.classList.add('hidden');
-            } else {
+            // 重置所有欄位
+            timeField.classList.add('hidden');
+            dayField.classList.add('hidden');
+            lastDateField.classList.add('hidden');
+            nextDateField.classList.add('hidden');
+
+            if (type === 'daily') {
+                // 每日任務：顯示時間
                 timeField.classList.remove('hidden');
-                dayField.classList.add('hidden');
+            } else if (type === 'threeWeeks') {
+                // 三週一次：顯示時間、上次日期、下次日期（自動計算）
+                timeField.classList.remove('hidden');
+                lastDateField.classList.remove('hidden');
+                nextDateField.classList.remove('hidden');
+                nextDateInput.readOnly = true;
+                nextDateInput.classList.add('bg-gray-100');
+                nextDateHint.textContent = '系統自動計算（上次日期 + 21天），可編輯上次日期調整';
+            } else if (type === 'monthly') {
+                // 每月任務：顯示每月執行日或下次日期（手動輸入）
+                dayField.classList.remove('hidden');
+                nextDateField.classList.remove('hidden');
+                nextDateInput.readOnly = false;
+                nextDateInput.classList.remove('bg-gray-100');
+                nextDateHint.textContent = '若無固定日期，請手動輸入下次執行日期';
+            } else if (type === 'bimonthly') {
+                // 雙月任務：顯示下次日期（手動輸入）
+                nextDateField.classList.remove('hidden');
+                nextDateInput.readOnly = false;
+                nextDateInput.classList.remove('bg-gray-100');
+                nextDateHint.textContent = '請手動輸入下次執行日期';
             }
+        }
+
+        function calculateNextDate() {
+            const lastDate = document.getElementById('new-routine-last-date').value;
+            if (!lastDate) {
+                document.getElementById('new-routine-next-date').value = '';
+                return;
+            }
+
+            // 計算下次日期（上次日期 + 21天）
+            const date = new Date(lastDate);
+            date.setDate(date.getDate() + 21);
+
+            const nextDate = date.toISOString().split('T')[0];
+            document.getElementById('new-routine-next-date').value = nextDate;
         }
 
         function addNewRoutine() {
@@ -1780,14 +1893,25 @@
 
             const taskData = { task: taskName };
 
-            if (type === 'daily' || type === 'threeWeeks') {
+            if (type === 'daily') {
                 taskData.time = document.getElementById('new-routine-time').value;
+            } else if (type === 'threeWeeks') {
+                taskData.time = document.getElementById('new-routine-time').value;
+                taskData.lastDate = document.getElementById('new-routine-last-date').value;
+                taskData.nextDate = document.getElementById('new-routine-next-date').value;
             } else if (type === 'monthly') {
                 const day = document.getElementById('new-routine-day').value;
-                if (day) taskData.day = parseInt(day);
-                else taskData.dates = {};
+                if (day) {
+                    taskData.day = parseInt(day);
+                } else {
+                    taskData.dates = {};
+                }
+                const nextDate = document.getElementById('new-routine-next-date').value;
+                if (nextDate) taskData.nextDate = nextDate;
             } else if (type === 'bimonthly') {
                 taskData.dates = {};
+                const nextDate = document.getElementById('new-routine-next-date').value;
+                if (nextDate) taskData.nextDate = nextDate;
             }
 
             // 檢查是否為編輯模式
@@ -1811,6 +1935,8 @@
             document.getElementById('new-routine-task').value = '';
             document.getElementById('new-routine-time').value = '';
             document.getElementById('new-routine-day').value = '';
+            document.getElementById('new-routine-last-date').value = '';
+            document.getElementById('new-routine-next-date').value = '';
             currentRoutineTask = null;
         }
 
@@ -1869,6 +1995,12 @@
             }
             if (task.day) {
                 document.getElementById('new-routine-day').value = task.day;
+            }
+            if (task.lastDate) {
+                document.getElementById('new-routine-last-date').value = task.lastDate;
+            }
+            if (task.nextDate) {
+                document.getElementById('new-routine-next-date').value = task.nextDate;
             }
 
             updateRoutineFields();
