@@ -985,12 +985,10 @@
         let currentContactId = null;
         let editMode = false;
 
-        // 全域錯誤處理
+        // 全域錯誤處理（僅記錄，不影響 UI）
         window.addEventListener('error', (e) => {
             console.error('全域錯誤:', e.error);
-            if (document.getElementById('sync-status')) {
-                updateSyncStatus('發生錯誤', false);
-            }
+            // 移除自動顯示錯誤，避免干擾 Firebase 狀態顯示
         });
 
         // 檢查資源加載
@@ -1048,50 +1046,69 @@
         function loadAllDataFromFirebase() {
             if (!isFirebaseInitialized) return;
 
+            console.log('📡 開始從 Firebase 載入資料...');
+
             // 載入專案資料
-            database.ref('projects').on('value', (snapshot) => {
+            database.ref('projects').once('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
+                if (data && Object.keys(data).length > 0) {
                     projects = Object.values(data).sort((a, b) => a.id - b.id);
-                    renderAiDashboard();
+                    console.log('✅ 載入專案資料:', projects.length, '個專案');
+                } else {
+                    // 如果資料庫是空的，初始化預設資料
+                    console.log('📝 資料庫為空，使用預設資料');
+                    syncToFirebase('projects', projects.reduce((acc, p) => ({ ...acc, [p.id]: p }), {}));
                 }
-            });
+                renderAiDashboard();
+            }).catch(err => console.error('載入專案失敗:', err));
 
             // 載入例行任務
-            database.ref('routineTasks').on('value', (snapshot) => {
+            database.ref('routineTasks').once('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
+                if (data && Object.keys(data).length > 0) {
                     routineTasks = data;
-                    renderRoutineDashboard();
+                    console.log('✅ 載入例行任務');
+                } else {
+                    syncToFirebase('routineTasks', routineTasks);
                 }
-            });
+                renderRoutineDashboard();
+            }).catch(err => console.error('載入例行任務失敗:', err));
 
             // 載入分享會
-            database.ref('sharingSessions').on('value', (snapshot) => {
+            database.ref('sharingSessions').once('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
+                if (data && Object.keys(data).length > 0) {
                     sharingSessions = Object.values(data);
-                    renderSharingDashboard();
+                    console.log('✅ 載入分享會:', sharingSessions.length, '場');
+                } else {
+                    syncToFirebase('sharingSessions', sharingSessions.reduce((acc, s) => ({ ...acc, [s.id]: s }), {}));
                 }
-            });
+                renderSharingDashboard();
+            }).catch(err => console.error('載入分享會失敗:', err));
 
             // 載入活動
-            database.ref('events').on('value', (snapshot) => {
+            database.ref('events').once('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
+                if (data && Object.keys(data).length > 0) {
                     eventsAttended = Object.values(data);
-                    renderEventsDashboard();
+                    console.log('✅ 載入活動:', eventsAttended.length, '個活動');
+                } else {
+                    syncToFirebase('events', eventsAttended.reduce((acc, e) => ({ ...acc, [e.id]: e }), {}));
                 }
-            });
+                renderEventsDashboard();
+            }).catch(err => console.error('載入活動失敗:', err));
 
             // 載入企業接洽
-            database.ref('contacts').on('value', (snapshot) => {
+            database.ref('contacts').once('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
+                if (data && Object.keys(data).length > 0) {
                     businessContacts = Object.values(data);
-                    renderContactsDashboard();
+                    console.log('✅ 載入企業接洽:', businessContacts.length, '筆');
+                } else {
+                    syncToFirebase('contacts', businessContacts.reduce((acc, c) => ({ ...acc, [c.id]: c }), {}));
                 }
-            });
+                renderContactsDashboard();
+            }).catch(err => console.error('載入企業接洽失敗:', err));
         }
 
         function syncToFirebase(path, data) {
@@ -1607,6 +1624,12 @@
                             <div class="flex items-center space-x-2">
                                 ${display}
                                 ${dateButton}
+                                <button onclick="editRoutineTask('${section.type}', ${index})" class="text-blue-600 hover:text-blue-800 text-sm">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteRoutineTask('${section.type}', ${index})" class="text-red-600 hover:text-red-800 text-sm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </div>
                     `;
@@ -1748,27 +1771,37 @@
 
         function addNewRoutine() {
             const type = document.getElementById('new-routine-type').value;
-            const task = document.getElementById('new-routine-task').value;
+            const taskName = document.getElementById('new-routine-task').value;
 
-            if (!task) {
+            if (!taskName) {
                 alert('請輸入任務名稱');
                 return;
             }
 
-            const newTask = { task };
+            const taskData = { task: taskName };
 
             if (type === 'daily' || type === 'threeWeeks') {
-                newTask.time = document.getElementById('new-routine-time').value;
+                taskData.time = document.getElementById('new-routine-time').value;
             } else if (type === 'monthly') {
                 const day = document.getElementById('new-routine-day').value;
-                if (day) newTask.day = parseInt(day);
-                else newTask.dates = {};
+                if (day) taskData.day = parseInt(day);
+                else taskData.dates = {};
             } else if (type === 'bimonthly') {
-                newTask.dates = {};
+                taskData.dates = {};
             }
 
-            if (!routineTasks[type]) routineTasks[type] = [];
-            routineTasks[type].push(newTask);
+            // 檢查是否為編輯模式
+            if (currentRoutineTask && currentRoutineTask.isEditing) {
+                // 編輯模式：更新現有任務
+                const { type: oldType, index } = currentRoutineTask;
+                routineTasks[oldType][index] = taskData;
+                alert('任務已更新');
+            } else {
+                // 新增模式：添加新任務
+                if (!routineTasks[type]) routineTasks[type] = [];
+                routineTasks[type].push(taskData);
+                alert('任務已新增');
+            }
 
             syncToFirebase('routineTasks', routineTasks);
             closeAddRoutineModal();
@@ -1778,6 +1811,7 @@
             document.getElementById('new-routine-task').value = '';
             document.getElementById('new-routine-time').value = '';
             document.getElementById('new-routine-day').value = '';
+            currentRoutineTask = null;
         }
 
         function openRoutineDateModal(type, index) {
@@ -1812,6 +1846,51 @@
             syncToFirebase('routineTasks', routineTasks);
             closeRoutineModal();
             renderRoutineDashboard();
+        }
+
+        function editRoutineTask(type, index) {
+            if (isReadOnly) {
+                alert('主管角色無法編輯例行任務');
+                return;
+            }
+
+            const task = routineTasks[type][index];
+            if (!task) {
+                alert('找不到該任務');
+                return;
+            }
+
+            // 填充編輯表單
+            document.getElementById('new-routine-type').value = type;
+            document.getElementById('new-routine-task').value = task.task;
+
+            if (task.time) {
+                document.getElementById('new-routine-time').value = task.time;
+            }
+            if (task.day) {
+                document.getElementById('new-routine-day').value = task.day;
+            }
+
+            updateRoutineFields();
+
+            // 保存當前編輯的任務資訊
+            currentRoutineTask = { type, index, isEditing: true };
+
+            document.getElementById('add-routine-modal').classList.add('show');
+        }
+
+        function deleteRoutineTask(type, index) {
+            if (isReadOnly) {
+                alert('主管角色無法刪除例行任務');
+                return;
+            }
+
+            if (!confirm('確定要刪除此例行任務嗎？')) return;
+
+            routineTasks[type].splice(index, 1);
+            syncToFirebase('routineTasks', routineTasks);
+            renderRoutineDashboard();
+            alert('任務已刪除');
         }
 
         // === 3. 分享會儀表板 ===
