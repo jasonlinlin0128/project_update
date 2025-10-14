@@ -1207,9 +1207,35 @@
         }
 
         function syncToFirebase(path, data) {
-            if (!isFirebaseInitialized) return;
-            database.ref(path).set(data);
-            updateSyncStatus('已同步', true);
+            if (!isFirebaseInitialized) {
+                console.error('❌ Firebase 未初始化，無法同步資料');
+                alert('Firebase 未初始化，資料無法儲存！');
+                return Promise.reject('Firebase not initialized');
+            }
+
+            console.log('🔄 正在同步資料到 Firebase:', path);
+
+            return database.ref(path).set(data)
+                .then(() => {
+                    console.log('✅ 資料同步成功:', path);
+                    updateSyncStatus('已同步', true);
+                })
+                .catch((error) => {
+                    console.error('❌ Firebase 同步失敗:', error);
+                    console.error('路徑:', path);
+                    console.error('錯誤代碼:', error.code);
+                    console.error('錯誤訊息:', error.message);
+
+                    // 顯示錯誤給用戶
+                    if (error.code === 'PERMISSION_DENIED') {
+                        alert('⚠️ Firebase 權限不足！\n\n請檢查 Firebase Realtime Database 規則設定。\n\n請前往 Firebase Console → Realtime Database → 規則，確認允許讀寫。');
+                    } else {
+                        alert('資料儲存失敗：' + error.message);
+                    }
+
+                    updateSyncStatus('同步失敗', false);
+                    throw error;
+                });
         }
 
         // === 1. AI 專案儀表板 ===
@@ -1394,17 +1420,34 @@
                 return;
             }
 
+            console.log('📝 準備新增專案:', newProject);
+
+            // 先添加到本地陣列
             projects.push(newProject);
-            syncToFirebase('projects/' + newProject.id, newProject);
-            
-            closeAddProjectModal();
-            renderAiDashboard();
-            
-            // 清空表單
-            document.getElementById('new-project-name').value = '';
-            document.getElementById('new-project-department').value = '';
-            document.getElementById('new-project-start').value = '';
-            document.getElementById('new-project-due').value = '';
+
+            // 同步到 Firebase 並等待結果
+            syncToFirebase('projects/' + newProject.id, newProject)
+                .then(() => {
+                    console.log('✅ 專案新增成功:', newProject.name);
+                    alert('✅ 專案「' + newProject.name + '」新增成功！');
+                    closeAddProjectModal();
+                    renderAiDashboard();
+
+                    // 清空表單
+                    document.getElementById('new-project-name').value = '';
+                    document.getElementById('new-project-department').value = '';
+                    document.getElementById('new-project-start').value = '';
+                    document.getElementById('new-project-due').value = '';
+                })
+                .catch((error) => {
+                    // 同步失敗，從本地陣列移除
+                    const index = projects.findIndex(p => p.id === newProject.id);
+                    if (index > -1) {
+                        projects.splice(index, 1);
+                    }
+                    console.error('❌ 專案新增失敗，已回滾本地資料');
+                    renderAiDashboard();
+                });
         }
 
         function reloadProjects() {
