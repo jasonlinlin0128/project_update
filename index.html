@@ -995,7 +995,8 @@
                     "16:00-16:05 開場與介紹",
                     "16:05-16:30 解決各部門提出的一項問題",
                     "16:30-16:45 Q&A 與交流",
-                ]
+                ],
+                comments: []
             },
             {
                 id: 10002,  // 固定 ID
@@ -1007,7 +1008,8 @@
                     "11:30-11:50 AI時代的知識管理利器：Google NotebookLM",
                     "16:05-16:30 解決各部門提出的一項問題",
                     "16:30-16:45 Q&A 與交流",
-                ]
+                ],
+                comments: []
             },
             // 過去的分享會保持原樣...
         ];
@@ -1048,7 +1050,8 @@
         let currentEventId = null;
         let currentContactId = null;
         let editMode = false;
-        let isDataLoading = false;  // 載入狀態標記
+        let isDataLoading = false;  // 全域載入狀態標記
+        let isProjectsLoading = false;  // 專案資料載入狀態標記
         let projectIdCounter = 100000;  // ID 生成器，從 100000 開始避免與固定 ID 衝突
 
         // 全域錯誤處理（僅記錄，不影響 UI）
@@ -1131,7 +1134,8 @@
         function loadAllDataFromFirebase() {
             if (!isFirebaseInitialized) return;
 
-            isDataLoading = true;  // 設定載入中狀態
+            isDataLoading = true;  // 設定全域載入中狀態
+            isProjectsLoading = true;  // 設定專案載入中狀態
             console.log('📡 開始從 Firebase 載入資料...');
 
             // 載入專案資料
@@ -1146,7 +1150,12 @@
                     syncToFirebase('projects', projects.reduce((acc, p) => ({ ...acc, [p.id]: p }), {}));
                 }
                 renderAiDashboard();
-            }).catch(err => console.error('載入專案失敗:', err));
+                isProjectsLoading = false;  // 專案載入完成，立即允許互動
+                console.log('✅ 專案資料載入完成，可以開始互動');
+            }).catch(err => {
+                console.error('載入專案失敗:', err);
+                isProjectsLoading = false;  // 即使失敗也要清除專案載入狀態
+            });
 
             // 載入例行任務
             database.ref('routineTasks').once('value', (snapshot) => {
@@ -1367,10 +1376,10 @@
                 return;
             }
 
-            // 檢查是否正在載入資料
-            if (isDataLoading) {
-                alert('資料載入中，請稍候再試');
-                console.warn('資料載入中，無法開啟專案');
+            // 檢查專案是否正在載入（使用專案專用的載入標記）
+            if (isProjectsLoading) {
+                alert('專案資料載入中，請稍候再試');
+                console.warn('專案資料載入中，無法開啟專案');
                 return;
             }
 
@@ -1378,7 +1387,7 @@
             const verifiedProject = findProjectById(project.id);
             if (!verifiedProject) {
                 alert('找不到此專案，可能已被刪除或資料尚未同步完成\n請重新整理頁面後再試');
-                console.error('openProjectModal: 找不到專案 ID', project.id);
+                console.error('openProjectModal: 找不到專案 ID', project.id, '| 當前專案列表:', projects.map(p => p.id));
                 return;
             }
 
@@ -1818,9 +1827,10 @@
             // 檢查是否在掃地週內
             routineTasks.threeWeeks.forEach(task => {
                 if (task.nextWeekStart) {
-                    const weekStart = new Date(task.nextWeekStart);
-                    const weekEnd = new Date(weekStart);
-                    weekEnd.setDate(weekEnd.getDate() + 4);
+                    // 修正：使用本地時區解析日期
+                    const [y, m, d] = task.nextWeekStart.split('-').map(Number);
+                    const weekStart = new Date(y, m - 1, d);
+                    const weekEnd = new Date(y, m - 1, d + 4);
 
                     if (today >= weekStart && today <= weekEnd) {
                         totalTasks++;
@@ -1873,9 +1883,10 @@
                 // 檢查是否在掃地週內（加入勾選框）
                 routineTasks.threeWeeks.forEach((t, index) => {
                     if (t.nextWeekStart) {
-                        const weekStart = new Date(t.nextWeekStart);
-                        const weekEnd = new Date(weekStart);
-                        weekEnd.setDate(weekEnd.getDate() + 4); // 週五
+                        // 修正：使用本地時區解析日期
+                        const [y, m, d] = t.nextWeekStart.split('-').map(Number);
+                        const weekStart = new Date(y, m - 1, d);
+                        const weekEnd = new Date(y, m - 1, d + 4); // 週五
 
                         if (today >= weekStart && today <= weekEnd) {
                             const status = getTaskCompletionStatus(t, today);
@@ -1928,20 +1939,20 @@
                     let nextDateDisplay = '';
                     if (section.type === 'threeWeeks') {
                         if (t.nextWeekStart) {
-                            const weekStart = new Date(t.nextWeekStart);
-                            const weekEnd = new Date(weekStart);
-                            weekEnd.setDate(weekEnd.getDate() + 4); // 週五
-                            const startStr = weekStart.toISOString().split('T')[0];
-                            const endStr = weekEnd.toISOString().split('T')[0];
+                            // 修正：使用本地時區解析和格式化日期
+                            const [y, m, d] = t.nextWeekStart.split('-').map(Number);
+                            const weekStart = new Date(y, m - 1, d);
+                            const weekEnd = new Date(y, m - 1, d + 4); // 週五
+                            const startStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                            const endStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`;
                             nextDateDisplay = `<span class="text-sm text-${section.color}-700 font-semibold">下次掃地週: ${startStr} ~ ${endStr}</span>`;
                         } else if (t.lastWeekStart) {
-                            // 自動計算下次掃地週（上次週一 + 21天）
-                            const lastStart = new Date(t.lastWeekStart);
-                            lastStart.setDate(lastStart.getDate() + 21);
-                            const weekEnd = new Date(lastStart);
-                            weekEnd.setDate(weekEnd.getDate() + 4);
-                            const startStr = lastStart.toISOString().split('T')[0];
-                            const endStr = weekEnd.toISOString().split('T')[0];
+                            // 自動計算下次掃地週（上次週一 + 21天）- 修正：使用本地時區
+                            const [y, m, d] = t.lastWeekStart.split('-').map(Number);
+                            const nextStart = new Date(y, m - 1, d + 21);
+                            const weekEnd = new Date(y, m - 1, d + 25); // 3週後的週五
+                            const startStr = `${nextStart.getFullYear()}-${String(nextStart.getMonth() + 1).padStart(2, '0')}-${String(nextStart.getDate()).padStart(2, '0')}`;
+                            const endStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`;
                             nextDateDisplay = `<span class="text-sm text-${section.color}-700 font-semibold">下次掃地週: ${startStr} ~ ${endStr}</span>`;
                         } else {
                             nextDateDisplay = `<span class="text-sm text-gray-500">未設定</span>`;
@@ -2086,20 +2097,32 @@
                 if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                     routineTasks.threeWeeks.forEach(task => {
                         if (task.nextWeekStart) {
-                            const weekStart = new Date(task.nextWeekStart);
-                            const weekEnd = new Date(weekStart);
-                            weekEnd.setDate(weekEnd.getDate() + 4); // 週五
+                            // 修正：使用本地時區解析日期，避免 UTC 時區差異
+                            const [y, m, d] = task.nextWeekStart.split('-').map(Number);
+                            const weekStart = new Date(y, m - 1, d); // month 是 0-indexed
+                            const weekEnd = new Date(y, m - 1, d + 4); // 週五
+
+                            // 除錯訊息（只在檢查日曆第一天時輸出）
+                            if (day === 1) {
+                                console.log('日曆三週任務檢查:', {
+                                    task: task.task,
+                                    nextWeekStart: task.nextWeekStart,
+                                    weekStart: weekStart.toLocaleDateString('zh-TW'),
+                                    weekEnd: weekEnd.toLocaleDateString('zh-TW'),
+                                    currentMonth: `${year}-${String(month + 1).padStart(2, '0')}`,
+                                    比較測試: currentDate >= weekStart && currentDate <= weekEnd
+                                });
+                            }
 
                             if (currentDate >= weekStart && currentDate <= weekEnd) {
                                 const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
                                 tasksHtml += `<div class="calendar-task bg-green-100 text-green-800">${shortTask}</div>`;
                             }
                         } else if (task.lastWeekStart) {
-                            // 自動計算下次掃地週
-                            const nextWeekStart = new Date(task.lastWeekStart);
-                            nextWeekStart.setDate(nextWeekStart.getDate() + 21);
-                            const weekEnd = new Date(nextWeekStart);
-                            weekEnd.setDate(weekEnd.getDate() + 4);
+                            // 自動計算下次掃地週 - 修正：使用本地時區
+                            const [y, m, d] = task.lastWeekStart.split('-').map(Number);
+                            const nextWeekStart = new Date(y, m - 1, d + 21); // 3週後
+                            const weekEnd = new Date(y, m - 1, d + 25); // 3週後的週五
 
                             if (currentDate >= nextWeekStart && currentDate <= weekEnd) {
                                 const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
@@ -2240,14 +2263,24 @@
                 return;
             }
 
-            const taskData = { task: taskName };
+            const taskData = { task: taskName, completionHistory: {} };
 
             if (type === 'daily') {
                 taskData.time = document.getElementById('new-routine-time').value;
             } else if (type === 'threeWeeks') {
                 taskData.time = document.getElementById('new-routine-time').value;
-                taskData.lastWeekStart = document.getElementById('new-routine-last-date').value;
-                taskData.nextWeekStart = document.getElementById('new-routine-next-date').value;
+                const lastWeekStart = document.getElementById('new-routine-last-date').value;
+                const nextWeekStart = document.getElementById('new-routine-next-date').value;
+
+                taskData.lastWeekStart = lastWeekStart;
+                taskData.nextWeekStart = nextWeekStart;
+
+                // 加入除錯訊息
+                console.log('三週任務設定:', {
+                    task: taskName,
+                    lastWeekStart,
+                    nextWeekStart
+                });
             } else if (type === 'monthly') {
                 const day = document.getElementById('new-routine-day').value;
                 if (day) {
@@ -2443,17 +2476,48 @@
                     return `<li>${item}</li>`;
                 }).join('');
 
+                // 編輯和刪除按鈕（只有非只讀模式才顯示）
+                const editDeleteButtons = !isReadOnly ? `
+                    <div class="flex space-x-2 ml-4">
+                        <button onclick="editSharing(${s.id}); event.stopPropagation();" class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs hover:bg-blue-200">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteSharing(${s.id}); event.stopPropagation();" class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs hover:bg-red-200">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ` : '';
+
                 return `
                     <details class="p-4 border-b last:border-b-0">
                         <summary class="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <div>
+                            <div class="flex-1">
                                 <p class="text-sm text-gray-500">${s.date}</p>
                                 <p class="font-semibold text-gray-700">${s.theme}</p>
                             </div>
-                            <i class="fas fa-chevron-right summary-icon text-gray-400"></i>
+                            <div class="flex items-center">
+                                ${editDeleteButtons}
+                                <i class="fas fa-chevron-right summary-icon text-gray-400 ml-2"></i>
+                            </div>
                         </summary>
                         <div class="mt-4 pl-4 border-l-2 border-gray-200">
-                            <ul class="list-disc list-inside space-y-1 text-gray-600">${content}</ul>
+                            <ul class="list-disc list-inside space-y-1 text-gray-600 mb-4">${content}</ul>
+
+                            <!-- 評論區塊 -->
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <h4 class="font-semibold text-gray-700 mb-3"><i class="fas fa-comments mr-2"></i>主管評論</h4>
+                                <div id="sharing-comments-${s.id}" class="space-y-2 mb-3">
+                                    ${renderSharingComments(s.comments || [])}
+                                </div>
+                                ${isReadOnly ? `
+                                    <div class="mt-3">
+                                        <input type="text" id="sharing-comment-${s.id}" placeholder="輸入您的評論..." class="w-full p-2 border rounded text-sm">
+                                        <button onclick="addSharingComment(${s.id})" class="mt-2 bg-blue-600 text-white px-4 py-1 rounded text-sm hover:bg-blue-700">
+                                            <i class="fas fa-paper-plane mr-1"></i>送出評論
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
                     </details>
                 `;
@@ -2484,7 +2548,8 @@
                 theme: document.getElementById('new-sharing-theme').value,
                 speaker: document.getElementById('new-sharing-speaker').value,
                 status: 'upcoming',
-                schedule: schedule
+                schedule: schedule,
+                comments: []
             };
 
             if (!newSharing.date || !newSharing.theme || !newSharing.speaker) {
@@ -2578,6 +2643,62 @@
             closeEditSharingModal();
             renderSharingDashboard();
             alert('分享會已更新');
+        }
+
+        // 分享會評論功能
+        function renderSharingComments(comments) {
+            if (!comments || comments.length === 0) {
+                return '<p class="text-sm text-gray-400 text-center py-2">尚無評論</p>';
+            }
+
+            return comments.map(comment => {
+                const date = new Date(comment.timestamp);
+                const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+                const isManager = comment.author === '主管';
+
+                return `
+                    <div class="p-3 rounded-lg ${isManager ? 'bg-red-50 border border-red-200' : 'bg-gray-50 border border-gray-200'}">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="font-semibold text-sm ${isManager ? 'text-red-800' : 'text-gray-800'}">
+                                <i class="fas fa-user-circle mr-1"></i>${comment.author}
+                            </span>
+                            <span class="text-xs text-gray-500">${dateStr}</span>
+                        </div>
+                        <p class="text-sm ${isManager ? 'text-red-700' : 'text-gray-700'}">${comment.text}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addSharingComment(sessionId) {
+            const input = document.getElementById(`sharing-comment-${sessionId}`);
+            const text = input.value.trim();
+
+            if (!text) {
+                alert('請輸入評論內容');
+                return;
+            }
+
+            const session = sharingSessions.find(s => s.id === sessionId);
+            if (!session) {
+                alert('找不到該分享會');
+                return;
+            }
+
+            if (!session.comments) session.comments = [];
+
+            const comment = {
+                id: generateUniqueId(),
+                author: '主管',  // 只有主管能評論
+                text: text,
+                timestamp: new Date().toISOString()
+            };
+
+            session.comments.push(comment);
+            syncToFirebase('sharingSessions', sharingSessions);
+
+            input.value = '';
+            renderSharingDashboard();
         }
 
         // === 4. 活動參與儀表板 ===
