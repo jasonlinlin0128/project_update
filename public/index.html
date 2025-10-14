@@ -1021,106 +1021,6 @@
             }
         }
 
-        // 資料區域
-        let projects = [
-            { id: 1, name: "籌料狀態數位化", department: "物管部 (王偉全、董光展)", startTime: "2025-08-19", dueDate: "2025-09-19", priority: "高", progress: 100, status: "已終止", notes: "", files: [], comments: [] },
-            { id: 2, name: "客製化軍品 AI 瑕疵檢測", department: "品保部 (徐世勇)", startTime: "2025-09-02", dueDate: "2025-12-31", priority: "低", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
-            { id: 3, name: "圖面繪製標準建議系統", department: "技術部 (林佳汝)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
-            { id: 4, name: "ERP+RPA交期提醒工具", department: "生管部 (王偉全)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
-            { id: 5, name: "地端GPT開發", department: "經企室 (Porter)", startTime: "2025-07-01", dueDate: "2026-6-30", priority: "高", progress: 15, status: "開發中", notes: "", files: [], comments: [] },
-            { id: 6, name: "NFC工廠夜間巡檢", department: "管理部 (淑惠姊)", startTime: "2025-06-09", dueDate: "2025-10-01", priority: "高", progress: 80, status: "測試中", notes: "", files: [], comments: [] },
-            { id: 7, name: "機台換刀預測系統", department: "加工部 (林昆弘)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
-            { id: 8, name: "AI合約排程輔助建議", department: "軍品業務部 (許協理)", startTime: "unknown", dueDate: "unknown", priority: "中", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
-            { id: 9, name: "AI Agent潛在客戶推播系統", department: "壓鑄業務部 (陳瑩盈)", startTime: "2025-07-30", dueDate: "2025-08-01", priority: "低", progress: 100, status: "已完成", notes: "", files: [], comments: [] },
-            { id: 10, name: "資安Teams Bot建置", department: "資安小隊", startTime: "2025-05-30", dueDate: "2025-06-04", priority: "高", progress: 100, status: "已完成", notes: "", files: [], comments: [] },
-            { id: 11, name: "會議記錄逐字稿及重點整理工具", department: "會議記錄人員(薪桉)", startTime: "2025-04-30", dueDate: "2025-05-26", priority: "高", progress: 100, status: "已完成", notes: "", files: [], comments: [] },
-            { id: 12, name: "壓鑄機SCADA整合系統", department: "電控部(胡協理)", startTime: "2025-08-25", dueDate: "2026-05-31", priority: "中", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
-            { id: 13, name: "壓鑄機射料曲線系統數據擷取分析", department: "電控部(胡協理)", startTime: "2025-08-25", dueDate: "2026-01-31", priority: "中", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
-            { id: 14, name: "壓鑄機觸控型工業電腦", department: "電控部(胡協理)", startTime: "unknown", dueDate: "unknown", priority: "中", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
-            { id: 15, name: "Dynabook-APS排程管理方案", department: "經企室(林佳賢)", startTime: "2025-07-29", dueDate: "unknown", priority: "中", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
-            { id: 16, name: "Google AgentSpace(Simhope KM+EIP開發)", department: "經企室 (Porter)", startTime: "unknown", dueDate: "unknown", priority: "低", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
-            { id: 17, name: "檢驗流程SOP呈現優化", department: "品保部 (薛瑞文)", startTime: "2025-09-03", dueDate: "unknown", priority: "低", progress: 5, status: "規劃中", notes: "", files: [], comments: [] },
-            { id: 18, name: "MasterCAM外掛程式開發", department: "加工部 (林昆弘)", startTime: "2025-09-11", dueDate: "2025-09-25", priority: "高", progress: 20, status: "開發中", notes: "直接指派任務", files: [], comments: [] },
-            { id: 19, name: "加工部日報表數位化", department: "加工部 (林昆弘)", startTime: "2025-09-11", dueDate: "2025-09-25", priority: "高", progress: 90, status: "測試中", notes: "直接指派任務", files: [], comments: [] },
-            { id: 20, name: "發票識別申報覆核", department: "管理部 (蕭瑄萱)", startTime: "2025-09-25", dueDate: "2025-12-31", priority: "中", progress: 0, status: "構思中", notes: "", files: [], comments: [] },
-        ];
-
-        let routineTasks = {
-            daily: [
-                { time: "8:00~8:15", task: "清潔洗手台 & 泡茶", completionHistory: {} },
-                { time: "13:00~13:30", task: "巡檢主辦公室 & 資訊辦公室 (各約15分鐘)", completionHistory: {} },
-                { time: "16:45~17:00", task: "倒垃圾", completionHistory: {} },
-            ],
-            threeWeeks: [
-                { time: "8:00~8:15", task: "掃地（週一至週五）", lastWeekStart: "2025-10-07", nextWeekStart: "2025-10-28", completionHistory: {} },
-            ],
-            monthly: [
-                { task: "技術部電腦巡檢", dates: {}, completionHistory: {} },
-                { task: "打掃廁所", dates: {}, completionHistory: {} },
-            ],
-            bimonthly: [
-                { task: "至餐廳備餐", dates: {}, completionHistory: {} },
-            ]
-        };
-        
-        let sharingSessions = [
-            {
-                id: 10001,  // 固定 ID，避免每次重新載入都變動
-                date: "2025-09-25",
-                theme: "LLM實戰分享會",
-                speaker: "我",
-                status: "upcoming",
-                schedule: [
-                    "16:00-16:05 開場與介紹",
-                    "16:05-16:30 解決各部門提出的一項問題",
-                    "16:30-16:45 Q&A 與交流",
-                ],
-                comments: []
-            },
-            {
-                id: 10002,  // 固定 ID
-                date: "2025-09-02",
-                theme: "AI應用分享-1",
-                speaker: "我",
-                status: "upcoming",
-                schedule: [
-                    "11:30-11:50 AI時代的知識管理利器：Google NotebookLM",
-                    "16:05-16:30 解決各部門提出的一項問題",
-                    "16:30-16:45 Q&A 與交流",
-                ],
-                comments: []
-            },
-            // 過去的分享會保持原樣...
-        ];
-        
-        let eventsAttended = [
-            {
-                id: 20001,  // 固定 ID，避免每次重新載入都變動
-                eventName: "勞工安全教育訓練",
-                date: "2025-04-29",
-                summary: "114年度 勞工安全教育訓練。",
-                learnings: [
-                    "工廠安全注意事項。",
-                    "工業電腦 (IPC) 結合邊緣 AI 的解決方案。",
-                ],
-                files: [],
-                type: "internal",
-            },
-            // 其他活動保持原樣...
-        ];
-        
-        let businessContacts = [
-            {
-                id: 30001,  // 固定 ID，避免每次重新載入都變動
-                companyName: "超數科技HyperData",
-                contactPerson: "張鈞程",
-                date: "2025-07-07",
-                topic: "了解公司目前AI規劃應用與挑戰。",
-                files: []
-            },
-            // 其他聯絡保持原樣...
-        ];
-
         // 全域變數
         let calendarDate = new Date();
         let currentProjectId = null;
@@ -1132,6 +1032,18 @@
         let isDataLoading = false;  // 全域載入狀態標記
         let isProjectsLoading = false;  // 專案資料載入狀態標記
         let projectIdCounter = 100000;  // ID 生成器，從 100000 開始避免與固定 ID 衝突
+
+        // 資料陣列（從 Firebase 載入，初始為空）
+        let projects = [];
+        let routineTasks = {
+            daily: [],
+            threeWeeks: [],
+            monthly: [],
+            bimonthly: []
+        };
+        let sharingSessions = [];
+        let eventsAttended = [];
+        let businessContacts = [];
 
         // 全域錯誤處理（僅記錄，不影響 UI）
         window.addEventListener('error', (e) => {
@@ -1154,9 +1066,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 loadFieldConfig();  // 載入欄位配置
-                initFirebase();
+                initFirebase();  // Firebase 載入完成後會自動調用各 render 函數
                 setupEventListeners();
-                renderAllDashboards();
+                // ⚠️ 不在這裡調用 renderAllDashboards()，因為 Firebase 資料尚未載入
+                // 各儀表板會在 Firebase 載入完成後自動渲染
 
                 // 延遲執行權限套用以確保 DOM 完全載入
                 setTimeout(() => {
@@ -1225,9 +1138,8 @@
                     projects = Object.values(data).sort((a, b) => a.id - b.id);
                     console.log('✅ 載入專案資料:', projects.length, '個專案');
                 } else {
-                    // 如果資料庫是空的，初始化預設資料
-                    console.log('📝 資料庫為空，使用預設資料');
-                    syncToFirebase('projects', projects.reduce((acc, p) => ({ ...acc, [p.id]: p }), {}));
+                    // Firebase 資料庫為空，保持空陣列
+                    console.log('📝 Firebase 資料庫為空，可以開始新增專案');
                 }
                 renderAiDashboard();
                 isProjectsLoading = false;  // 專案載入完成，立即允許互動
@@ -1244,7 +1156,7 @@
                     routineTasks = data;
                     console.log('✅ 載入例行任務');
                 } else {
-                    syncToFirebase('routineTasks', routineTasks);
+                    console.log('📝 例行任務資料庫為空，可以開始新增任務');
                 }
                 renderRoutineDashboard();
             }).catch(err => console.error('載入例行任務失敗:', err));
@@ -1256,7 +1168,7 @@
                     sharingSessions = Object.values(data);
                     console.log('✅ 載入分享會:', sharingSessions.length, '場');
                 } else {
-                    syncToFirebase('sharingSessions', sharingSessions.reduce((acc, s) => ({ ...acc, [s.id]: s }), {}));
+                    console.log('📝 分享會資料庫為空，可以開始新增分享會');
                 }
                 renderSharingDashboard();
             }).catch(err => console.error('載入分享會失敗:', err));
@@ -1268,7 +1180,7 @@
                     eventsAttended = Object.values(data);
                     console.log('✅ 載入活動:', eventsAttended.length, '個活動');
                 } else {
-                    syncToFirebase('events', eventsAttended.reduce((acc, e) => ({ ...acc, [e.id]: e }), {}));
+                    console.log('📝 活動資料庫為空，可以開始新增活動');
                 }
                 renderEventsDashboard();
             }).catch(err => console.error('載入活動失敗:', err));
@@ -1280,7 +1192,7 @@
                     businessContacts = Object.values(data);
                     console.log('✅ 載入企業接洽:', businessContacts.length, '筆');
                 } else {
-                    syncToFirebase('contacts', businessContacts.reduce((acc, c) => ({ ...acc, [c.id]: c }), {}));
+                    console.log('📝 企業接洽資料庫為空，可以開始新增聯絡人');
                 }
                 renderContactsDashboard();
 
@@ -1307,6 +1219,13 @@
 
             if (!board || !summaryContainer || !monthFilter) {
                 console.error('AI Dashboard 元素未找到');
+                return;
+            }
+
+            // 安全檢查：確保 projects 已初始化
+            if (!projects || !Array.isArray(projects)) {
+                console.warn('專案資料尚未載入');
+                board.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">資料載入中...</div>';
                 return;
             }
 
@@ -2153,6 +2072,14 @@
                 console.error('例行公事容器未找到');
                 return;
             }
+
+            // 安全檢查：確保 routineTasks 已初始化
+            if (!routineTasks) {
+                console.warn('例行任務資料尚未載入');
+                container.innerHTML = '<div class="text-center text-gray-500 py-8">資料載入中...</div>';
+                return;
+            }
+
             container.innerHTML = '';
 
             const today = new Date();
@@ -2740,6 +2667,17 @@
         // === 3. 分享會儀表板 ===
         function renderSharingDashboard() {
             const container = document.getElementById('sharing-session-content');
+            if (!container) {
+                console.error('分享會容器未找到');
+                return;
+            }
+
+            // 安全檢查：確保 sharingSessions 已初始化
+            if (!sharingSessions || !Array.isArray(sharingSessions)) {
+                console.warn('分享會資料尚未載入');
+                container.innerHTML = '<div class="text-center text-gray-500 py-8">資料載入中...</div>';
+                return;
+            }
 
             // 根據日期自動分類
             const today = new Date();
@@ -3026,6 +2964,17 @@
         // === 4. 活動參與儀表板 ===
         function renderEventsDashboard(filteredEvents = null) {
             const container = document.getElementById('event-participation-content');
+            if (!container) {
+                console.error('活動容器未找到');
+                return;
+            }
+
+            // 安全檢查：確保 eventsAttended 已初始化
+            if (!eventsAttended || !Array.isArray(eventsAttended)) {
+                console.warn('活動資料尚未載入');
+                container.innerHTML = '<div class="text-center text-gray-500 py-8">資料載入中...</div>';
+                return;
+            }
 
             const events = filteredEvents || eventsAttended;
 
@@ -3238,6 +3187,17 @@
         // === 5. 接洽企業儀表板 ===
         function renderContactsDashboard(filteredContacts = null) {
             const container = document.getElementById('business-contacts-content');
+            if (!container) {
+                console.error('企業接洽容器未找到');
+                return;
+            }
+
+            // 安全檢查：確保 businessContacts 已初始化
+            if (!businessContacts || !Array.isArray(businessContacts)) {
+                console.warn('企業接洽資料尚未載入');
+                container.innerHTML = '<div class="text-center text-gray-500 py-8">資料載入中...</div>';
+                return;
+            }
 
             const contacts = filteredContacts || businessContacts;
 
