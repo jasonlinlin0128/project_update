@@ -160,7 +160,7 @@
 
             <!-- 2. Routine Tasks Dashboard -->
             <div id="dashboard-routine" class="dashboard-content hidden">
-                 <header class="mb-8 flex justify-between items-center">
+                 <header class="mb-6 flex justify-between items-center">
                      <div>
                          <h1 class="text-3xl font-bold text-gray-800">例行公事儀表板</h1>
                          <p class="text-gray-500 mt-1">追蹤每日、每週、每月的重複性任務。</p>
@@ -169,6 +169,59 @@
                          <i class="fas fa-plus mr-2"></i>新增任務
                      </button>
                  </header>
+
+                 <!-- 搜尋與篩選區 -->
+                 <div class="mb-6 space-y-4">
+                     <!-- 搜尋框 -->
+                     <div class="relative">
+                         <input type="text"
+                                id="routine-search"
+                                placeholder="🔍 搜尋任務名稱..."
+                                oninput="handleRoutineSearch(this.value)"
+                                class="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                         <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                     </div>
+
+                     <!-- 篩選按鈕組 -->
+                     <div class="flex flex-wrap gap-2" id="routine-filter-buttons">
+                         <button onclick="filterRoutineTasks('all')"
+                                 data-filter="all"
+                                 class="routine-filter-btn active px-4 py-2 rounded-lg font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700">
+                             全部
+                         </button>
+                         <button onclick="filterRoutineTasks('daily')"
+                                 data-filter="daily"
+                                 class="routine-filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300">
+                             每日任務
+                         </button>
+                         <button onclick="filterRoutineTasks('threeWeeks')"
+                                 data-filter="threeWeeks"
+                                 class="routine-filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300">
+                             三週一次
+                         </button>
+                         <button onclick="filterRoutineTasks('monthly')"
+                                 data-filter="monthly"
+                                 class="routine-filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300">
+                             每月任務
+                         </button>
+                         <button onclick="filterRoutineTasks('bimonthly')"
+                                 data-filter="bimonthly"
+                                 class="routine-filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300">
+                             雙月任務
+                         </button>
+                         <button onclick="filterRoutineTasks('completed')"
+                                 data-filter="completed"
+                                 class="routine-filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300">
+                             今日已完成
+                         </button>
+                         <button onclick="filterRoutineTasks('pending')"
+                                 data-filter="pending"
+                                 class="routine-filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300">
+                             今日待完成
+                         </button>
+                     </div>
+                 </div>
+
                  <div id="routine-tasks-content" class="space-y-8"></div>
                  <div class="mt-12">
                      <div id="calendar-header" class="flex items-center justify-between mb-4"></div>
@@ -915,41 +968,41 @@
 
         let routineTasks = {
             daily: [
-                { time: "8:00~8:15", task: "清潔洗手台 & 泡茶" },
-                { time: "13:00~13:30", task: "巡檢主辦公室 & 資訊辦公室 (各約15分鐘)" },
-                { time: "16:45~17:00", task: "倒垃圾" },
+                { time: "8:00~8:15", task: "清潔洗手台 & 泡茶", completionHistory: {} },
+                { time: "13:00~13:30", task: "巡檢主辦公室 & 資訊辦公室 (各約15分鐘)", completionHistory: {} },
+                { time: "16:45~17:00", task: "倒垃圾", completionHistory: {} },
             ],
             threeWeeks: [
-                { time: "8:00~8:15", task: "掃地（週一至週五）", lastWeekStart: "2025-10-07", nextWeekStart: "2025-10-28" },
+                { time: "8:00~8:15", task: "掃地（週一至週五）", lastWeekStart: "2025-10-07", nextWeekStart: "2025-10-28", completionHistory: {} },
             ],
             monthly: [
-                { task: "技術部電腦巡檢", dates: {} },
-                { task: "打掃廁所", dates: {} },
+                { task: "技術部電腦巡檢", dates: {}, completionHistory: {} },
+                { task: "打掃廁所", dates: {}, completionHistory: {} },
             ],
             bimonthly: [
-                { task: "至餐廳備餐", dates: {} },
+                { task: "至餐廳備餐", dates: {}, completionHistory: {} },
             ]
         };
         
         let sharingSessions = [
-            { 
-                id: Date.now() + 1,
-                date: "2025-09-25", 
-                theme: "LLM實戰分享會", 
-                speaker: "我", 
-                status: "upcoming", 
-                schedule: [ 
-                    "16:00-16:05 開場與介紹", 
-                    "16:05-16:30 解決各部門提出的一項問題", 
-                    "16:30-16:45 Q&A 與交流", 
+            {
+                id: 10001,  // 固定 ID，避免每次重新載入都變動
+                date: "2025-09-25",
+                theme: "LLM實戰分享會",
+                speaker: "我",
+                status: "upcoming",
+                schedule: [
+                    "16:00-16:05 開場與介紹",
+                    "16:05-16:30 解決各部門提出的一項問題",
+                    "16:30-16:45 Q&A 與交流",
                 ]
             },
-            { 
-                id: Date.now() + 2,
-                date: "2025-09-02", 
-                theme: "AI應用分享-1", 
-                speaker: "我", 
-                status: "upcoming", 
+            {
+                id: 10002,  // 固定 ID
+                date: "2025-09-02",
+                theme: "AI應用分享-1",
+                speaker: "我",
+                status: "upcoming",
                 schedule: [
                     "11:30-11:50 AI時代的知識管理利器：Google NotebookLM",
                     "16:05-16:30 解決各部門提出的一項問題",
@@ -960,28 +1013,28 @@
         ];
         
         let eventsAttended = [
-            { 
-                id: Date.now() + 100,
-                eventName: "勞工安全教育訓練", 
-                date: "2025-04-29", 
-                summary: "114年度 勞工安全教育訓練。", 
+            {
+                id: 20001,  // 固定 ID，避免每次重新載入都變動
+                eventName: "勞工安全教育訓練",
+                date: "2025-04-29",
+                summary: "114年度 勞工安全教育訓練。",
                 learnings: [
                     "工廠安全注意事項。",
                     "工業電腦 (IPC) 結合邊緣 AI 的解決方案。",
-                ], 
-                files: [], 
-                type: "internal", 
+                ],
+                files: [],
+                type: "internal",
             },
             // 其他活動保持原樣...
         ];
         
         let businessContacts = [
-            { 
-                id: Date.now() + 200,
-                companyName: "超數科技HyperData", 
-                contactPerson: "張鈞程", 
-                date: "2025-07-07", 
-                topic: "了解公司目前AI規劃應用與挑戰。", 
+            {
+                id: 30001,  // 固定 ID，避免每次重新載入都變動
+                companyName: "超數科技HyperData",
+                contactPerson: "張鈞程",
+                date: "2025-07-07",
+                topic: "了解公司目前AI規劃應用與挑戰。",
                 files: []
             },
             // 其他聯絡保持原樣...
@@ -995,6 +1048,8 @@
         let currentEventId = null;
         let currentContactId = null;
         let editMode = false;
+        let isDataLoading = false;  // 載入狀態標記
+        let projectIdCounter = 100000;  // ID 生成器，從 100000 開始避免與固定 ID 衝突
 
         // 全域錯誤處理（僅記錄，不影響 UI）
         window.addEventListener('error', (e) => {
@@ -1053,10 +1108,30 @@
             renderContactsDashboard();
         }
 
+        // === 輔助函式 ===
+        function generateUniqueId() {
+            // 使用遞增計數器 + 隨機數確保唯一性
+            return projectIdCounter++;
+        }
+
+        function findProjectById(projectId) {
+            // 安全查找專案，包含錯誤處理
+            if (!projectId) {
+                console.warn('專案 ID 為空');
+                return null;
+            }
+            const project = projects.find(p => p.id === projectId);
+            if (!project) {
+                console.warn('找不到專案 ID:', projectId, '| 當前專案數:', projects.length);
+            }
+            return project;
+        }
+
         // === Firebase 同步函數 ===
         function loadAllDataFromFirebase() {
             if (!isFirebaseInitialized) return;
 
+            isDataLoading = true;  // 設定載入中狀態
             console.log('📡 開始從 Firebase 載入資料...');
 
             // 載入專案資料
@@ -1119,7 +1194,14 @@
                     syncToFirebase('contacts', businessContacts.reduce((acc, c) => ({ ...acc, [c.id]: c }), {}));
                 }
                 renderContactsDashboard();
-            }).catch(err => console.error('載入企業接洽失敗:', err));
+
+                // 所有資料載入完成
+                isDataLoading = false;
+                console.log('✅ 所有資料載入完成');
+            }).catch(err => {
+                console.error('載入企業接洽失敗:', err);
+                isDataLoading = false;  // 即使失敗也要清除載入狀態
+            });
         }
 
         function syncToFirebase(path, data) {
@@ -1246,7 +1328,7 @@
 
         function addNewProject() {
             const newProject = {
-                id: Date.now(),
+                id: generateUniqueId(),  // 使用可靠的 ID 生成器
                 name: document.getElementById('new-project-name').value,
                 department: document.getElementById('new-project-department').value,
                 startTime: document.getElementById('new-project-start').value || 'unknown',
@@ -1278,6 +1360,28 @@
         }
 
         function openProjectModal(project) {
+            // 驗證專案存在性
+            if (!project || !project.id) {
+                alert('專案資料無效，請重新整理頁面');
+                console.error('openProjectModal: 專案物件無效', project);
+                return;
+            }
+
+            // 檢查是否正在載入資料
+            if (isDataLoading) {
+                alert('資料載入中，請稍候再試');
+                console.warn('資料載入中，無法開啟專案');
+                return;
+            }
+
+            // 再次確認專案仍存在於陣列中（防止 Firebase 同步導致的競態條件）
+            const verifiedProject = findProjectById(project.id);
+            if (!verifiedProject) {
+                alert('找不到此專案，可能已被刪除或資料尚未同步完成\n請重新整理頁面後再試');
+                console.error('openProjectModal: 找不到專案 ID', project.id);
+                return;
+            }
+
             currentProjectId = project.id;
             editMode = false;
 
@@ -1286,18 +1390,19 @@
             document.getElementById('project-info-edit').classList.add('hidden');
             document.getElementById('toggle-edit-mode').textContent = '編輯專案資訊';
 
+            // 使用已驗證的專案資料
             // 填充資料
-            document.getElementById('modal-project-name').textContent = project.name;
-            document.getElementById('modal-project-department').textContent = project.department;
-            document.getElementById('modal-start-date').textContent = project.startTime;
-            document.getElementById('modal-due-date').textContent = project.dueDate;
-            document.getElementById('modal-priority').textContent = project.priority;
-            document.getElementById('modal-status').textContent = project.status;
-            document.getElementById('modal-progress-text').textContent = `${project.progress}%`;
-            document.getElementById('modal-progress-bar').style.width = `${project.progress}%`;
+            document.getElementById('modal-project-name').textContent = verifiedProject.name;
+            document.getElementById('modal-project-department').textContent = verifiedProject.department;
+            document.getElementById('modal-start-date').textContent = verifiedProject.startTime;
+            document.getElementById('modal-due-date').textContent = verifiedProject.dueDate;
+            document.getElementById('modal-priority').textContent = verifiedProject.priority;
+            document.getElementById('modal-status').textContent = verifiedProject.status;
+            document.getElementById('modal-progress-text').textContent = `${verifiedProject.progress}%`;
+            document.getElementById('modal-progress-bar').style.width = `${verifiedProject.progress}%`;
 
             // 備註
-            document.getElementById('project-notes').value = project.notes || '';
+            document.getElementById('project-notes').value = verifiedProject.notes || '';
 
             // 根據 URL 角色參數設定評論者身份
             const commentAuthor = userRole === 'supervisor' ? '主管' : '員工';
@@ -1313,10 +1418,10 @@
             }
 
             // 評論
-            renderComments(project.comments || []);
+            renderComments(verifiedProject.comments || []);
 
             // 檔案
-            renderFilesList(project.files || []);
+            renderFilesList(verifiedProject.files || []);
 
             document.getElementById('project-modal').classList.add('show');
         }
@@ -1350,9 +1455,10 @@
         }
 
         function saveProjectEdit() {
-            const project = projects.find(p => p.id === currentProjectId);
+            const project = findProjectById(currentProjectId);
             if (!project) {
-                console.error('找不到專案');
+                console.error('saveProjectEdit: 找不到專案 ID:', currentProjectId);
+                alert('找不到專案，可能已被刪除\n請關閉視窗並重新整理頁面');
                 return;
             }
 
@@ -1416,17 +1522,17 @@
         }
 
         function saveNotes() {
-            const project = projects.find(p => p.id === currentProjectId);
+            const project = findProjectById(currentProjectId);
             if (!project) {
-                console.error('找不到專案');
-                alert('找不到專案，請重新開啟');
+                console.error('saveNotes: 找不到專案 ID:', currentProjectId);
+                alert('找不到專案，可能已被刪除或資料尚未同步\n請關閉視窗並重新整理頁面');
                 return;
             }
 
             const notesField = document.getElementById('project-notes');
             if (!notesField) {
-                console.error('找不到說明欄位');
-                alert('說明欄位載入錯誤');
+                console.error('saveNotes: 找不到說明欄位');
+                alert('說明欄位載入錯誤，請重新整理頁面');
                 return;
             }
 
@@ -1453,7 +1559,7 @@
             if (!project.comments) project.comments = [];
 
             const comment = {
-                id: Date.now(),
+                id: generateUniqueId(),
                 author: document.getElementById('comment-author').value,
                 text: text,
                 timestamp: new Date().toISOString()
@@ -1538,10 +1644,10 @@
         }
 
         function exportCurrentProject() {
-            const project = projects.find(p => p.id === currentProjectId);
+            const project = findProjectById(currentProjectId);
             if (!project) {
-                console.error('找不到專案');
-                alert('找不到專案，請重新開啟');
+                console.error('exportCurrentProject: 找不到專案 ID:', currentProjectId);
+                alert('找不到專案，無法匯出\n請關閉視窗並重新整理頁面');
                 return;
             }
 
@@ -1586,6 +1692,148 @@
         }
 
         // === 2. 例行公事儀表板 ===
+
+        // 搜尋與篩選狀態
+        let routineSearchTerm = '';
+        let routineFilterType = 'all';
+        let searchDebounceTimer = null;
+
+        // 防抖搜尋處理
+        function handleRoutineSearch(searchTerm) {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                routineSearchTerm = searchTerm.toLowerCase().trim();
+                renderRoutineDashboard();
+                console.log('搜尋任務:', routineSearchTerm);
+            }, 300); // 300ms 防抖延遲
+        }
+
+        // 篩選處理
+        function filterRoutineTasks(filterType) {
+            routineFilterType = filterType;
+
+            // 更新按鈕樣式
+            document.querySelectorAll('.routine-filter-btn').forEach(btn => {
+                if (btn.dataset.filter === filterType) {
+                    btn.classList.remove('bg-gray-200', 'text-gray-700');
+                    btn.classList.add('bg-blue-600', 'text-white', 'active');
+                } else {
+                    btn.classList.remove('bg-blue-600', 'text-white', 'active');
+                    btn.classList.add('bg-gray-200', 'text-gray-700');
+                }
+            });
+
+            renderRoutineDashboard();
+            console.log('篩選類型:', filterType);
+        }
+
+        // 檢查任務是否符合搜尋和篩選條件
+        function shouldShowTask(task, taskType) {
+            const today = new Date();
+
+            // 搜尋過濾
+            if (routineSearchTerm && !task.task.toLowerCase().includes(routineSearchTerm)) {
+                return false;
+            }
+
+            // 類型篩選
+            if (routineFilterType !== 'all') {
+                // 完成狀態篩選
+                if (routineFilterType === 'completed') {
+                    const status = getTaskCompletionStatus(task, today);
+                    if (!status.completed) return false;
+                } else if (routineFilterType === 'pending') {
+                    const status = getTaskCompletionStatus(task, today);
+                    if (status.completed) return false;
+                }
+                // 任務類型篩選
+                else if (routineFilterType !== taskType) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // 完成追蹤輔助函式
+        function getDateKey(date = new Date()) {
+            // 將日期轉換為 YYYY-MM-DD 格式作為鍵值
+            return date.toISOString().split('T')[0];
+        }
+
+        function getTaskCompletionStatus(task, date = new Date()) {
+            // 查詢特定日期的完成狀態
+            if (!task.completionHistory) task.completionHistory = {};
+            const dateKey = getDateKey(date);
+            return task.completionHistory[dateKey] || { completed: false };
+        }
+
+        function toggleTaskCompletion(taskType, taskIndex, date = new Date()) {
+            // 切換任務完成狀態
+            const task = routineTasks[taskType][taskIndex];
+            if (!task) {
+                console.error('找不到任務:', taskType, taskIndex);
+                return;
+            }
+
+            if (!task.completionHistory) task.completionHistory = {};
+            const dateKey = getDateKey(date);
+
+            // 切換狀態
+            const currentStatus = task.completionHistory[dateKey] || { completed: false };
+            task.completionHistory[dateKey] = {
+                completed: !currentStatus.completed,
+                timestamp: new Date().toISOString()
+            };
+
+            // 同步到 Firebase
+            syncToFirebase('routineTasks', routineTasks);
+
+            // 重新渲染儀表板
+            renderRoutineDashboard();
+
+            console.log(`任務 "${task.task}" 於 ${dateKey} 標記為 ${task.completionHistory[dateKey].completed ? '已完成' : '未完成'}`);
+        }
+
+        function calculateTodayCompletionRate() {
+            // 計算今日完成率
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+
+            // 週末沒有任務
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                return { completed: 0, total: 0, rate: 0 };
+            }
+
+            let totalTasks = 0;
+            let completedTasks = 0;
+
+            // 計算每日任務
+            routineTasks.daily.forEach(task => {
+                totalTasks++;
+                const status = getTaskCompletionStatus(task, today);
+                if (status.completed) completedTasks++;
+            });
+
+            // 檢查是否在掃地週內
+            routineTasks.threeWeeks.forEach(task => {
+                if (task.nextWeekStart) {
+                    const weekStart = new Date(task.nextWeekStart);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekEnd.getDate() + 4);
+
+                    if (today >= weekStart && today <= weekEnd) {
+                        totalTasks++;
+                        const status = getTaskCompletionStatus(task, today);
+                        if (status.completed) completedTasks++;
+                    }
+                }
+            });
+
+            const rate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            return { completed: completedTasks, total: totalTasks, rate };
+        }
+
         function renderRoutineDashboard() {
             const container = document.getElementById('routine-tasks-content');
             if (!container) {
@@ -1598,28 +1846,51 @@
             const dayOfWeek = today.getDay();
             let todayTasksHtml = '';
 
+            // 計算今日完成率
+            const completionStats = calculateTodayCompletionRate();
+
             if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                // 每日任務
-                routineTasks.daily.forEach(t => {
+                // 每日任務（加入勾選框）
+                routineTasks.daily.forEach((t, index) => {
+                    const status = getTaskCompletionStatus(t, today);
+                    const checkedClass = status.completed ? 'line-through opacity-60' : '';
+                    const checkIcon = status.completed ? 'fa-check-square' : 'fa-square';
+
                     todayTasksHtml += `
-                        <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0">
-                            <span class="text-blue-800 font-medium">${t.task}</span>
+                        <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0 hover:bg-blue-50 transition-colors">
+                            <div class="flex items-center space-x-3 flex-1">
+                                <button onclick="toggleTaskCompletion('daily', ${index})"
+                                        class="text-blue-600 hover:text-blue-800 text-xl">
+                                    <i class="far ${checkIcon}"></i>
+                                </button>
+                                <span class="text-blue-800 font-medium ${checkedClass}">${t.task}</span>
+                            </div>
                             <span class="text-blue-600 text-sm">${t.time}</span>
                         </div>
                     `;
                 });
 
-                // 檢查是否在掃地週內
-                routineTasks.threeWeeks.forEach(t => {
+                // 檢查是否在掃地週內（加入勾選框）
+                routineTasks.threeWeeks.forEach((t, index) => {
                     if (t.nextWeekStart) {
                         const weekStart = new Date(t.nextWeekStart);
                         const weekEnd = new Date(weekStart);
                         weekEnd.setDate(weekEnd.getDate() + 4); // 週五
 
                         if (today >= weekStart && today <= weekEnd) {
+                            const status = getTaskCompletionStatus(t, today);
+                            const checkedClass = status.completed ? 'line-through opacity-60' : '';
+                            const checkIcon = status.completed ? 'fa-check-square' : 'fa-square';
+
                             todayTasksHtml += `
-                                <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0">
-                                    <span class="text-green-800 font-medium">${t.task}</span>
+                                <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0 hover:bg-green-50 transition-colors">
+                                    <div class="flex items-center space-x-3 flex-1">
+                                        <button onclick="toggleTaskCompletion('threeWeeks', ${index})"
+                                                class="text-green-600 hover:text-green-800 text-xl">
+                                            <i class="far ${checkIcon}"></i>
+                                        </button>
+                                        <span class="text-green-800 font-medium ${checkedClass}">${t.task}</span>
+                                    </div>
                                     <span class="text-green-600 text-sm">${t.time}</span>
                                 </div>
                             `;
@@ -1638,7 +1909,17 @@
             ];
 
             const taskSectionsHtml = taskSections.map(section => {
-                const tasksHtml = section.tasks.map((t, index) => {
+                // 應用搜尋和篩選
+                const filteredTasks = section.tasks.filter(t => shouldShowTask(t, section.type));
+
+                // 如果該區塊沒有符合的任務，不顯示整個區塊
+                if (filteredTasks.length === 0 && (routineSearchTerm || routineFilterType !== 'all')) {
+                    return '';
+                }
+
+                const tasksHtml = filteredTasks.map((t, index) => {
+                    // 需要找到原始索引以正確操作
+                    const originalIndex = section.tasks.indexOf(t);
                     let display = '';
                     if (t.time) display = `<span class="text-${section.color}-600 text-sm">${t.time}</span>`;
                     if (t.day) display = `<span class="text-${section.color}-600 text-sm">每月${t.day}日</span>`;
@@ -1681,7 +1962,7 @@
                         dateButton = `
                             <div class="flex items-center space-x-2">
                                 ${dateDisplay}
-                                <button onclick="openRoutineDateModal('${section.type}', ${index})"
+                                <button onclick="openRoutineDateModal('${section.type}', ${originalIndex})"
                                         class="text-${section.color}-600 hover:text-${section.color}-800 text-sm">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -1691,10 +1972,10 @@
 
                     // 編輯/刪除按鈕（僅專案管理師可見）
                     const editDeleteButtons = !isReadOnly ? `
-                        <button onclick="editRoutineTask('${section.type}', ${index})" class="text-blue-600 hover:text-blue-800 text-sm">
+                        <button onclick="editRoutineTask('${section.type}', ${originalIndex})" class="text-blue-600 hover:text-blue-800 text-sm">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button onclick="deleteRoutineTask('${section.type}', ${index})" class="text-red-600 hover:text-red-800 text-sm">
+                        <button onclick="deleteRoutineTask('${section.type}', ${originalIndex})" class="text-red-600 hover:text-red-800 text-sm">
                             <i class="fas fa-trash"></i>
                         </button>
                     ` : '';
@@ -1724,10 +2005,28 @@
                 `;
             }).join('');
 
+            // 完成進度條 HTML
+            const progressBarHtml = dayOfWeek >= 1 && dayOfWeek <= 5 ? `
+                <div class="mt-3 pt-3 border-t border-blue-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-blue-700">今日完成進度</span>
+                        <span class="text-sm font-bold text-blue-800">${completionStats.completed}/${completionStats.total} (${completionStats.rate}%)</span>
+                    </div>
+                    <div class="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
+                        <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: ${completionStats.rate}%"></div>
+                    </div>
+                    ${completionStats.rate === 100 ? '<p class="text-sm text-green-600 font-semibold mt-2">🎉 太棒了！今日任務全部完成！</p>' : ''}
+                    ${completionStats.rate === 0 && completionStats.total > 0 ? '<p class="text-sm text-orange-600 mt-2">⚠️ 尚未開始今日任務</p>' : ''}
+                </div>
+            ` : '';
+
             container.innerHTML = `
-                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-                    <h2 class="text-xl font-bold text-blue-800 mb-2">今日待辦</h2>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm">
+                    <h2 class="text-xl font-bold text-blue-800 mb-3 flex items-center">
+                        <i class="fas fa-tasks mr-2"></i>今日待辦
+                    </h2>
                     <div class="space-y-2">${todayTasksHtml}</div>
+                    ${progressBarHtml}
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">${taskSectionsHtml}</div>
             `;
@@ -2180,7 +2479,7 @@
             const schedule = document.getElementById('new-sharing-schedule').value.split('\n').filter(s => s.trim());
             
             const newSharing = {
-                id: Date.now(),
+                id: generateUniqueId(),
                 date: document.getElementById('new-sharing-date').value,
                 theme: document.getElementById('new-sharing-theme').value,
                 speaker: document.getElementById('new-sharing-speaker').value,
@@ -2368,7 +2667,7 @@
             const learnings = document.getElementById('new-event-learnings').value.split('\n').filter(l => l.trim());
             
             const newEvent = {
-                id: Date.now(),
+                id: generateUniqueId(),
                 eventName: document.getElementById('new-event-name').value,
                 date: document.getElementById('new-event-date').value,
                 type: document.getElementById('new-event-type').value,
@@ -2576,7 +2875,7 @@
 
         function addNewContact() {
             const newContact = {
-                id: Date.now(),
+                id: generateUniqueId(),
                 companyName: document.getElementById('new-contact-company').value,
                 contactPerson: document.getElementById('new-contact-person').value,
                 date: document.getElementById('new-contact-date').value,
