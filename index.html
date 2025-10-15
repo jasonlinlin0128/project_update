@@ -1418,6 +1418,17 @@
 
         function initFirebase() {
             try {
+                // 檢查 Firebase 是否可用
+                if (typeof firebase === 'undefined') {
+                    console.error('❌ Firebase 庫未載入');
+                    updateSyncStatus('離線模式', false);
+                    // 使用本地資料渲染所有儀表板
+                    setTimeout(() => {
+                        renderAllDashboards();
+                    }, 100);
+                    return false;
+                }
+
                 // 內建 Firebase 配置
                 const firebaseConfig = {
                     apiKey: "AIzaSyBlOglfZtVNC3wkH8FzxPRWpZjbioOisKA",
@@ -1445,7 +1456,14 @@
                 return true;
             } catch (error) {
                 console.error('Firebase 初始化失敗:', error);
-                updateSyncStatus('連線失敗，使用本地資料', false);
+                updateSyncStatus('離線模式', false);
+                isFirebaseInitialized = false;
+
+                // 即使 Firebase 失敗，也要渲染儀表板讓用戶可以使用
+                setTimeout(() => {
+                    renderAllDashboards();
+                }, 100);
+
                 return false;
             }
         }
@@ -1709,6 +1727,23 @@
             isProjectsLoading = true;  // 設定專案載入中狀態
             console.log('📡 開始從 Firebase 載入資料...');
 
+            // 設置超時處理 - 10秒後如果還沒載入完成，就使用本地資料
+            const loadTimeout = setTimeout(() => {
+                if (isDataLoading) {
+                    console.warn('⚠️ Firebase 載入超時，使用本地資料');
+                    isDataLoading = false;
+                    isProjectsLoading = false;
+                    updateSyncStatus('離線模式', false);
+
+                    // 渲染所有儀表板（使用空資料或本地資料）
+                    renderAiDashboard();
+                    renderRoutineDashboard();
+                    renderSharingDashboard();
+                    renderEventsDashboard();
+                    renderContactsDashboard();
+                }
+            }, 10000);
+
             // 載入專案資料
             database.ref('projects').once('value', (snapshot) => {
                 const data = snapshot.val();
@@ -1775,10 +1810,12 @@
                 renderContactsDashboard();
 
                 // 所有資料載入完成
+                clearTimeout(loadTimeout);  // 清除超時定時器
                 isDataLoading = false;
                 console.log('✅ 所有資料載入完成');
             }).catch(err => {
                 console.error('載入企業接洽失敗:', err);
+                clearTimeout(loadTimeout);  // 清除超時定時器
                 isDataLoading = false;  // 即使失敗也要清除載入狀態
             });
         }
