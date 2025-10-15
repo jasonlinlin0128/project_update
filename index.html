@@ -111,7 +111,55 @@
         #calendar-grid { grid-template-rows: repeat(6, minmax(0, 1fr)); }
         .calendar-day { min-height: 100px; }
         .calendar-day.other-month { background-color: #f9fafb; color: #9ca3af; }
-        .calendar-task { font-size: 0.75rem; padding: 2px 4px; border-radius: 4px; margin-top: 2px; }
+        .calendar-task {
+            font-size: 0.75rem;
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin-top: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 響應式設計 - 防止文字溢出 */
+        @media (max-width: 768px) {
+            /* 專案卡片標題自動換行 */
+            .project-card h3,
+            .project-card p,
+            .project-card span {
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                word-break: break-word;
+            }
+
+            /* 表格在手機上允許換行 */
+            td.whitespace-nowrap {
+                white-space: normal !important;
+            }
+
+            /* 行事曆任務在手機上縮小字體 */
+            .calendar-task {
+                font-size: 0.65rem;
+            }
+
+            /* 按鈕文字在手機上縮小 */
+            button {
+                font-size: 0.875rem;
+            }
+
+            /* 導航標籤在手機上縮小間距 */
+            .dashboard-tab {
+                padding: 10px 12px;
+                font-size: 0.875rem;
+            }
+
+            /* 卡片內容確保不溢出 */
+            .bg-white,
+            .modal-content {
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+        }
         
         /* Details Summary Styling */
         details > summary { list-style: none; }
@@ -900,10 +948,22 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">議程安排（每行一項）</label>
-                    <textarea id="new-sharing-schedule" rows="5" class="w-full px-3 py-2 border rounded-lg" 
+                    <textarea id="new-sharing-schedule" rows="5" class="w-full px-3 py-2 border rounded-lg"
                               placeholder="16:00-16:05 開場與介紹
 16:05-16:30 主題分享
 16:30-16:45 Q&A 與交流"></textarea>
+                </div>
+
+                <!-- File Upload Section -->
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">相關文件</h4>
+                    <div id="sharing-file-upload-area" class="file-upload-area cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-600 mb-1 text-sm">拖拽檔案到此處或點擊選擇檔案</p>
+                        <p class="text-xs text-gray-500">支援 PDF、Word、Excel、圖片等格式（最大 10MB）</p>
+                        <input type="file" id="sharing-file-input" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.ppt,.pptx">
+                    </div>
+                    <div id="sharing-files-list" class="mt-2 space-y-1"></div>
                 </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
@@ -944,6 +1004,18 @@
 16:05-16:30 主題分享
 16:30-16:45 Q&A 與交流"></textarea>
                 </div>
+
+                <!-- File Upload Section -->
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">相關文件</h4>
+                    <div id="edit-sharing-file-upload-area" class="file-upload-area cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-600 mb-1 text-sm">拖拽檔案到此處或點擊選擇檔案</p>
+                        <p class="text-xs text-gray-500">支援 PDF、Word、Excel、圖片等格式（最大 10MB）</p>
+                        <input type="file" id="edit-sharing-file-input" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.ppt,.pptx">
+                    </div>
+                    <div id="edit-sharing-files-list" class="mt-2 space-y-1"></div>
+                </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
                 <button onclick="closeEditSharingModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
@@ -979,6 +1051,18 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">主要學習與收穫（每行一項）</label>
                     <textarea id="new-event-learnings" rows="4" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                </div>
+
+                <!-- File Upload Section -->
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">相關文件</h4>
+                    <div id="event-file-upload-area" class="file-upload-area cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-600 mb-1 text-sm">拖拽檔案到此處或點擊選擇檔案</p>
+                        <p class="text-xs text-gray-500">支援 PDF、Word、Excel、圖片等格式（最大 10MB）</p>
+                        <input type="file" id="event-file-input" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.ppt,.pptx">
+                    </div>
+                    <div id="event-files-list" class="mt-2 space-y-1"></div>
                 </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
@@ -1016,6 +1100,18 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">主要學習與收穫（每行一項）</label>
                     <textarea id="edit-event-learnings" rows="4" class="w-full px-3 py-2 border rounded-lg"></textarea>
                 </div>
+
+                <!-- File Upload Section -->
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">相關文件</h4>
+                    <div id="edit-event-file-upload-area" class="file-upload-area cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-600 mb-1 text-sm">拖拽檔案到此處或點擊選擇檔案</p>
+                        <p class="text-xs text-gray-500">支援 PDF、Word、Excel、圖片等格式（最大 10MB）</p>
+                        <input type="file" id="edit-event-file-input" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.ppt,.pptx">
+                    </div>
+                    <div id="edit-event-files-list" class="mt-2 space-y-1"></div>
+                </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
                 <button onclick="closeEditEventModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
@@ -1045,6 +1141,18 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">洽談主題</label>
                     <textarea id="new-contact-topic" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
                 </div>
+
+                <!-- File Upload Section -->
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">相關文件</h4>
+                    <div id="contact-file-upload-area" class="file-upload-area cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-600 mb-1 text-sm">拖拽檔案到此處或點擊選擇檔案</p>
+                        <p class="text-xs text-gray-500">支援 PDF、Word、Excel、圖片等格式（最大 10MB）</p>
+                        <input type="file" id="contact-file-input" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.ppt,.pptx">
+                    </div>
+                    <div id="contact-files-list" class="mt-2 space-y-1"></div>
+                </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
                 <button onclick="closeAddContactModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
@@ -1073,6 +1181,18 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">洽談主題</label>
                     <textarea id="edit-contact-topic" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                </div>
+
+                <!-- File Upload Section -->
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">相關文件</h4>
+                    <div id="edit-contact-file-upload-area" class="file-upload-area cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-600 mb-1 text-sm">拖拽檔案到此處或點擊選擇檔案</p>
+                        <p class="text-xs text-gray-500">支援 PDF、Word、Excel、圖片等格式（最大 10MB）</p>
+                        <input type="file" id="edit-contact-file-input" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.ppt,.pptx">
+                    </div>
+                    <div id="edit-contact-files-list" class="mt-2 space-y-1"></div>
                 </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
@@ -1717,7 +1837,14 @@
 
                 const statuses = ["構思中", "規劃中", "開發中", "測試中", "已終止", "已完成"];
                 const priorityColors = { '高': 'bg-red-100 text-red-800', '中': 'bg-yellow-100 text-yellow-800', '低': 'bg-green-100 text-green-800' };
-                const columnHeaderColors = { "構思中": "bg-purple-500", "規劃中": "bg-blue-500", "開發中": "bg-orange-500", "測試中": "bg-teal-500", "已終止": "bg-red-500", "已完成": "bg-green-600" };
+                const columnHeaderColors = {
+                    "構思中": "bg-purple-600",
+                    "規劃中": "bg-blue-600",
+                    "開發中": "bg-orange-600",
+                    "測試中": "bg-teal-600",
+                    "已終止": "bg-red-600",
+                    "已完成": "bg-green-700"
+                };
 
                 statuses.forEach(status => {
                     const column = document.createElement('div');
@@ -2671,6 +2798,11 @@
             ];
 
             const taskSectionsHtml = taskSections.map(section => {
+                // 安全檢查：確保 tasks 數組存在
+                if (!section.tasks || !Array.isArray(section.tasks)) {
+                    return '';
+                }
+
                 // 應用搜尋和篩選
                 const filteredTasks = section.tasks.filter(t => shouldShowTask(t, section.type));
 
@@ -2913,25 +3045,25 @@
                             // 計算從開始日期到當前日期的天數差
                             const daysDiff = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
 
-                            let shouldShowTask = false;
+                            let shouldDisplay = false;
 
                             if (unit === 'days') {
                                 // 每 N 天
-                                shouldShowTask = daysDiff >= 0 && daysDiff % interval === 0;
+                                shouldDisplay = daysDiff >= 0 && daysDiff % interval === 0;
                             } else if (unit === 'weeks') {
                                 // 每 N 週（7 * N 天）
                                 const weekInterval = interval * 7;
-                                shouldShowTask = daysDiff >= 0 && daysDiff % weekInterval === 0;
+                                shouldDisplay = daysDiff >= 0 && daysDiff % weekInterval === 0;
                             } else if (unit === 'months') {
                                 // 每 N 月（檢查月份差和日期）
                                 const monthsDiff = (currentDate.getFullYear() - startDate.getFullYear()) * 12 +
                                                   (currentDate.getMonth() - startDate.getMonth());
-                                shouldShowTask = monthsDiff >= 0 &&
+                                shouldDisplay = monthsDiff >= 0 &&
                                                monthsDiff % interval === 0 &&
                                                currentDate.getDate() === startDate.getDate();
                             }
 
-                            if (shouldShowTask) {
+                            if (shouldDisplay) {
                                 const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
                                 tasksHtml += `<div class="calendar-task bg-teal-100 text-teal-800">${shortTask}</div>`;
                             }
@@ -4206,6 +4338,178 @@
             }
         }
 
+        // === 分享會/活動/企業接洽 檔案上傳功能 ===
+        let currentSharingFiles = [];
+        let currentEventFiles = [];
+        let currentContactFiles = [];
+
+        function setupAllFileUploads() {
+            setupFileUpload(); // 原有的專案檔案上傳
+            setupSharingFileUpload();
+            setupEventFileUpload();
+            setupContactFileUpload();
+        }
+
+        function setupSharingFileUpload() {
+            // 新增分享會檔案上傳
+            const newArea = document.getElementById('sharing-file-upload-area');
+            const newInput = document.getElementById('sharing-file-input');
+            if (newArea && newInput) {
+                newArea.addEventListener('click', () => newInput.click());
+                newInput.addEventListener('change', (e) => handleSharingFiles(e.target.files, 'new'));
+                setupDragDrop(newArea, (files) => handleSharingFiles(files, 'new'));
+            }
+
+            // 編輯分享會檔案上傳
+            const editArea = document.getElementById('edit-sharing-file-upload-area');
+            const editInput = document.getElementById('edit-sharing-file-input');
+            if (editArea && editInput) {
+                editArea.addEventListener('click', () => editInput.click());
+                editInput.addEventListener('change', (e) => handleSharingFiles(e.target.files, 'edit'));
+                setupDragDrop(editArea, (files) => handleSharingFiles(files, 'edit'));
+            }
+        }
+
+        function setupEventFileUpload() {
+            // 新增活動檔案上傳
+            const newArea = document.getElementById('event-file-upload-area');
+            const newInput = document.getElementById('event-file-input');
+            if (newArea && newInput) {
+                newArea.addEventListener('click', () => newInput.click());
+                newInput.addEventListener('change', (e) => handleEventFiles(e.target.files, 'new'));
+                setupDragDrop(newArea, (files) => handleEventFiles(files, 'new'));
+            }
+
+            // 編輯活動檔案上傳
+            const editArea = document.getElementById('edit-event-file-upload-area');
+            const editInput = document.getElementById('edit-event-file-input');
+            if (editArea && editInput) {
+                editArea.addEventListener('click', () => editInput.click());
+                editInput.addEventListener('change', (e) => handleEventFiles(e.target.files, 'edit'));
+                setupDragDrop(editArea, (files) => handleEventFiles(files, 'edit'));
+            }
+        }
+
+        function setupContactFileUpload() {
+            // 新增接洽檔案上傳
+            const newArea = document.getElementById('contact-file-upload-area');
+            const newInput = document.getElementById('contact-file-input');
+            if (newArea && newInput) {
+                newArea.addEventListener('click', () => newInput.click());
+                newInput.addEventListener('change', (e) => handleContactFiles(e.target.files, 'new'));
+                setupDragDrop(newArea, (files) => handleContactFiles(files, 'new'));
+            }
+
+            // 編輯接洽檔案上傳
+            const editArea = document.getElementById('edit-contact-file-upload-area');
+            const editInput = document.getElementById('edit-contact-file-input');
+            if (editArea && editInput) {
+                editArea.addEventListener('click', () => editInput.click());
+                editInput.addEventListener('change', (e) => handleContactFiles(e.target.files, 'edit'));
+                setupDragDrop(editArea, (files) => handleContactFiles(files, 'edit'));
+            }
+        }
+
+        function setupDragDrop(area, handler) {
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+            area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                if (e.dataTransfer && e.dataTransfer.files) {
+                    handler(e.dataTransfer.files);
+                }
+            });
+        }
+
+        async function handleSharingFiles(fileList, mode) {
+            for (let file of fileList) {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`檔案 ${file.name} 超過 10MB 限制`);
+                    continue;
+                }
+                const fileInfo = {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    url: URL.createObjectURL(file),
+                    file: file
+                };
+                currentSharingFiles.push(fileInfo);
+            }
+            renderFilesList(`${mode}-sharing-files-list`, currentSharingFiles);
+        }
+
+        async function handleEventFiles(fileList, mode) {
+            for (let file of fileList) {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`檔案 ${file.name} 超過 10MB 限制`);
+                    continue;
+                }
+                const fileInfo = {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    url: URL.createObjectURL(file),
+                    file: file
+                };
+                currentEventFiles.push(fileInfo);
+            }
+            renderFilesList(`${mode}-event-files-list`, currentEventFiles);
+        }
+
+        async function handleContactFiles(fileList, mode) {
+            for (let file of fileList) {
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`檔案 ${file.name} 超過 10MB 限制`);
+                    continue;
+                }
+                const fileInfo = {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    url: URL.createObjectURL(file),
+                    file: file
+                };
+                currentContactFiles.push(fileInfo);
+            }
+            renderFilesList(`${mode}-contact-files-list`, currentContactFiles);
+        }
+
+        function renderFilesList(listId, files) {
+            const list = document.getElementById(listId);
+            if (!list) return;
+
+            list.innerHTML = files.map((f, i) => `
+                <div class="flex items-center justify-between bg-gray-50 px-3 py-2 rounded text-sm">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-file text-gray-400"></i>
+                        <span class="text-gray-700">${f.name}</span>
+                        <span class="text-gray-400 text-xs">(${(f.size / 1024).toFixed(1)} KB)</span>
+                    </div>
+                    <button onclick="removeFile('${listId}', ${i})" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function removeFile(listId, index) {
+            if (listId.includes('sharing')) {
+                currentSharingFiles.splice(index, 1);
+                renderFilesList(listId, currentSharingFiles);
+            } else if (listId.includes('event')) {
+                currentEventFiles.splice(index, 1);
+                renderFilesList(listId, currentEventFiles);
+            } else if (listId.includes('contact')) {
+                currentContactFiles.splice(index, 1);
+                renderFilesList(listId, currentContactFiles);
+            }
+        }
+
         // === Modal 事件設置 ===
         function setupModalEvents() {
             // 專案 Modal
@@ -4243,7 +4547,7 @@
             });
 
             // 檔案上傳
-            setupFileUpload();
+            setupAllFileUploads();
         }
     </script>
 </body>
