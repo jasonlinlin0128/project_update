@@ -1090,12 +1090,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">任務類型</label>
                     <select id="new-routine-type" class="w-full px-3 py-2 border rounded-lg" onchange="updateRoutineFields()">
-                        <option value="daily">每日任務</option>
-                        <option value="weekly">每週任務</option>
-                        <option value="threeWeeks">三週一次</option>
-                        <option value="monthly">每月任務</option>
-                        <option value="quarterly">每季任務</option>
-                        <option value="bimonthly">雙月任務</option>
+                        <option value="daily">每日任務 (週一至週五，排除國定假日)</option>
                         <option value="custom">自定義週期</option>
                     </select>
                 </div>
@@ -1167,13 +1162,26 @@
                     <p class="text-xs text-gray-500 mt-1">例如：第一個月 + 15日 = 1/15、4/15、7/15、10/15</p>
                 </div>
                 <div id="routine-custom-field" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">快速設定（預設選項）</label>
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <button type="button" onclick="applyPreset('weekly')" class="px-3 py-2 bg-blue-50 text-blue-700 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors">
+                            <i class="fas fa-calendar-week mr-1"></i>每週
+                        </button>
+                        <button type="button" onclick="applyPreset('monthly')" class="px-3 py-2 bg-purple-50 text-purple-700 border border-purple-300 rounded-lg hover:bg-purple-100 transition-colors">
+                            <i class="fas fa-calendar-alt mr-1"></i>每月
+                        </button>
+                        <button type="button" onclick="applyPreset('quarterly')" class="px-3 py-2 bg-teal-50 text-teal-700 border border-teal-300 rounded-lg hover:bg-teal-100 transition-colors">
+                            <i class="fas fa-calendar mr-1"></i>每季
+                        </button>
+                    </div>
+
                     <label class="block text-sm font-medium text-gray-700 mb-1">自定義週期</label>
                     <div class="grid grid-cols-2 gap-3">
                         <div class="flex items-center space-x-2">
                             <span class="text-sm text-gray-600">每</span>
-                            <input id="new-routine-custom-interval" type="number" min="1" placeholder="數量" class="flex-1 px-3 py-2 border rounded-lg">
+                            <input id="new-routine-custom-interval" type="number" min="1" placeholder="數量" class="flex-1 px-3 py-2 border rounded-lg" oninput="calculateCustomNextDate()">
                         </div>
-                        <select id="new-routine-custom-unit" class="w-full px-3 py-2 border rounded-lg">
+                        <select id="new-routine-custom-unit" class="w-full px-3 py-2 border rounded-lg" onchange="calculateCustomNextDate()">
                             <option value="days">天</option>
                             <option value="weeks">週</option>
                             <option value="months">月</option>
@@ -1183,7 +1191,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">開始日期</label>
                         <input id="new-routine-custom-start" type="date" class="w-full px-3 py-2 border rounded-lg" onchange="calculateCustomNextDate()">
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">例如：每 5 天、每 2 週、每 3 月</p>
+                    <p class="text-xs text-gray-500 mt-1">💡 提示：點擊快速設定按鈕，或手動輸入數值。例如：每 2 週、每 3 月</p>
                 </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
@@ -1391,9 +1399,13 @@
         let projects = [];
         let routineTasks = {
             daily: [],
+            custom: [],  // 自定義週期任務（包含預設的每週、每月、每季等）
+            // 舊的任務類型保留以便向後兼容（從 Firebase 載入舊資料）
             threeWeeks: [],
             monthly: [],
-            bimonthly: []
+            bimonthly: [],
+            weekly: [],
+            quarterly: []
         };
         let sharingSessions = [];
         let eventsAttended = [];
@@ -2572,6 +2584,7 @@
 
             // 檢查是否有任何任務
             const hasAnyTask = (routineTasks.daily && routineTasks.daily.length > 0) ||
+                              (routineTasks.custom && routineTasks.custom.length > 0) ||
                               (routineTasks.threeWeeks && routineTasks.threeWeeks.length > 0) ||
                               (routineTasks.monthly && routineTasks.monthly.length > 0) ||
                               (routineTasks.bimonthly && routineTasks.bimonthly.length > 0);
@@ -2650,9 +2663,11 @@
 
             const taskSections = [
                 { title: '每日任務 (週一至週五，排除國定假日)', tasks: routineTasks.daily, icon: 'fa-calendar-day', color: 'blue', type: 'daily' },
-                { title: '三週一次', tasks: routineTasks.threeWeeks, icon: 'fa-calendar-week', color: 'green', type: 'threeWeeks' },
-                { title: '每月任務', tasks: routineTasks.monthly, icon: 'fa-calendar-alt', color: 'purple', type: 'monthly' },
-                { title: '雙月任務', tasks: routineTasks.bimonthly, icon: 'fa-calendar', color: 'orange', type: 'bimonthly' }
+                { title: '自定義週期任務', tasks: routineTasks.custom || [], icon: 'fa-calendar-check', color: 'teal', type: 'custom' },
+                // 舊的任務類型（向後兼容）
+                { title: '三週一次', tasks: routineTasks.threeWeeks || [], icon: 'fa-calendar-week', color: 'green', type: 'threeWeeks' },
+                { title: '每月任務', tasks: routineTasks.monthly || [], icon: 'fa-calendar-alt', color: 'purple', type: 'monthly' },
+                { title: '雙月任務', tasks: routineTasks.bimonthly || [], icon: 'fa-calendar', color: 'orange', type: 'bimonthly' }
             ];
 
             const taskSectionsHtml = taskSections.map(section => {
@@ -2673,7 +2688,17 @@
 
                     // 顯示下次執行日期
                     let nextDateDisplay = '';
-                    if (section.type === 'threeWeeks') {
+                    if (section.type === 'custom' && t.customPeriod) {
+                        // 自定義週期任務
+                        const unitNames = { days: '天', weeks: '週', months: '月' };
+                        const periodText = `每 ${t.customPeriod.interval} ${unitNames[t.customPeriod.unit] || t.customPeriod.unit}`;
+                        nextDateDisplay = `
+                            <div class="flex flex-col space-y-1">
+                                <span class="text-xs text-${section.color}-600 bg-${section.color}-100 px-2 py-0.5 rounded-full inline-block w-fit">${periodText}</span>
+                                ${t.nextDate ? `<span class="text-sm text-${section.color}-700 font-semibold">下次: ${t.nextDate}</span>` : ''}
+                            </div>
+                        `;
+                    } else if (section.type === 'threeWeeks') {
                         if (t.nextWeekStart) {
                             // 修正：使用本地時區解析和格式化日期
                             const [y, m, d] = t.nextWeekStart.split('-').map(Number);
@@ -2933,71 +2958,45 @@
             document.getElementById('add-routine-modal').classList.remove('show');
         }
 
+        // 套用快速預設
+        function applyPreset(preset) {
+            const intervalInput = document.getElementById('new-routine-custom-interval');
+            const unitSelect = document.getElementById('new-routine-custom-unit');
+
+            if (preset === 'weekly') {
+                intervalInput.value = '1';
+                unitSelect.value = 'weeks';
+            } else if (preset === 'monthly') {
+                intervalInput.value = '1';
+                unitSelect.value = 'months';
+            } else if (preset === 'quarterly') {
+                intervalInput.value = '3';
+                unitSelect.value = 'months';
+            }
+
+            // 觸發下次日期計算
+            calculateCustomNextDate();
+
+            console.log('套用預設:', preset);
+        }
+
         function updateRoutineFields() {
             const type = document.getElementById('new-routine-type').value;
             const timeField = document.getElementById('routine-time-field');
-            const dayField = document.getElementById('routine-day-field');
-            const lastDateField = document.getElementById('routine-last-date-field');
-            const nextDateField = document.getElementById('routine-next-date-field');
-            const weekdaysField = document.getElementById('routine-weekdays-field');
-            const quarterlyField = document.getElementById('routine-quarterly-field');
             const customField = document.getElementById('routine-custom-field');
+            const nextDateField = document.getElementById('routine-next-date-field');
             const nextDateInput = document.getElementById('new-routine-next-date');
             const nextDateHint = document.getElementById('next-date-hint');
-
-            // 獲取標籤元素
-            const lastDateLabel = lastDateField.querySelector('label');
             const nextDateLabel = nextDateField.querySelector('label');
 
             // 重置所有欄位
             timeField.classList.add('hidden');
-            dayField.classList.add('hidden');
-            lastDateField.classList.add('hidden');
-            nextDateField.classList.add('hidden');
-            weekdaysField.classList.add('hidden');
-            quarterlyField.classList.add('hidden');
             customField.classList.add('hidden');
+            nextDateField.classList.add('hidden');
 
             if (type === 'daily') {
                 // 每日任務：顯示時間
                 timeField.classList.remove('hidden');
-            } else if (type === 'weekly') {
-                // 每週任務：顯示時間、星期幾
-                timeField.classList.remove('hidden');
-                weekdaysField.classList.remove('hidden');
-            } else if (type === 'threeWeeks') {
-                // 三週一次：顯示時間、上次掃地週開始日、下次掃地週開始日（自動計算）
-                timeField.classList.remove('hidden');
-                lastDateField.classList.remove('hidden');
-                nextDateField.classList.remove('hidden');
-                lastDateLabel.textContent = '上次掃地週開始日（週一）';
-                nextDateLabel.textContent = '下次掃地週開始日（週一）';
-                nextDateInput.readOnly = true;
-                nextDateInput.classList.add('bg-gray-100');
-                nextDateHint.textContent = '系統自動計算（上次掃地週開始日 + 21天 = 下次掃地週開始日）';
-            } else if (type === 'monthly') {
-                // 每月任務：顯示每月執行日或下次日期（手動輸入）
-                dayField.classList.remove('hidden');
-                nextDateField.classList.remove('hidden');
-                nextDateLabel.textContent = '下次執行日期';
-                nextDateInput.readOnly = false;
-                nextDateInput.classList.remove('bg-gray-100');
-                nextDateHint.textContent = '若無固定日期，請手動輸入下次執行日期';
-            } else if (type === 'quarterly') {
-                // 每季任務：顯示季度月份和日期
-                quarterlyField.classList.remove('hidden');
-                nextDateField.classList.remove('hidden');
-                nextDateLabel.textContent = '下次執行日期';
-                nextDateInput.readOnly = false;
-                nextDateInput.classList.remove('bg-gray-100');
-                nextDateHint.textContent = '請輸入下次執行日期（系統將自動計算後續季度日期）';
-            } else if (type === 'bimonthly') {
-                // 雙月任務：顯示下次日期（手動輸入）
-                nextDateField.classList.remove('hidden');
-                nextDateLabel.textContent = '下次執行日期';
-                nextDateInput.readOnly = false;
-                nextDateInput.classList.remove('bg-gray-100');
-                nextDateHint.textContent = '請手動輸入下次執行日期';
             } else if (type === 'custom') {
                 // 自定義週期：顯示週期設定和開始日期
                 customField.classList.remove('hidden');
@@ -3252,6 +3251,12 @@
             }
             if (task.nextWeekStart) {
                 document.getElementById('new-routine-next-date').value = task.nextWeekStart;
+            }
+            // 自定義週期任務
+            if (task.customPeriod) {
+                document.getElementById('new-routine-custom-interval').value = task.customPeriod.interval;
+                document.getElementById('new-routine-custom-unit').value = task.customPeriod.unit;
+                document.getElementById('new-routine-custom-start').value = task.customPeriod.startDate;
             }
 
             updateRoutineFields();
