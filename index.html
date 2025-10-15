@@ -2830,29 +2830,30 @@
                 // 檢查是否在掃地週內（加入勾選框）
                 if (routineTasks.threeWeeks && Array.isArray(routineTasks.threeWeeks)) {
                     routineTasks.threeWeeks.forEach((t, index) => {
-                    if (t.nextWeekStart) {
-                        // 修正：使用本地時區解析日期
-                        const [y, m, d] = t.nextWeekStart.split('-').map(Number);
-                        const weekStart = new Date(y, m - 1, d);
-                        const weekEnd = new Date(y, m - 1, d + 4); // 週五
+                        if (t.nextWeekStart) {
+                            // 修正：使用本地時區解析日期
+                            const [y, m, d] = t.nextWeekStart.split('-').map(Number);
+                            const weekStart = new Date(y, m - 1, d);
+                            const weekEnd = new Date(y, m - 1, d + 4); // 週五
 
-                        if (today >= weekStart && today <= weekEnd) {
-                            const status = getTaskCompletionStatus(t, today);
-                            const checkedClass = status.completed ? 'line-through opacity-60' : '';
-                            const checkIcon = status.completed ? 'fa-check-square' : 'fa-square';
+                            if (today >= weekStart && today <= weekEnd) {
+                                const status = getTaskCompletionStatus(t, today);
+                                const checkedClass = status.completed ? 'line-through opacity-60' : '';
+                                const checkIcon = status.completed ? 'fa-check-square' : 'fa-square';
 
-                            todayTasksHtml += `
-                                <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0 hover:bg-green-50 transition-colors">
-                                    <div class="flex items-center space-x-3 flex-1">
-                                        <button onclick="toggleTaskCompletion('threeWeeks', ${index})"
-                                                class="text-green-600 hover:text-green-800 text-xl">
-                                            <i class="far ${checkIcon}"></i>
-                                        </button>
-                                        <span class="text-green-800 font-medium ${checkedClass}">${t.task}</span>
+                                todayTasksHtml += `
+                                    <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0 hover:bg-green-50 transition-colors">
+                                        <div class="flex items-center space-x-3 flex-1">
+                                            <button onclick="toggleTaskCompletion('threeWeeks', ${index})"
+                                                    class="text-green-600 hover:text-green-800 text-xl">
+                                                <i class="far ${checkIcon}"></i>
+                                            </button>
+                                            <span class="text-green-800 font-medium ${checkedClass}">${t.task}</span>
+                                        </div>
+                                        <span class="text-green-600 text-sm">${t.time}</span>
                                     </div>
-                                    <span class="text-green-600 text-sm">${t.time}</span>
-                                </div>
-                            `;
+                                `;
+                            }
                         }
                     });
                 }
