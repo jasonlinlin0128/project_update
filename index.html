@@ -21,18 +21,57 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     
     <style>
-        /* Glassmorphism - Vibrant Gradient Background */
+        /* CSS Variables for Theming */
+        :root {
+            /* Light Theme (Default) */
+            --bg-gradient-1: #e0f2fe;
+            --bg-gradient-2: #dbeafe;
+            --bg-gradient-3: #fce7f3;
+            --bg-gradient-4: #e0e7ff;
+            --bg-gradient-5: #f0fdfa;
+
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-tertiary: #6b7280;
+
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --input-bg: rgba(255, 255, 255, 0.6);
+        }
+
+        body.dark-theme {
+            /* Dark Theme */
+            --bg-gradient-1: #1e293b;
+            --bg-gradient-2: #334155;
+            --bg-gradient-3: #4c1d95;
+            --bg-gradient-4: #1e3a8a;
+            --bg-gradient-5: #164e63;
+
+            --text-primary: #f9fafb;
+            --text-secondary: #e5e7eb;
+            --text-tertiary: #d1d5db;
+
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --input-bg: rgba(15, 23, 42, 0.6);
+        }
+
+        /* Glassmorphism - Gradient Background with Theme Support */
         body {
             font-family: 'Inter', 'Noto Sans TC', sans-serif;
             background: linear-gradient(135deg,
-                #667eea 0%,
-                #764ba2 25%,
-                #f093fb 50%,
-                #4facfe 75%,
-                #00f2fe 100%);
+                var(--bg-gradient-1) 0%,
+                var(--bg-gradient-2) 25%,
+                var(--bg-gradient-3) 50%,
+                var(--bg-gradient-4) 75%,
+                var(--bg-gradient-5) 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             min-height: 100vh;
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         @keyframes gradientShift {
@@ -160,29 +199,33 @@
         
         /* Glassmorphism - Text Styling with High Contrast */
         h1, h2, h3 {
-            color: white !important;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            color: var(--text-primary) !important;
+            text-shadow: none;
+            font-weight: 700;
         }
 
         .text-gray-800, .text-gray-700, .text-gray-600, .text-gray-500 {
-            color: rgba(255, 255, 255, 0.95) !important;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            color: var(--text-secondary) !important;
+            text-shadow: none;
         }
 
         .text-gray-400 {
-            color: rgba(255, 255, 255, 0.75) !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+            color: var(--text-tertiary) !important;
+            text-shadow: none;
+        }
+
+        p, span, div, label {
+            color: var(--text-secondary);
         }
 
         /* Glassmorphism - Buttons */
         .action-btn, button[class*="bg-"] {
-            background: rgba(255, 255, 255, 0.3) !important;
+            background: var(--card-bg) !important;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5) !important;
-            color: white !important;
+            border: 1px solid var(--glass-border) !important;
+            color: var(--text-primary) !important;
             font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             padding: 10px 20px;
             border-radius: 8px;
@@ -190,38 +233,37 @@
         }
 
         .action-btn:hover, button[class*="bg-"]:hover {
-            background: rgba(255, 255, 255, 0.4) !important;
+            background: var(--glass-bg) !important;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
             transform: translateY(-2px);
         }
 
         /* Glassmorphism - Input Fields */
         input, select, textarea {
-            background: rgba(255, 255, 255, 0.2) !important;
+            background: var(--input-bg) !important;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.4) !important;
-            color: white !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--glass-border) !important;
+            color: var(--text-primary) !important;
         }
 
         input::placeholder, textarea::placeholder {
-            color: rgba(255, 255, 255, 0.6) !important;
+            color: var(--text-tertiary) !important;
         }
 
         input:focus, select:focus, textarea:focus {
-            background: rgba(255, 255, 255, 0.25) !important;
-            border-color: rgba(255, 255, 255, 0.6) !important;
+            background: var(--card-bg) !important;
+            border-color: #3b82f6 !important;
             outline: none !important;
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
         }
 
         /* Glassmorphism - Navigation Bar */
         nav {
-            background: rgba(255, 255, 255, 0.15) !important;
+            background: var(--glass-bg) !important;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            border: 1px solid var(--glass-border);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border-radius: 16px;
             margin: 20px;
@@ -229,11 +271,11 @@
 
         /* Glassmorphism - Main Content Area */
         main {
-            background: rgba(255, 255, 255, 0.12) !important;
+            background: var(--glass-bg) !important;
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border-radius: 16px;
             margin: 20px;
         }
@@ -241,19 +283,19 @@
         /* Glassmorphism - Stat Cards / Summary Cards */
         .bg-blue-100, .bg-orange-100, .bg-purple-100, .bg-red-100, .bg-green-100,
         .bg-teal-50, .bg-blue-50, .bg-purple-50, .bg-green-50, .bg-orange-50 {
-            background: rgba(255, 255, 255, 0.2) !important;
+            background: var(--card-bg) !important;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.35) !important;
+            border: 1px solid var(--glass-border) !important;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         /* Glassmorphism - Kanban Columns */
         .bg-gray-100 {
-            background: rgba(255, 255, 255, 0.15) !important;
+            background: var(--card-bg) !important;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            border: 1px solid var(--glass-border) !important;
         }
 
         /* Glassmorphism - Column Headers keep their solid colors but with glass effect */
@@ -266,9 +308,37 @@
         /* Glassmorphism - Labels and Badges */
         .text-blue-800, .text-blue-600, .text-orange-800, .text-purple-800, .text-green-800, .text-red-800,
         .text-yellow-800, .text-teal-800 {
-            color: rgba(255, 255, 255, 0.95) !important;
+            color: var(--text-primary) !important;
             font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Dashboard Tab Styling */
+        .dashboard-tab {
+            color: var(--text-secondary) !important;
+        }
+
+        .dashboard-tab.active {
+            color: var(--text-primary) !important;
+        }
+
+        /* Theme Toggle Button */
+        #theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        #theme-toggle:hover {
+            background: var(--glass-bg);
+        }
+
+        /* Project Card Improvements */
+        .project-card {
+            background: var(--card-bg) !important;
+        }
+
+        .project-card:hover {
+            background: var(--glass-bg) !important;
         }
     </style>
 </head>
@@ -276,12 +346,19 @@
     <div class="max-w-7xl mx-auto">
         <!-- Navigation Tabs -->
         <nav class="bg-white rounded-t-lg shadow-sm">
-            <div id="tab-container" class="flex border-b border-gray-200 overflow-x-auto">
-                <button data-target="dashboard-ai" class="dashboard-tab active flex-shrink-0">AI 專案進度</button>
-                <button data-target="dashboard-routine" class="dashboard-tab flex-shrink-0">例行公事</button>
-                <button data-target="dashboard-sharing" class="dashboard-tab flex-shrink-0">分享會</button>
-                <button data-target="dashboard-events" class="dashboard-tab flex-shrink-0">活動參與</button>
-                <button data-target="dashboard-contacts" class="dashboard-tab flex-shrink-0">接洽企業</button>
+            <div class="flex items-center justify-between p-2">
+                <div id="tab-container" class="flex border-b-0 overflow-x-auto flex-1">
+                    <button data-target="dashboard-ai" class="dashboard-tab active flex-shrink-0">AI 專案進度</button>
+                    <button data-target="dashboard-routine" class="dashboard-tab flex-shrink-0">例行公事</button>
+                    <button data-target="dashboard-sharing" class="dashboard-tab flex-shrink-0">分享會</button>
+                    <button data-target="dashboard-events" class="dashboard-tab flex-shrink-0">活動參與</button>
+                    <button data-target="dashboard-contacts" class="dashboard-tab flex-shrink-0">接洽企業</button>
+                </div>
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" onclick="toggleTheme()" class="ml-4 px-4 py-2 rounded-lg transition-all">
+                    <i id="theme-icon" class="fas fa-moon"></i>
+                    <span id="theme-text" class="ml-2">深色</span>
+                </button>
             </div>
         </nav>
 
@@ -1136,6 +1213,38 @@
     </div>
 
     <script>
+        // ===== 主題切換系統 =====
+        function initTheme() {
+            // 從 localStorage 讀取主題偏好，預設為淺色主題
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                updateThemeButton(true);
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-theme');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeButton(isDark);
+            console.log('主題已切換:', isDark ? '深色' : '淺色');
+        }
+
+        function updateThemeButton(isDark) {
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            if (isDark) {
+                icon.className = 'fas fa-sun';
+                text.textContent = '淺色';
+            } else {
+                icon.className = 'fas fa-moon';
+                text.textContent = '深色';
+            }
+        }
+
+        // 頁面載入時初始化主題
+        initTheme();
+
         // ===== 權限系統 (URL 參數法) =====
         const urlParams = new URLSearchParams(window.location.search);
         const userRole = urlParams.get('role') || 'manager'; // 預設為專案管理師
