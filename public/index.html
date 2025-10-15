@@ -1399,6 +1399,66 @@
         let eventsAttended = [];
         let businessContacts = [];
 
+        // ===== 台灣國定假日資料庫 (2025-2026) =====
+        const taiwanHolidays = {
+            '2025': [
+                { date: '2025-01-01', name: '中華民國開國紀念日' },
+                { date: '2025-01-27', name: '農曆除夕前一日' },
+                { date: '2025-01-28', name: '農曆除夕' },
+                { date: '2025-01-29', name: '春節' },
+                { date: '2025-01-30', name: '春節' },
+                { date: '2025-01-31', name: '春節' },
+                { date: '2025-02-01', name: '春節' },
+                { date: '2025-02-28', name: '和平紀念日' },
+                { date: '2025-04-03', name: '兒童節' },
+                { date: '2025-04-04', name: '清明節' },
+                { date: '2025-05-31', name: '端午節' },
+                { date: '2025-10-06', name: '中秋節' },
+                { date: '2025-10-10', name: '國慶日' }
+            ],
+            '2026': [
+                { date: '2026-01-01', name: '中華民國開國紀念日' },
+                { date: '2026-02-16', name: '農曆除夕前一日' },
+                { date: '2026-02-17', name: '農曆除夕' },
+                { date: '2026-02-18', name: '春節' },
+                { date: '2026-02-19', name: '春節' },
+                { date: '2026-02-20', name: '春節' },
+                { date: '2026-02-21', name: '春節' },
+                { date: '2026-02-28', name: '和平紀念日' },
+                { date: '2026-04-03', name: '兒童節' },
+                { date: '2026-04-04', name: '清明節' },
+                { date: '2026-06-19', name: '端午節' },
+                { date: '2026-09-25', name: '中秋節' },
+                { date: '2026-10-10', name: '國慶日' }
+            ]
+        };
+
+        // 檢查是否為台灣國定假日
+        function isTaiwanHoliday(date) {
+            const year = date.getFullYear().toString();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
+            if (taiwanHolidays[year]) {
+                const holiday = taiwanHolidays[year].find(h => h.date === dateStr);
+                return holiday ? holiday.name : null;
+            }
+            return null;
+        }
+
+        // 檢查是否為週末或國定假日
+        function isWeekendOrHoliday(date) {
+            const dayOfWeek = date.getDay();
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const holiday = isTaiwanHoliday(date);
+
+            return {
+                isOff: isWeekend || holiday !== null,
+                reason: holiday || (isWeekend ? '週末' : null)
+            };
+        }
+
         // 全域錯誤處理（僅記錄，不影響 UI）
         window.addEventListener('error', (e) => {
             console.error('全域錯誤:', e.error);
@@ -2459,10 +2519,10 @@
         function calculateTodayCompletionRate() {
             // 計算今日完成率
             const today = new Date();
-            const dayOfWeek = today.getDay();
+            const offCheck = isWeekendOrHoliday(today);
 
-            // 週末沒有任務
-            if (dayOfWeek === 0 || dayOfWeek === 6) {
+            // 週末或國定假日沒有任務
+            if (offCheck.isOff) {
                 return { completed: 0, total: 0, rate: 0 };
             }
 
@@ -2525,13 +2585,13 @@
             container.innerHTML = '';
 
             const today = new Date();
-            const dayOfWeek = today.getDay();
+            const offCheck = isWeekendOrHoliday(today);
             let todayTasksHtml = '';
 
             // 計算今日完成率
             const completionStats = calculateTodayCompletionRate();
 
-            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            if (!offCheck.isOff) {
                 // 每日任務（加入勾選框）
                 routineTasks.daily.forEach((t, index) => {
                     const status = getTaskCompletionStatus(t, today);
@@ -2581,11 +2641,15 @@
                     }
                 });
             } else {
-                todayTasksHtml = '<p class="text-blue-600">今日為假日，無例行公事。</p>';
+                // 顯示假日訊息
+                const holidayMessage = offCheck.reason === '週末'
+                    ? '今日為週末，無例行公事。'
+                    : `今日為國定假日 (${offCheck.reason})，無例行公事。`;
+                todayTasksHtml = `<p class="text-blue-600"><i class="fas fa-calendar-times mr-2"></i>${holidayMessage}</p>`;
             }
 
             const taskSections = [
-                { title: '每日任務 (週一至週五)', tasks: routineTasks.daily, icon: 'fa-calendar-day', color: 'blue', type: 'daily' },
+                { title: '每日任務 (週一至週五，排除國定假日)', tasks: routineTasks.daily, icon: 'fa-calendar-day', color: 'blue', type: 'daily' },
                 { title: '三週一次', tasks: routineTasks.threeWeeks, icon: 'fa-calendar-week', color: 'green', type: 'threeWeeks' },
                 { title: '每月任務', tasks: routineTasks.monthly, icon: 'fa-calendar-alt', color: 'purple', type: 'monthly' },
                 { title: '雙月任務', tasks: routineTasks.bimonthly, icon: 'fa-calendar', color: 'orange', type: 'bimonthly' }
@@ -2756,18 +2820,26 @@
                 const currentDate = new Date(year, month, day);
                 const dayOfWeek = currentDate.getDay();
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const offCheck = isWeekendOrHoliday(currentDate);
                 let tasksHtml = '';
 
-                // 每日任務
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                // 標示國定假日
+                if (offCheck.reason && offCheck.reason !== '週末') {
+                    tasksHtml += `<div class="calendar-task bg-red-100 text-red-600 font-semibold border border-red-300">
+                        <i class="fas fa-flag text-xs mr-1"></i>${offCheck.reason}
+                    </div>`;
+                }
+
+                // 每日任務（排除週末和國定假日）
+                if (!offCheck.isOff) {
                     routineTasks.daily.forEach(t => {
                         const shortTask = t.task.length > 15 ? t.task.substring(0, 12) + '...' : t.task;
                         tasksHtml += `<div class="calendar-task bg-blue-100 text-blue-800">${shortTask}</div>`;
                     });
                 }
 
-                // 三週一次任務（掃地週：週一到週五）
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                // 三週一次任務（掃地週：週一到週五，排除國定假日）
+                if (!offCheck.isOff) {
                     routineTasks.threeWeeks.forEach(task => {
                         if (task.nextWeekStart) {
                             // 修正：使用本地時區解析日期，避免 UTC 時區差異
