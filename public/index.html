@@ -2669,27 +2669,31 @@
             let completedTasks = 0;
 
             // 計算每日任務
-            routineTasks.daily.forEach(task => {
-                totalTasks++;
-                const status = getTaskCompletionStatus(task, today);
-                if (status.completed) completedTasks++;
-            });
+            if (routineTasks.daily && Array.isArray(routineTasks.daily)) {
+                routineTasks.daily.forEach(task => {
+                    totalTasks++;
+                    const status = getTaskCompletionStatus(task, today);
+                    if (status.completed) completedTasks++;
+                });
+            }
 
             // 檢查是否在掃地週內
-            routineTasks.threeWeeks.forEach(task => {
-                if (task.nextWeekStart) {
-                    // 修正：使用本地時區解析日期
-                    const [y, m, d] = task.nextWeekStart.split('-').map(Number);
-                    const weekStart = new Date(y, m - 1, d);
-                    const weekEnd = new Date(y, m - 1, d + 4);
+            if (routineTasks.threeWeeks && Array.isArray(routineTasks.threeWeeks)) {
+                routineTasks.threeWeeks.forEach(task => {
+                    if (task.nextWeekStart) {
+                        // 修正：使用本地時區解析日期
+                        const [y, m, d] = task.nextWeekStart.split('-').map(Number);
+                        const weekStart = new Date(y, m - 1, d);
+                        const weekEnd = new Date(y, m - 1, d + 4);
 
-                    if (today >= weekStart && today <= weekEnd) {
-                        totalTasks++;
-                        const status = getTaskCompletionStatus(task, today);
-                        if (status.completed) completedTasks++;
+                        if (today >= weekStart && today <= weekEnd) {
+                            totalTasks++;
+                            const status = getTaskCompletionStatus(task, today);
+                            if (status.completed) completedTasks++;
+                        }
                     }
-                }
-            });
+                });
+            }
 
             const rate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
             return { completed: completedTasks, total: totalTasks, rate };
@@ -2733,27 +2737,30 @@
 
             if (!offCheck.isOff) {
                 // 每日任務（加入勾選框）
-                routineTasks.daily.forEach((t, index) => {
-                    const status = getTaskCompletionStatus(t, today);
-                    const checkedClass = status.completed ? 'line-through opacity-60' : '';
-                    const checkIcon = status.completed ? 'fa-check-square' : 'fa-square';
+                if (routineTasks.daily && Array.isArray(routineTasks.daily)) {
+                    routineTasks.daily.forEach((t, index) => {
+                        const status = getTaskCompletionStatus(t, today);
+                        const checkedClass = status.completed ? 'line-through opacity-60' : '';
+                        const checkIcon = status.completed ? 'fa-check-square' : 'fa-square';
 
-                    todayTasksHtml += `
-                        <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0 hover:bg-blue-50 transition-colors">
-                            <div class="flex items-center space-x-3 flex-1">
-                                <button onclick="toggleTaskCompletion('daily', ${index})"
-                                        class="text-blue-600 hover:text-blue-800 text-xl">
-                                    <i class="far ${checkIcon}"></i>
-                                </button>
-                                <span class="text-blue-800 font-medium ${checkedClass}">${t.task}</span>
+                        todayTasksHtml += `
+                            <div class="flex justify-between items-center py-2 border-b border-blue-100 last:border-b-0 hover:bg-blue-50 transition-colors">
+                                <div class="flex items-center space-x-3 flex-1">
+                                    <button onclick="toggleTaskCompletion('daily', ${index})"
+                                            class="text-blue-600 hover:text-blue-800 text-xl">
+                                        <i class="far ${checkIcon}"></i>
+                                    </button>
+                                    <span class="text-blue-800 font-medium ${checkedClass}">${t.task}</span>
+                                </div>
+                                <span class="text-blue-600 text-sm">${t.time}</span>
                             </div>
-                            <span class="text-blue-600 text-sm">${t.time}</span>
-                        </div>
-                    `;
-                });
+                        `;
+                    });
+                }
 
                 // 檢查是否在掃地週內（加入勾選框）
-                routineTasks.threeWeeks.forEach((t, index) => {
+                if (routineTasks.threeWeeks && Array.isArray(routineTasks.threeWeeks)) {
+                    routineTasks.threeWeeks.forEach((t, index) => {
                     if (t.nextWeekStart) {
                         // 修正：使用本地時區解析日期
                         const [y, m, d] = t.nextWeekStart.split('-').map(Number);
@@ -2778,8 +2785,8 @@
                                 </div>
                             `;
                         }
-                    }
-                });
+                    });
+                }
             } else {
                 // 顯示假日訊息
                 const holidayMessage = offCheck.reason === '週末'
@@ -3072,34 +3079,38 @@
                 }
 
                 // 每月任務
-                routineTasks.monthly.forEach(task => {
-                    // 固定日期（每月X日）
-                    if (task.day && task.day === day) {
-                        const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
-                        tasksHtml += `<div class="calendar-task bg-purple-100 text-purple-800">${shortTask}</div>`;
-                    }
-                    // 下次執行日期
-                    else if (task.nextDate === dateStr) {
-                        const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
-                        tasksHtml += `<div class="calendar-task bg-purple-100 text-purple-800">${shortTask}</div>`;
-                    }
-                    // 每月自定義日期
-                    else if (task.dates && task.dates[currentMonthStr] === dateStr) {
-                        const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
-                        tasksHtml += `<div class="calendar-task bg-purple-100 text-purple-800">${shortTask}</div>`;
-                    }
-                });
+                if (routineTasks.monthly && Array.isArray(routineTasks.monthly)) {
+                    routineTasks.monthly.forEach(task => {
+                        // 固定日期（每月X日）
+                        if (task.day && task.day === day) {
+                            const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                            tasksHtml += `<div class="calendar-task bg-purple-100 text-purple-800">${shortTask}</div>`;
+                        }
+                        // 下次執行日期
+                        else if (task.nextDate === dateStr) {
+                            const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                            tasksHtml += `<div class="calendar-task bg-purple-100 text-purple-800">${shortTask}</div>`;
+                        }
+                        // 每月自定義日期
+                        else if (task.dates && task.dates[currentMonthStr] === dateStr) {
+                            const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                            tasksHtml += `<div class="calendar-task bg-purple-100 text-purple-800">${shortTask}</div>`;
+                        }
+                    });
+                }
 
                 // 雙月任務（下次執行日期）
-                routineTasks.bimonthly.forEach(task => {
-                    if (task.nextDate === dateStr) {
-                        const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
-                        tasksHtml += `<div class="calendar-task bg-orange-100 text-orange-800">${shortTask}</div>`;
-                    } else if (task.dates && task.dates[currentMonthStr] === dateStr) {
-                        // 舊的 dates 格式（向後兼容）
-                        tasksHtml += `<div class="calendar-task bg-orange-100 text-orange-800">${task.task}</div>`;
-                    }
-                });
+                if (routineTasks.bimonthly && Array.isArray(routineTasks.bimonthly)) {
+                    routineTasks.bimonthly.forEach(task => {
+                        if (task.nextDate === dateStr) {
+                            const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                            tasksHtml += `<div class="calendar-task bg-orange-100 text-orange-800">${shortTask}</div>`;
+                        } else if (task.dates && task.dates[currentMonthStr] === dateStr) {
+                            // 舊的 dates 格式（向後兼容）
+                            tasksHtml += `<div class="calendar-task bg-orange-100 text-orange-800">${task.task}</div>`;
+                        }
+                    });
+                }
 
                 const isToday = new Date().toDateString() === currentDate.toDateString() ? 'bg-blue-100' : 'bg-white';
                 calendarHtml += `
