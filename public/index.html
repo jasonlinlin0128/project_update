@@ -847,9 +847,12 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">任務類型</label>
                     <select id="new-routine-type" class="w-full px-3 py-2 border rounded-lg" onchange="updateRoutineFields()">
                         <option value="daily">每日任務</option>
+                        <option value="weekly">每週任務</option>
                         <option value="threeWeeks">三週一次</option>
                         <option value="monthly">每月任務</option>
+                        <option value="quarterly">每季任務</option>
                         <option value="bimonthly">雙月任務</option>
+                        <option value="custom">自定義週期</option>
                     </select>
                 </div>
                 <div>
@@ -873,6 +876,70 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">下次執行日期</label>
                     <input id="new-routine-next-date" type="date" class="w-full px-3 py-2 border rounded-lg">
                     <p id="next-date-hint" class="text-xs text-gray-500 mt-1"></p>
+                </div>
+                <div id="routine-weekdays-field" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">執行日（可多選）</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" value="1" class="routine-weekday-checkbox">
+                            <span>週一</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" value="2" class="routine-weekday-checkbox">
+                            <span>週二</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" value="3" class="routine-weekday-checkbox">
+                            <span>週三</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" value="4" class="routine-weekday-checkbox">
+                            <span>週四</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" value="5" class="routine-weekday-checkbox">
+                            <span>週五</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" value="6" class="routine-weekday-checkbox">
+                            <span>週六</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" value="0" class="routine-weekday-checkbox">
+                            <span>週日</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="routine-quarterly-field" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">季度執行月份與日期</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <select id="new-routine-quarter-month" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="1">每季第一個月</option>
+                            <option value="2">每季第二個月</option>
+                            <option value="3">每季第三個月</option>
+                        </select>
+                        <input id="new-routine-quarter-day" type="number" min="1" max="31" placeholder="日期" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">例如：第一個月 + 15日 = 1/15、4/15、7/15、10/15</p>
+                </div>
+                <div id="routine-custom-field" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">自定義週期</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-600">每</span>
+                            <input id="new-routine-custom-interval" type="number" min="1" placeholder="數量" class="flex-1 px-3 py-2 border rounded-lg">
+                        </div>
+                        <select id="new-routine-custom-unit" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="days">天</option>
+                            <option value="weeks">週</option>
+                            <option value="months">月</option>
+                        </select>
+                    </div>
+                    <div class="mt-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">開始日期</label>
+                        <input id="new-routine-custom-start" type="date" class="w-full px-3 py-2 border rounded-lg" onchange="calculateCustomNextDate()">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">例如：每 5 天、每 2 週、每 3 月</p>
                 </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
@@ -2524,6 +2591,9 @@
             const dayField = document.getElementById('routine-day-field');
             const lastDateField = document.getElementById('routine-last-date-field');
             const nextDateField = document.getElementById('routine-next-date-field');
+            const weekdaysField = document.getElementById('routine-weekdays-field');
+            const quarterlyField = document.getElementById('routine-quarterly-field');
+            const customField = document.getElementById('routine-custom-field');
             const nextDateInput = document.getElementById('new-routine-next-date');
             const nextDateHint = document.getElementById('next-date-hint');
 
@@ -2536,10 +2606,17 @@
             dayField.classList.add('hidden');
             lastDateField.classList.add('hidden');
             nextDateField.classList.add('hidden');
+            weekdaysField.classList.add('hidden');
+            quarterlyField.classList.add('hidden');
+            customField.classList.add('hidden');
 
             if (type === 'daily') {
                 // 每日任務：顯示時間
                 timeField.classList.remove('hidden');
+            } else if (type === 'weekly') {
+                // 每週任務：顯示時間、星期幾
+                timeField.classList.remove('hidden');
+                weekdaysField.classList.remove('hidden');
             } else if (type === 'threeWeeks') {
                 // 三週一次：顯示時間、上次掃地週開始日、下次掃地週開始日（自動計算）
                 timeField.classList.remove('hidden');
@@ -2558,6 +2635,14 @@
                 nextDateInput.readOnly = false;
                 nextDateInput.classList.remove('bg-gray-100');
                 nextDateHint.textContent = '若無固定日期，請手動輸入下次執行日期';
+            } else if (type === 'quarterly') {
+                // 每季任務：顯示季度月份和日期
+                quarterlyField.classList.remove('hidden');
+                nextDateField.classList.remove('hidden');
+                nextDateLabel.textContent = '下次執行日期';
+                nextDateInput.readOnly = false;
+                nextDateInput.classList.remove('bg-gray-100');
+                nextDateHint.textContent = '請輸入下次執行日期（系統將自動計算後續季度日期）';
             } else if (type === 'bimonthly') {
                 // 雙月任務：顯示下次日期（手動輸入）
                 nextDateField.classList.remove('hidden');
@@ -2565,6 +2650,14 @@
                 nextDateInput.readOnly = false;
                 nextDateInput.classList.remove('bg-gray-100');
                 nextDateHint.textContent = '請手動輸入下次執行日期';
+            } else if (type === 'custom') {
+                // 自定義週期：顯示週期設定和開始日期
+                customField.classList.remove('hidden');
+                nextDateField.classList.remove('hidden');
+                nextDateLabel.textContent = '下次執行日期（自動計算）';
+                nextDateInput.readOnly = true;
+                nextDateInput.classList.add('bg-gray-100');
+                nextDateHint.textContent = '根據開始日期和週期自動計算';
             }
         }
 
@@ -2583,6 +2676,30 @@
             document.getElementById('new-routine-next-date').value = nextDate;
         }
 
+        function calculateCustomNextDate() {
+            const startDate = document.getElementById('new-routine-custom-start').value;
+            const interval = parseInt(document.getElementById('new-routine-custom-interval').value);
+            const unit = document.getElementById('new-routine-custom-unit').value;
+
+            if (!startDate || !interval) {
+                document.getElementById('new-routine-next-date').value = '';
+                return;
+            }
+
+            const date = new Date(startDate);
+
+            if (unit === 'days') {
+                date.setDate(date.getDate() + interval);
+            } else if (unit === 'weeks') {
+                date.setDate(date.getDate() + (interval * 7));
+            } else if (unit === 'months') {
+                date.setMonth(date.getMonth() + interval);
+            }
+
+            const nextDate = date.toISOString().split('T')[0];
+            document.getElementById('new-routine-next-date').value = nextDate;
+        }
+
         function addNewRoutine() {
             const type = document.getElementById('new-routine-type').value;
             const taskName = document.getElementById('new-routine-task').value;
@@ -2596,6 +2713,18 @@
 
             if (type === 'daily') {
                 taskData.time = document.getElementById('new-routine-time').value;
+            } else if (type === 'weekly') {
+                // 每週任務：儲存時間和選中的星期幾
+                taskData.time = document.getElementById('new-routine-time').value;
+                const weekdayCheckboxes = document.querySelectorAll('.routine-weekday-checkbox:checked');
+                taskData.weekdays = Array.from(weekdayCheckboxes).map(cb => parseInt(cb.value));
+
+                if (taskData.weekdays.length === 0) {
+                    alert('請至少選擇一個執行日');
+                    return;
+                }
+
+                console.log('每週任務設定:', { task: taskName, weekdays: taskData.weekdays });
             } else if (type === 'threeWeeks') {
                 taskData.time = document.getElementById('new-routine-time').value;
                 const lastWeekStart = document.getElementById('new-routine-last-date').value;
@@ -2619,10 +2748,46 @@
                 }
                 const nextDate = document.getElementById('new-routine-next-date').value;
                 if (nextDate) taskData.nextDate = nextDate;
+            } else if (type === 'quarterly') {
+                // 每季任務：儲存季度月份和日期
+                const quarterMonth = parseInt(document.getElementById('new-routine-quarter-month').value);
+                const quarterDay = parseInt(document.getElementById('new-routine-quarter-day').value);
+                const nextDate = document.getElementById('new-routine-next-date').value;
+
+                if (!quarterDay || !nextDate) {
+                    alert('請填寫日期和下次執行日期');
+                    return;
+                }
+
+                taskData.quarterMonth = quarterMonth;  // 1, 2, or 3
+                taskData.quarterDay = quarterDay;
+                taskData.nextDate = nextDate;
+
+                console.log('每季任務設定:', { task: taskName, quarterMonth, quarterDay, nextDate });
             } else if (type === 'bimonthly') {
                 taskData.dates = {};
                 const nextDate = document.getElementById('new-routine-next-date').value;
                 if (nextDate) taskData.nextDate = nextDate;
+            } else if (type === 'custom') {
+                // 自定義週期任務
+                const interval = parseInt(document.getElementById('new-routine-custom-interval').value);
+                const unit = document.getElementById('new-routine-custom-unit').value;
+                const startDate = document.getElementById('new-routine-custom-start').value;
+                const nextDate = document.getElementById('new-routine-next-date').value;
+
+                if (!interval || !startDate) {
+                    alert('請填寫週期數量和開始日期');
+                    return;
+                }
+
+                taskData.customPeriod = {
+                    interval: interval,
+                    unit: unit,
+                    startDate: startDate
+                };
+                taskData.nextDate = nextDate;
+
+                console.log('自定義週期任務設定:', { task: taskName, customPeriod: taskData.customPeriod, nextDate });
             }
 
             // 檢查是否為編輯模式
