@@ -2902,6 +2902,43 @@
                     });
                 }
 
+                // 自定義週期任務
+                if (routineTasks.custom) {
+                    routineTasks.custom.forEach(task => {
+                        if (task.customPeriod && task.customPeriod.startDate) {
+                            const startDate = new Date(task.customPeriod.startDate + 'T00:00:00');
+                            const interval = task.customPeriod.interval;
+                            const unit = task.customPeriod.unit;
+
+                            // 計算從開始日期到當前日期的天數差
+                            const daysDiff = Math.floor((currentDate - startDate) / (1000 * 60 * 60 * 24));
+
+                            let shouldShowTask = false;
+
+                            if (unit === 'days') {
+                                // 每 N 天
+                                shouldShowTask = daysDiff >= 0 && daysDiff % interval === 0;
+                            } else if (unit === 'weeks') {
+                                // 每 N 週（7 * N 天）
+                                const weekInterval = interval * 7;
+                                shouldShowTask = daysDiff >= 0 && daysDiff % weekInterval === 0;
+                            } else if (unit === 'months') {
+                                // 每 N 月（檢查月份差和日期）
+                                const monthsDiff = (currentDate.getFullYear() - startDate.getFullYear()) * 12 +
+                                                  (currentDate.getMonth() - startDate.getMonth());
+                                shouldShowTask = monthsDiff >= 0 &&
+                                               monthsDiff % interval === 0 &&
+                                               currentDate.getDate() === startDate.getDate();
+                            }
+
+                            if (shouldShowTask) {
+                                const shortTask = task.task.length > 15 ? task.task.substring(0, 12) + '...' : task.task;
+                                tasksHtml += `<div class="calendar-task bg-teal-100 text-teal-800">${shortTask}</div>`;
+                            }
+                        }
+                    });
+                }
+
                 // 每月任務
                 routineTasks.monthly.forEach(task => {
                     // 固定日期（每月X日）
