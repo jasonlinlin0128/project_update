@@ -619,6 +619,16 @@
                         <option value="已完成">已完成</option>
                     </select>
                 </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">完成進度</label>
+                    <div class="flex items-center space-x-4">
+                        <input id="new-project-progress" type="range" min="0" max="100" value="0"
+                               class="flex-grow h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                               oninput="document.getElementById('new-project-progress-value').textContent = this.value + '%'">
+                        <span id="new-project-progress-value" class="text-lg font-semibold text-blue-600 w-16 text-right">0%</span>
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500">拖動滑桿設定專案完成進度（0-100%）</div>
+                </div>
             </div>
             <div class="flex justify-end space-x-3 mt-6">
                 <button onclick="closeAddProjectModal()" class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">取消</button>
@@ -1372,12 +1382,28 @@
                     board.appendChild(column);
                 });
 
-                // 統計資料
+                // 統計資料（添加詳細除錯日誌）
+                console.log('📊 專案統計除錯：');
+                console.log('所有專案:', filteredProjects.map(p => ({ id: p.id, name: p.name, status: p.status })));
+
                 const total = filteredProjects.length;
                 const completed = filteredProjects.filter(p => p.status === '已完成').length;
                 const inProgress = filteredProjects.filter(p => ['開發中', '測試中'].includes(p.status)).length;
                 const planning = filteredProjects.filter(p => ['構思中', '規劃中'].includes(p.status)).length;
                 const shutdown = filteredProjects.filter(p => ['已終止'].includes(p.status)).length;
+
+                // 檢查是否有未分類的專案
+                const categorized = completed + inProgress + planning + shutdown;
+                const uncategorized = filteredProjects.filter(p =>
+                    !['已完成', '開發中', '測試中', '構思中', '規劃中', '已終止'].includes(p.status)
+                );
+
+                if (uncategorized.length > 0) {
+                    console.warn('⚠️ 發現未分類的專案:', uncategorized.map(p => ({ id: p.id, name: p.name, status: p.status })));
+                }
+
+                console.log(`總計: ${total}, 已完成: ${completed}, 進行中: ${inProgress}, 規劃中: ${planning}, 已終止: ${shutdown}`);
+                console.log(`分類總和: ${categorized}, 差異: ${total - categorized}`);
                 [
                     { label: '總專案數', value: total, color: 'bg-blue-100 text-blue-800' },
                     { label: '進行中', value: inProgress, color: 'bg-orange-100 text-orange-800' },
@@ -1414,7 +1440,7 @@
                 dueDate: document.getElementById('new-project-due').value || 'unknown',
                 priority: document.getElementById('new-project-priority').value,
                 status: document.getElementById('new-project-status').value,
-                progress: 0,
+                progress: parseInt(document.getElementById('new-project-progress').value) || 0,
                 notes: "",
                 files: [],
                 comments: []
@@ -1443,6 +1469,8 @@
                     document.getElementById('new-project-department').value = '';
                     document.getElementById('new-project-start').value = '';
                     document.getElementById('new-project-due').value = '';
+                    document.getElementById('new-project-progress').value = '0';
+                    document.getElementById('new-project-progress-value').textContent = '0%';
                 })
                 .catch((error) => {
                     // 同步失敗，從本地陣列移除
