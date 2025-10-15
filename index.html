@@ -184,15 +184,16 @@
         }
         .modal-overlay.show { display: flex; }
         .modal-content {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--card-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--glass-border);
             border-radius: 16px;
             max-width: 90vw;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            color: var(--text-primary);
         }
 
         /* Glassmorphism - Project Cards */
@@ -263,7 +264,38 @@
         }
 
         p, span, div, label {
-            color: var(--text-secondary);
+            color: var(--text-secondary) !important;
+        }
+
+        /* 確保 Modal 內的元素使用正確的文字顏色 */
+        .modal-content p,
+        .modal-content span,
+        .modal-content div,
+        .modal-content label {
+            color: inherit;
+        }
+
+        .modal-content h1,
+        .modal-content h2,
+        .modal-content h3,
+        .modal-content h4 {
+            color: var(--text-primary) !important;
+        }
+
+        /* 確保輸入框和文字區域使用正確的顏色 */
+        .modal-content input[type="text"],
+        .modal-content input[type="date"],
+        .modal-content input[type="number"],
+        .modal-content textarea,
+        .modal-content select {
+            background: var(--input-bg);
+            color: var(--text-primary);
+            border-color: var(--glass-border);
+        }
+
+        .modal-content input[type="text"]::placeholder,
+        .modal-content textarea::placeholder {
+            color: var(--text-tertiary);
         }
 
         /* Glassmorphism - Buttons */
@@ -624,19 +656,19 @@
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between">
                                 <span class="text-gray-600">開始日期:</span>
-                                <span id="modal-start-date" class="font-medium"></span>
+                                <span id="modal-start-date" class="font-medium text-gray-800"></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">預計完成:</span>
-                                <span id="modal-due-date" class="font-medium"></span>
+                                <span id="modal-due-date" class="font-medium text-gray-800"></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">優先級:</span>
-                                <span id="modal-priority" class="font-medium"></span>
+                                <span id="modal-priority" class="font-medium text-gray-800"></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">狀態:</span>
-                                <span id="modal-status" class="font-medium"></span>
+                                <span id="modal-status" class="font-medium text-gray-800"></span>
                             </div>
                         </div>
                     </div>
@@ -645,7 +677,7 @@
                         <div class="space-y-2">
                             <div class="flex justify-between items-center">
                                 <span class="text-sm text-gray-600">完成進度</span>
-                                <span id="modal-progress-text" class="text-sm font-medium"></span>
+                                <span id="modal-progress-text" class="text-sm font-medium text-gray-800"></span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-3">
                                 <div id="modal-progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-300"></div>
@@ -1838,12 +1870,12 @@
                 const statuses = ["構思中", "規劃中", "開發中", "測試中", "已終止", "已完成"];
                 const priorityColors = { '高': 'bg-red-100 text-red-800', '中': 'bg-yellow-100 text-yellow-800', '低': 'bg-green-100 text-green-800' };
                 const columnHeaderColors = {
-                    "構思中": "bg-purple-600",
-                    "規劃中": "bg-blue-600",
-                    "開發中": "bg-orange-600",
-                    "測試中": "bg-teal-600",
-                    "已終止": "bg-red-600",
-                    "已完成": "bg-green-700"
+                    "構思中": "bg-purple-400",
+                    "規劃中": "bg-blue-400",
+                    "開發中": "bg-orange-400",
+                    "測試中": "bg-teal-400",
+                    "已終止": "bg-red-400",
+                    "已完成": "bg-green-500"
                 };
 
                 statuses.forEach(status => {
