@@ -504,28 +504,28 @@
                         </div>
                         <div class="grid grid-cols-3 gap-3">
                             <button onclick="setColorTheme('blue')" class="color-theme-option" data-theme="blue">
-                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-blue-300 to-blue-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">藍色</span>
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-indigo-300 to-indigo-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Indigo</span>
                             </button>
                             <button onclick="setColorTheme('purple')" class="color-theme-option" data-theme="purple">
-                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-purple-300 to-purple-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">紫色</span>
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-violet-300 to-violet-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Violet</span>
                             </button>
                             <button onclick="setColorTheme('orange')" class="color-theme-option" data-theme="orange">
-                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-orange-300 to-orange-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">橙色</span>
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-amber-300 to-amber-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Amber</span>
                             </button>
                             <button onclick="setColorTheme('green')" class="color-theme-option" data-theme="green">
-                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-green-300 to-green-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">綠色</span>
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-emerald-300 to-emerald-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Emerald</span>
                             </button>
                             <button onclick="setColorTheme('teal')" class="color-theme-option" data-theme="teal">
-                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-teal-300 to-teal-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">青綠</span>
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-cyan-300 to-cyan-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Cyan</span>
                             </button>
                             <button onclick="setColorTheme('pink')" class="color-theme-option" data-theme="pink">
-                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-pink-300 to-pink-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">粉紅</span>
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-rose-300 to-rose-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Rose</span>
                             </button>
                         </div>
                     </div>
@@ -1472,51 +1472,51 @@
         // ===== 顏色主題配置 =====
         const COLOR_THEMES = {
             blue: {
-                name: '藍色',
-                colors: ['#dbeafe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8'],
+                name: 'Indigo',
+                colors: ['#e0e7ff', '#c7d2fe', '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5'],
                 textColors: {
-                    light: { primary: '#1e40af', secondary: '#3b82f6', tertiary: '#60a5fa' },
-                    dark: { primary: '#93c5fd', secondary: '#60a5fa', tertiary: '#3b82f6' }
+                    light: { primary: '#3730a3', secondary: '#4f46e5', tertiary: '#6366f1' },
+                    dark: { primary: '#c7d2fe', secondary: '#a5b4fc', tertiary: '#818cf8' }
                 }
             },
             purple: {
-                name: '紫色',
-                colors: ['#e9d5ff', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'],
+                name: 'Violet',
+                colors: ['#ede9fe', '#ddd6fe', '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed'],
                 textColors: {
-                    light: { primary: '#6b21a8', secondary: '#9333ea', tertiary: '#a855f7' },
-                    dark: { primary: '#c084fc', secondary: '#a855f7', tertiary: '#9333ea' }
+                    light: { primary: '#6d28d9', secondary: '#7c3aed', tertiary: '#8b5cf6' },
+                    dark: { primary: '#ddd6fe', secondary: '#c4b5fd', tertiary: '#a78bfa' }
                 }
             },
             orange: {
-                name: '橙色',
-                colors: ['#fed7aa', '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c'],
+                name: 'Amber',
+                colors: ['#fef3c7', '#fde68a', '#fcd34d', '#fbbf24', '#f59e0b', '#d97706'],
                 textColors: {
-                    light: { primary: '#c2410c', secondary: '#ea580c', tertiary: '#f97316' },
-                    dark: { primary: '#fdba74', secondary: '#fb923c', tertiary: '#f97316' }
+                    light: { primary: '#b45309', secondary: '#d97706', tertiary: '#f59e0b' },
+                    dark: { primary: '#fde68a', secondary: '#fcd34d', tertiary: '#fbbf24' }
                 }
             },
             green: {
-                name: '綠色',
-                colors: ['#d1fae5', '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857'],
+                name: 'Emerald',
+                colors: ['#d1fae5', '#a7f3d0', '#6ee7b7', '#34d399', '#10b981', '#059669'],
                 textColors: {
                     light: { primary: '#047857', secondary: '#059669', tertiary: '#10b981' },
-                    dark: { primary: '#6ee7b7', secondary: '#34d399', tertiary: '#10b981' }
+                    dark: { primary: '#a7f3d0', secondary: '#6ee7b7', tertiary: '#34d399' }
                 }
             },
             teal: {
-                name: '青綠',
-                colors: ['#ccfbf1', '#5eead4', '#2dd4bf', '#14b8a6', '#0d9488', '#0f766e'],
+                name: 'Cyan',
+                colors: ['#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2'],
                 textColors: {
-                    light: { primary: '#0f766e', secondary: '#0d9488', tertiary: '#14b8a6' },
-                    dark: { primary: '#5eead4', secondary: '#2dd4bf', tertiary: '#14b8a6' }
+                    light: { primary: '#0e7490', secondary: '#0891b2', tertiary: '#06b6d4' },
+                    dark: { primary: '#a5f3fc', secondary: '#67e8f9', tertiary: '#22d3ee' }
                 }
             },
             pink: {
-                name: '粉紅',
-                colors: ['#fce7f3', '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d'],
+                name: 'Rose',
+                colors: ['#ffe4e6', '#fecdd3', '#fda4af', '#fb7185', '#f43f5e', '#e11d48'],
                 textColors: {
-                    light: { primary: '#be185d', secondary: '#db2777', tertiary: '#ec4899' },
-                    dark: { primary: '#f9a8d4', secondary: '#f472b6', tertiary: '#ec4899' }
+                    light: { primary: '#be123c', secondary: '#e11d48', tertiary: '#f43f5e' },
+                    dark: { primary: '#fecdd3', secondary: '#fda4af', tertiary: '#fb7185' }
                 }
             }
         };
@@ -3829,7 +3829,7 @@
 
             let upcomingHtml = upcoming.length > 0 ? upcoming.map(s => {
                 const scheduleHtml = (s.schedule && Array.isArray(s.schedule))
-                    ? s.schedule.map(item => `<li class="text-gray-600 dark:text-gray-300">${item}</li>`).join('')
+                    ? s.schedule.map(item => `<li style="color: var(--theme-text-secondary);">${item}</li>`).join('')
                     : '<li class="text-gray-400 dark:text-gray-500">議程資料未設定</li>';
                 const editDeleteButtons = !isReadOnly ? `
                     <div class="space-x-2">
@@ -3895,7 +3895,7 @@
                             </div>
                         </summary>
                         <div class="mt-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
-                            <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-300 mb-4">${content}</ul>
+                            <ul class="list-disc list-inside space-y-1 mb-4" style="color: var(--theme-text-secondary);">${content}</ul>
 
                             <!-- 評論區塊 -->
                             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -4136,15 +4136,15 @@
 
                 const eventsHtml = events.map(event => {
                     const learningsHtml = (event.learnings && Array.isArray(event.learnings))
-                        ? event.learnings.map(learning => `<li class="text-gray-600 dark:text-gray-300">${learning}</li>`).join('')
+                        ? event.learnings.map(learning => `<li style="color: var(--theme-text-secondary);">${learning}</li>`).join('')
                         : '<li class="text-gray-400 dark:text-gray-500">學習心得未設定</li>';
                     const filesHtml = event.files && Array.isArray(event.files) ? event.files.map(file => {
                         if (file.link === '#' || !file.link) {
-                            return `<span class="inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-sm mr-2 mb-2">
+                            return `<span class="inline-block px-3 py-1 rounded-full text-sm mr-2 mb-2" style="background-color: var(--status-1); color: var(--theme-text-secondary);">
                                 <i class="fas fa-file mr-1"></i>${file.name}
                             </span>`;
                         } else {
-                            return `<a href="${file.link}" target="_blank" class="inline-block bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1 rounded-full text-sm mr-2 mb-2 transition-colors">
+                            return `<a href="${file.link}" target="_blank" class="inline-block px-3 py-1 rounded-full text-sm mr-2 mb-2 hover:opacity-80 transition-opacity" style="background-color: var(--status-2); color: var(--theme-text-primary);">
                                 <i class="fas fa-download mr-1"></i>${file.name}
                             </a>`;
                         }
@@ -4173,7 +4173,7 @@
                             </div>
                             <div class="mb-4">
                                 <h4 class="font-semibold mb-2" style="color: var(--theme-text-primary);">活動概述：</h4>
-                                <p class="text-gray-600 dark:text-gray-300">${event.summary}</p>
+                                <p style="color: var(--theme-text-secondary);">${event.summary}</p>
                             </div>
                             <div class="mb-4">
                                 <h4 class="font-semibold mb-2" style="color: var(--theme-text-primary);">主要學習與收穫：</h4>
@@ -4363,11 +4363,11 @@
             const tableRows = contacts.map(contact => {
                 const filesHtml = contact.files && contact.files.length > 0 ? contact.files.map(file => {
                     if (file.link === '#' || !file.link) {
-                        return `<span class="inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded text-xs mr-1 mb-1">
+                        return `<span class="inline-block px-2 py-1 rounded text-xs mr-1 mb-1" style="background-color: var(--status-1); color: var(--theme-text-secondary);">
                             <i class="fas fa-file mr-1"></i>${file.name}
                         </span>`;
                     } else {
-                        return `<a href="${file.link}" target="_blank" class="inline-block bg-blue-100 text-blue-600 hover:bg-blue-200 px-2 py-1 rounded text-xs mr-1 mb-1 transition-colors">
+                        return `<a href="${file.link}" target="_blank" class="inline-block px-2 py-1 rounded text-xs mr-1 mb-1 hover:opacity-80 transition-opacity" style="background-color: var(--status-2); color: var(--theme-text-primary);">
                             <i class="fas fa-download mr-1"></i>${file.name}
                         </a>`;
                     }
