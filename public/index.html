@@ -483,7 +483,7 @@
 <body class="p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
         <!-- Navigation Tabs -->
-        <nav class="bg-white rounded-t-lg shadow-sm">
+        <nav class="bg-white rounded-t-lg shadow-sm" style="position: relative; z-index: 100;">
             <div class="flex items-center justify-between p-2">
                 <div id="tab-container" class="flex border-b-0 overflow-x-auto flex-1">
                     <button data-target="dashboard-ai" class="dashboard-tab active flex-shrink-0">AI 專案進度</button>
@@ -3802,7 +3802,7 @@
             // 如果資料為空，顯示友善提示
             if (sharingSessions.length === 0) {
                 console.log('📝 分享會資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 bg-teal-50 dark:bg-gray-800 rounded-lg p-12"><i class="fas fa-comments text-6xl text-teal-300 mb-4"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無分享會資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增分享會」按鈕開始建立您的第一場分享會</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-comments text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無分享會資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增分享會」按鈕開始建立您的第一場分享會</p></div>';
                 return;
             }
 
@@ -3841,11 +3841,11 @@
                     </div>
                 ` : '';
                 return `
-                    <div class="bg-green-50 border border-green-200 p-6 rounded-lg mb-4">
+                    <div class="p-6 rounded-lg mb-4" style="background-color: var(--status-1); border: 1px solid var(--status-3);">
                         <div class="flex justify-between items-start mb-4">
                             <div>
-                                <h3 class="text-xl font-bold text-green-800">${s.theme}</h3>
-                                <p class="text-green-600 mt-1">日期：${s.date} | 講者：${s.speaker}</p>
+                                <h3 class="text-xl font-bold" style="color: var(--theme-text-primary);">${s.theme}</h3>
+                                <p class="mt-1" style="color: var(--theme-text-secondary);">日期：${s.date} | 講者：${s.speaker}</p>
                             </div>
                             ${editDeleteButtons}
                         </div>
@@ -3919,7 +3919,7 @@
             // 搜尋結果提示
             const totalResults = upcoming.length + past.length;
             const searchResultsHtml = sharingSearchTerm
-                ? `<div class="mb-4 text-sm text-gray-600 dark:text-gray-300 bg-teal-50 dark:bg-gray-800 p-3 rounded-lg">
+                ? `<div class="mb-4 text-sm p-3 rounded-lg" style="background-color: var(--status-1); color: var(--theme-text-secondary);">
                      找到 ${totalResults} 筆符合「${sharingSearchTerm}」的結果
                    </div>`
                 : '';
@@ -4121,7 +4121,7 @@
             // 如果資料為空，顯示友善提示
             if (eventsAttended.length === 0) {
                 console.log('📝 活動資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 bg-orange-50 dark:bg-gray-800 rounded-lg p-12"><i class="fas fa-calendar-alt text-6xl text-orange-300 mb-4"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無活動資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增活動」按鈕開始記錄您的第一個活動</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-calendar-alt text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無活動資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增活動」按鈕開始記錄您的第一個活動</p></div>';
                 return;
             }
 
@@ -4150,14 +4150,14 @@
                     }).join('') : '';
 
                     return `
-                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 rounded-lg shadow-sm">
+                        <div class="border border-gray-200 dark:border-gray-700 p-6 rounded-lg shadow-sm" style="background-color: var(--status-1);">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">${event.eventName}</h3>
-                                    <p class="text-gray-500 dark:text-gray-400 mt-1">${event.date}</p>
+                                    <h3 class="text-xl font-bold" style="color: var(--theme-text-primary);">${event.eventName}</h3>
+                                    <p class="mt-1" style="color: var(--theme-text-secondary);">${event.date}</p>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <span class="bg-${event.type === 'external' ? 'blue' : 'green'}-100 text-${event.type === 'external' ? 'blue' : 'green'}-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                    <span class="px-3 py-1 rounded-full text-sm font-semibold" style="background-color: var(--status-2); color: var(--theme-text-primary);">
                                         ${event.type === 'external' ? '外部活動' : '內部活動'}
                                     </span>
                                     ${!isReadOnly ? `
@@ -4353,7 +4353,7 @@
             // 如果資料為空，顯示友善提示
             if (businessContacts.length === 0) {
                 console.log('📝 企業接洽資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 bg-green-50 dark:bg-gray-800 rounded-lg p-12"><i class="fas fa-building text-6xl text-green-300 mb-4"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無企業接洽資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增企業接洽」按鈕開始記錄您的第一筆接洽記錄</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-building text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無企業接洽資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增企業接洽」按鈕開始記錄您的第一筆接洽記錄</p></div>';
                 return;
             }
 
@@ -4408,14 +4408,14 @@
             container.innerHTML = `
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                        <thead style="background-color: var(--status-2);">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">企業名稱</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">聯絡人</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">接洽日期</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">洽談主題</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">相關資料</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--theme-text-primary);">企業名稱</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--theme-text-primary);">聯絡人</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--theme-text-primary);">接洽日期</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--theme-text-primary);">洽談主題</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--theme-text-primary);">相關資料</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--theme-text-primary);">操作</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
