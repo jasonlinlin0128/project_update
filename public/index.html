@@ -52,6 +52,10 @@
             --theme-text-primary: #1e40af;    /* 主文字（深藍） */
             --theme-text-secondary: #3b82f6;  /* 次要文字（中藍） */
             --theme-text-tertiary: #60a5fa;   /* 第三文字（淺藍） */
+
+            /* 卡片背景（淺色模式使用主題色） */
+            --card-theme-bg: var(--status-1);
+            --card-theme-bg-secondary: var(--status-2);
         }
 
         body.dark-theme {
@@ -70,6 +74,20 @@
             --glass-border: rgba(255, 255, 255, 0.1);
             --card-bg: rgba(30, 41, 59, 0.85);
             --input-bg: rgba(15, 23, 42, 0.6);
+
+            /* 深色模式專用背景色（中性色，不隨主題變） */
+            --card-bg-primary: #1e293b;      /* 卡片主背景 */
+            --card-bg-secondary: #334155;    /* 卡片次背景（稍淺） */
+            --card-bg-tertiary: #475569;     /* 卡片三級背景（更淺） */
+
+            /* 深色模式專用文字色（中性色，不隨主題變） */
+            --text-neutral-primary: #f8fafc;    /* 主要文字（接近白） */
+            --text-neutral-secondary: #cbd5e1;  /* 次要文字（淺灰） */
+            --text-neutral-tertiary: #94a3b8;   /* 第三文字（中灰） */
+
+            /* 卡片背景（深色模式使用中性色） */
+            --card-theme-bg: var(--card-bg-primary);
+            --card-theme-bg-secondary: var(--card-bg-secondary);
 
             /* 移除硬編碼的主題顏色，讓 JavaScript 完全控制 */
         }
@@ -212,19 +230,28 @@
             color: var(--text-primary);
         }
 
-        /* Glassmorphism - Project Cards */
+        /* Enhanced Project Cards with Theme Support */
         .project-card {
-            background: rgba(255, 255, 255, 0.25) !important;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         .project-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
-            background: rgba(255, 255, 255, 0.35) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Enhanced Dashboard Cards */
+        .dashboard-card {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .dashboard-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         .file-upload-area { 
             border: 2px dashed #d1d5db; 
@@ -459,13 +486,26 @@
             background: var(--glass-bg);
         }
 
-        /* Project Card Improvements */
-        .project-card {
-            background: var(--card-bg) !important;
+        /* Enhanced Interactive Elements */
+        button:not(.no-style) {
+            transition: all 0.2s ease;
         }
 
-        .project-card:hover {
-            background: var(--glass-bg) !important;
+        button:not(.no-style):active {
+            transform: scale(0.98);
+        }
+
+        /* Table Row Hover Effects */
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            filter: brightness(0.95);
+        }
+
+        body.dark-theme tbody tr:hover {
+            filter: brightness(1.1);
         }
     </style>
 </head>
@@ -2146,7 +2186,7 @@
                         const card = document.createElement('div');
                         const borderColor = { '高': 'border-red-500', '中': 'border-yellow-500', '低': 'border-green-500' }[project.priority] || 'border-gray-300';
                         card.className = `p-4 rounded-lg shadow-md border-l-4 ${borderColor} project-card`;
-                        card.style.backgroundColor = 'var(--status-1)';
+                        card.style.backgroundColor = 'var(--card-theme-bg)';
 
                         // 根據配置動態構建卡片內容
                         let cardContent = `<h3 class="font-bold" style="color: var(--theme-text-primary);">${project.name}</h3>`;
@@ -2172,7 +2212,7 @@
                             if (fieldConfig.comments) {
                                 const commentCount = project.comments ? project.comments.length : 0;
                                 if (commentCount > 0) {
-                                    cardContent += `<span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background-color: var(--status-2); color: var(--theme-text-primary);"><i class="fas fa-comment mr-1"></i>${commentCount}</span>`;
+                                    cardContent += `<span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background-color: var(--card-theme-bg-secondary); color: var(--theme-text-primary);"><i class="fas fa-comment mr-1"></i>${commentCount}</span>`;
                                 } else {
                                     cardContent += `<span></span>`; // 佔位
                                 }
@@ -3792,7 +3832,7 @@
             // 如果資料為空，顯示友善提示
             if (sharingSessions.length === 0) {
                 console.log('📝 分享會資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-comments text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold mb-2" style="color: var(--theme-text-primary);">尚無分享會資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增分享會」按鈕開始建立您的第一場分享會</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--card-theme-bg);"><i class="fas fa-comments text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold mb-2" style="color: var(--theme-text-primary);">尚無分享會資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增分享會」按鈕開始建立您的第一場分享會</p></div>';
                 return;
             }
 
@@ -3831,7 +3871,7 @@
                     </div>
                 ` : '';
                 return `
-                    <div class="p-6 rounded-lg mb-4" style="background-color: var(--status-1); border: 1px solid var(--status-3);">
+                    <div class="p-6 rounded-lg mb-4" style="background-color: var(--card-theme-bg); border: 1px solid var(--status-3);">
                         <div class="flex justify-between items-start mb-4">
                             <div>
                                 <h3 class="text-xl font-bold" style="color: var(--theme-text-primary);">${s.theme}</h3>
@@ -3862,7 +3902,7 @@
                 // 編輯和刪除按鈕（只有非只讀模式才顯示）
                 const editDeleteButtons = !isReadOnly ? `
                     <div class="flex space-x-2 ml-4">
-                        <button onclick="editSharing(${s.id}); event.stopPropagation();" class="px-2 py-1 rounded text-xs hover:opacity-80" style="background-color: var(--status-2); color: var(--theme-text-primary);">
+                        <button onclick="editSharing(${s.id}); event.stopPropagation();" class="px-2 py-1 rounded text-xs hover:opacity-80" style="background-color: var(--card-theme-bg-secondary); color: var(--theme-text-primary);">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button onclick="deleteSharing(${s.id}); event.stopPropagation();" class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs hover:bg-red-200">
@@ -3909,7 +3949,7 @@
             // 搜尋結果提示
             const totalResults = upcoming.length + past.length;
             const searchResultsHtml = sharingSearchTerm
-                ? `<div class="mb-4 text-sm p-3 rounded-lg" style="background-color: var(--status-1); color: var(--theme-text-secondary);">
+                ? `<div class="mb-4 text-sm p-3 rounded-lg" style="background-color: var(--card-theme-bg); color: var(--theme-text-secondary);">
                      找到 ${totalResults} 筆符合「${sharingSearchTerm}」的結果
                    </div>`
                 : '';
@@ -4111,7 +4151,7 @@
             // 如果資料為空，顯示友善提示
             if (eventsAttended.length === 0) {
                 console.log('📝 活動資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-calendar-alt text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold mb-2" style="color: var(--theme-text-primary);">尚無活動資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增活動」按鈕開始記錄您的第一個活動</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--card-theme-bg);"><i class="fas fa-calendar-alt text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold mb-2" style="color: var(--theme-text-primary);">尚無活動資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增活動」按鈕開始記錄您的第一個活動</p></div>';
                 return;
             }
 
@@ -4129,29 +4169,29 @@
                         : '<li class="text-gray-400 dark:text-gray-500">學習心得未設定</li>';
                     const filesHtml = event.files && Array.isArray(event.files) ? event.files.map(file => {
                         if (file.link === '#' || !file.link) {
-                            return `<span class="inline-block px-3 py-1 rounded-full text-sm mr-2 mb-2" style="background-color: var(--status-1); color: var(--theme-text-secondary);">
+                            return `<span class="inline-block px-3 py-1 rounded-full text-sm mr-2 mb-2" style="background-color: var(--card-theme-bg); color: var(--theme-text-secondary);">
                                 <i class="fas fa-file mr-1"></i>${file.name}
                             </span>`;
                         } else {
-                            return `<a href="${file.link}" target="_blank" class="inline-block px-3 py-1 rounded-full text-sm mr-2 mb-2 hover:opacity-80 transition-opacity" style="background-color: var(--status-2); color: var(--theme-text-primary);">
+                            return `<a href="${file.link}" target="_blank" class="inline-block px-3 py-1 rounded-full text-sm mr-2 mb-2 hover:opacity-80 transition-opacity" style="background-color: var(--card-theme-bg-secondary); color: var(--theme-text-primary);">
                                 <i class="fas fa-download mr-1"></i>${file.name}
                             </a>`;
                         }
                     }).join('') : '';
 
                     return `
-                        <div class="border border-gray-200 dark:border-gray-700 p-6 rounded-lg shadow-sm" style="background-color: var(--status-1);">
+                        <div class="border border-gray-200 dark:border-gray-700 p-6 rounded-lg shadow-sm" style="background-color: var(--card-theme-bg);">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
                                     <h3 class="text-xl font-bold" style="color: var(--theme-text-primary);">${event.eventName}</h3>
                                     <p class="mt-1" style="color: var(--theme-text-secondary);">${event.date}</p>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <span class="px-3 py-1 rounded-full text-sm font-semibold" style="background-color: var(--status-2); color: var(--theme-text-primary);">
+                                    <span class="px-3 py-1 rounded-full text-sm font-semibold" style="background-color: var(--card-theme-bg-secondary); color: var(--theme-text-primary);">
                                         ${event.type === 'external' ? '外部活動' : '內部活動'}
                                     </span>
                                     ${!isReadOnly ? `
-                                        <button onclick="editEvent(${event.id})" class="px-3 py-1 rounded text-sm hover:opacity-80" style="background-color: var(--status-2); color: var(--theme-text-primary);">
+                                        <button onclick="editEvent(${event.id})" class="px-3 py-1 rounded text-sm hover:opacity-80" style="background-color: var(--card-theme-bg-secondary); color: var(--theme-text-primary);">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <button onclick="deleteEvent(${event.id})" class="bg-red-100 text-red-800 px-3 py-1 rounded text-sm hover:bg-red-200">
@@ -4343,7 +4383,7 @@
             // 如果資料為空，顯示友善提示
             if (businessContacts.length === 0) {
                 console.log('📝 企業接洽資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-building text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold mb-2" style="color: var(--theme-text-primary);">尚無企業接洽資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增企業接洽」按鈕開始記錄您的第一筆接洽記錄</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--card-theme-bg);"><i class="fas fa-building text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold mb-2" style="color: var(--theme-text-primary);">尚無企業接洽資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增企業接洽」按鈕開始記錄您的第一筆接洽記錄</p></div>';
                 return;
             }
 
@@ -4352,11 +4392,11 @@
             const tableRows = contacts.map(contact => {
                 const filesHtml = contact.files && contact.files.length > 0 ? contact.files.map(file => {
                     if (file.link === '#' || !file.link) {
-                        return `<span class="inline-block px-2 py-1 rounded text-xs mr-1 mb-1" style="background-color: var(--status-1); color: var(--theme-text-secondary);">
+                        return `<span class="inline-block px-2 py-1 rounded text-xs mr-1 mb-1" style="background-color: var(--card-theme-bg); color: var(--theme-text-secondary);">
                             <i class="fas fa-file mr-1"></i>${file.name}
                         </span>`;
                     } else {
-                        return `<a href="${file.link}" target="_blank" class="inline-block px-2 py-1 rounded text-xs mr-1 mb-1 hover:opacity-80 transition-opacity" style="background-color: var(--status-2); color: var(--theme-text-primary);">
+                        return `<a href="${file.link}" target="_blank" class="inline-block px-2 py-1 rounded text-xs mr-1 mb-1 hover:opacity-80 transition-opacity" style="background-color: var(--card-theme-bg-secondary); color: var(--theme-text-primary);">
                             <i class="fas fa-download mr-1"></i>${file.name}
                         </a>`;
                     }
@@ -4398,7 +4438,7 @@
             container.innerHTML = `
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead style="background-color: var(--status-2);">
+                        <thead style="background-color: var(--card-theme-bg-secondary);">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--theme-text-primary);">企業名稱</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--theme-text-primary);">聯絡人</th>
@@ -4408,7 +4448,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--theme-text-primary);">操作</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700" style="background-color: var(--status-1);">
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700" style="background-color: var(--card-theme-bg);">
                             ${tableRows}
                         </tbody>
                     </table>
