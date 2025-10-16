@@ -23,12 +23,12 @@
     <style>
         /* CSS Variables for Theming */
         :root {
-            /* Light Theme (Default) */
-            --bg-gradient-1: #e0f2fe;
-            --bg-gradient-2: #dbeafe;
-            --bg-gradient-3: #fce7f3;
-            --bg-gradient-4: #e0e7ff;
-            --bg-gradient-5: #f0fdfa;
+            /* Light Theme (Default) - Neutral Gray Background */
+            --bg-gradient-1: #f8fafc;
+            --bg-gradient-2: #f1f5f9;
+            --bg-gradient-3: #e2e8f0;
+            --bg-gradient-4: #f1f5f9;
+            --bg-gradient-5: #f8fafc;
 
             --text-primary: #1f2937;
             --text-secondary: #4b5563;
@@ -38,15 +38,23 @@
             --glass-border: rgba(255, 255, 255, 0.8);
             --card-bg: rgba(255, 255, 255, 0.85);
             --input-bg: rgba(255, 255, 255, 0.6);
+
+            /* Status Colors - Blue Theme (Default) */
+            --status-1: #dbeafe;  /* lightest */
+            --status-2: #93c5fd;
+            --status-3: #60a5fa;
+            --status-4: #3b82f6;
+            --status-5: #2563eb;
+            --status-6: #1d4ed8;  /* darkest */
         }
 
         body.dark-theme {
-            /* Dark Theme */
-            --bg-gradient-1: #1e293b;
-            --bg-gradient-2: #334155;
-            --bg-gradient-3: #4c1d95;
-            --bg-gradient-4: #1e3a8a;
-            --bg-gradient-5: #164e63;
+            /* Dark Theme - Neutral Gray Background */
+            --bg-gradient-1: #0f172a;
+            --bg-gradient-2: #1e293b;
+            --bg-gradient-3: #334155;
+            --bg-gradient-4: #1e293b;
+            --bg-gradient-5: #0f172a;
 
             --text-primary: #f9fafb;
             --text-secondary: #e5e7eb;
@@ -56,6 +64,14 @@
             --glass-border: rgba(255, 255, 255, 0.1);
             --card-bg: rgba(30, 41, 59, 0.85);
             --input-bg: rgba(15, 23, 42, 0.6);
+
+            /* Status Colors for Dark Theme - same as light */
+            --status-1: #dbeafe;
+            --status-2: #93c5fd;
+            --status-3: #60a5fa;
+            --status-4: #3b82f6;
+            --status-5: #2563eb;
+            --status-6: #1d4ed8;
         }
 
         /* Glassmorphism - Gradient Background with Theme Support */
@@ -401,6 +417,37 @@
             color: var(--text-primary) !important;
         }
 
+        /* Color Theme Selector */
+        .color-theme-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .color-theme-option:hover {
+            background: rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .color-theme-option.active {
+            border-color: var(--status-4);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        #color-theme-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        #color-theme-btn:hover {
+            background: var(--glass-bg);
+        }
+
         /* Theme Toggle Button */
         #theme-toggle {
             background: var(--card-bg);
@@ -433,6 +480,44 @@
                     <button data-target="dashboard-sharing" class="dashboard-tab flex-shrink-0">分享會</button>
                     <button data-target="dashboard-events" class="dashboard-tab flex-shrink-0">活動參與</button>
                     <button data-target="dashboard-contacts" class="dashboard-tab flex-shrink-0">接洽企業</button>
+                </div>
+                <!-- Color Theme Selector -->
+                <div class="relative ml-4">
+                    <button id="color-theme-btn" onclick="toggleColorPicker()" class="px-4 py-2 rounded-lg transition-all bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700">
+                        <i class="fas fa-palette mr-2"></i>
+                        <span id="current-color-name">藍色</span>
+                    </button>
+                    <div id="color-picker-dropdown" class="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 hidden z-50" style="min-width: 280px;">
+                        <div class="mb-3">
+                            <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">選擇主題色</p>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="setColorTheme('blue')" class="color-theme-option" data-theme="blue">
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-blue-300 to-blue-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">藍色</span>
+                            </button>
+                            <button onclick="setColorTheme('purple')" class="color-theme-option" data-theme="purple">
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-purple-300 to-purple-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">紫色</span>
+                            </button>
+                            <button onclick="setColorTheme('orange')" class="color-theme-option" data-theme="orange">
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-orange-300 to-orange-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">橙色</span>
+                            </button>
+                            <button onclick="setColorTheme('green')" class="color-theme-option" data-theme="green">
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-green-300 to-green-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">綠色</span>
+                            </button>
+                            <button onclick="setColorTheme('teal')" class="color-theme-option" data-theme="teal">
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-teal-300 to-teal-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">青綠</span>
+                            </button>
+                            <button onclick="setColorTheme('pink')" class="color-theme-option" data-theme="pink">
+                                <div class="w-full h-12 rounded-lg bg-gradient-to-br from-pink-300 to-pink-600"></div>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">粉紅</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <!-- Theme Toggle Button -->
                 <button id="theme-toggle" onclick="toggleTheme()" class="ml-4 px-4 py-2 rounded-lg transition-all">
@@ -1373,6 +1458,95 @@
     </div>
 
     <script>
+        // ===== 顏色主題配置 =====
+        const COLOR_THEMES = {
+            blue: {
+                name: '藍色',
+                colors: ['#dbeafe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8']
+            },
+            purple: {
+                name: '紫色',
+                colors: ['#e9d5ff', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8']
+            },
+            orange: {
+                name: '橙色',
+                colors: ['#fed7aa', '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c']
+            },
+            green: {
+                name: '綠色',
+                colors: ['#d1fae5', '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857']
+            },
+            teal: {
+                name: '青綠',
+                colors: ['#ccfbf1', '#5eead4', '#2dd4bf', '#14b8a6', '#0d9488', '#0f766e']
+            },
+            pink: {
+                name: '粉紅',
+                colors: ['#fce7f3', '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d']
+            }
+        };
+
+        // ===== 顏色主題切換系統 =====
+        function initColorTheme() {
+            const savedColorTheme = localStorage.getItem('colorTheme') || 'blue';
+            applyColorTheme(savedColorTheme, false);
+        }
+
+        function toggleColorPicker() {
+            const dropdown = document.getElementById('color-picker-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function setColorTheme(themeName) {
+            applyColorTheme(themeName, true);
+            toggleColorPicker();
+        }
+
+        function applyColorTheme(themeName, saveToStorage = true) {
+            const theme = COLOR_THEMES[themeName];
+            if (!theme) return;
+
+            // 更新CSS變數
+            const root = document.documentElement;
+            theme.colors.forEach((color, index) => {
+                root.style.setProperty(`--status-${index + 1}`, color);
+            });
+
+            // 更新UI顯示
+            document.getElementById('current-color-name').textContent = theme.name;
+
+            // 更新選中狀態
+            document.querySelectorAll('.color-theme-option').forEach(btn => {
+                if (btn.getAttribute('data-theme') === themeName) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // 儲存到localStorage
+            if (saveToStorage) {
+                localStorage.setItem('colorTheme', themeName);
+                console.log('顏色主題已切換:', theme.name);
+            }
+
+            // 重新渲染所有儀表板以套用新顏色
+            renderAiDashboard();
+            renderRoutineDashboard();
+            renderSharingDashboard();
+            renderEventsDashboard();
+            renderContactsDashboard();
+        }
+
+        // 點擊外部關閉顏色選擇器
+        document.addEventListener('click', function(event) {
+            const colorPicker = document.getElementById('color-picker-dropdown');
+            const colorBtn = document.getElementById('color-theme-btn');
+            if (colorPicker && !colorPicker.contains(event.target) && !colorBtn.contains(event.target)) {
+                colorPicker.classList.add('hidden');
+            }
+        });
+
         // ===== 主題切換系統 =====
         function initTheme() {
             // 從 localStorage 讀取主題偏好，預設為淺色主題
@@ -1661,6 +1835,8 @@
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             try {
+                initTheme();        // 初始化明暗主題
+                initColorTheme();   // 初始化顏色主題
                 loadFieldConfig();  // 載入欄位配置
                 initFirebase();  // Firebase 載入完成後會自動調用各 render 函數
                 setupEventListeners();
@@ -1906,13 +2082,14 @@
 
                 const statuses = ["構思中", "規劃中", "開發中", "測試中", "已終止", "已完成"];
                 const priorityColors = { '高': 'bg-red-100 text-red-800', '中': 'bg-yellow-100 text-yellow-800', '低': 'bg-green-100 text-green-800' };
-                const columnHeaderColors = {
-                    "構思中": "bg-purple-400",
-                    "規劃中": "bg-blue-400",
-                    "開發中": "bg-orange-400",
-                    "測試中": "bg-teal-400",
-                    "已終止": "bg-red-400",
-                    "已完成": "bg-green-500"
+                // 使用 CSS 變數來定義狀態顏色（單色調漸變）
+                const statusColorVars = {
+                    "構思中": "var(--status-1)",
+                    "規劃中": "var(--status-2)",
+                    "開發中": "var(--status-3)",
+                    "測試中": "var(--status-4)",
+                    "已終止": "var(--status-5)",
+                    "已完成": "var(--status-6)"
                 };
 
                 statuses.forEach(status => {
@@ -1921,7 +2098,7 @@
                     const projectsInStatus = filteredProjects.filter(p => p.status === status);
                     
                     column.innerHTML = `
-                        <div class="p-4 rounded-t-lg ${columnHeaderColors[status]} text-white flex justify-between items-center">
+                        <div class="p-4 rounded-t-lg text-white flex justify-between items-center" style="background-color: ${statusColorVars[status]};">
                             <h2 class="font-bold text-lg">${status}</h2>
                             <span class="bg-white/30 text-white text-sm font-semibold rounded-full px-2 py-0.5">${projectsInStatus.length}</span>
                         </div>
@@ -2798,6 +2975,7 @@
             container.innerHTML = '';
 
             const today = new Date();
+            const dayOfWeek = today.getDay();
             const offCheck = isWeekendOrHoliday(today);
             let todayTasksHtml = '';
 
