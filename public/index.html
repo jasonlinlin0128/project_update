@@ -47,6 +47,11 @@
             --status-4: #3b82f6;
             --status-5: #2563eb;
             --status-6: #1d4ed8;  /* darkest */
+
+            /* Theme Text Colors */
+            --theme-text-primary: #1e40af;    /* 主文字（深藍） */
+            --theme-text-secondary: #3b82f6;  /* 次要文字（中藍） */
+            --theme-text-tertiary: #60a5fa;   /* 第三文字（淺藍） */
         }
 
         body.dark-theme {
@@ -73,6 +78,11 @@
             --status-4: #3b82f6;
             --status-5: #2563eb;
             --status-6: #1d4ed8;
+
+            /* Theme Text Colors for Dark Mode */
+            --theme-text-primary: #93c5fd;    /* 主文字（淺藍） */
+            --theme-text-secondary: #60a5fa;  /* 次要文字（中藍） */
+            --theme-text-tertiary: #3b82f6;   /* 第三文字（深藍） */
         }
 
         /* Glassmorphism - Gradient Background with Theme Support */
@@ -488,7 +498,7 @@
                         <i class="fas fa-palette mr-2"></i>
                         <span id="current-color-name">藍色</span>
                     </button>
-                    <div id="color-picker-dropdown" class="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 hidden z-50" style="min-width: 280px;">
+                    <div id="color-picker-dropdown" class="absolute right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 hidden" style="min-width: 280px; z-index: 9999;">
                         <div class="mb-3">
                             <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">選擇主題色</p>
                         </div>
@@ -1463,27 +1473,51 @@
         const COLOR_THEMES = {
             blue: {
                 name: '藍色',
-                colors: ['#dbeafe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8']
+                colors: ['#dbeafe', '#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8'],
+                textColors: {
+                    light: { primary: '#1e40af', secondary: '#3b82f6', tertiary: '#60a5fa' },
+                    dark: { primary: '#93c5fd', secondary: '#60a5fa', tertiary: '#3b82f6' }
+                }
             },
             purple: {
                 name: '紫色',
-                colors: ['#e9d5ff', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8']
+                colors: ['#e9d5ff', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'],
+                textColors: {
+                    light: { primary: '#6b21a8', secondary: '#9333ea', tertiary: '#a855f7' },
+                    dark: { primary: '#c084fc', secondary: '#a855f7', tertiary: '#9333ea' }
+                }
             },
             orange: {
                 name: '橙色',
-                colors: ['#fed7aa', '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c']
+                colors: ['#fed7aa', '#fdba74', '#fb923c', '#f97316', '#ea580c', '#c2410c'],
+                textColors: {
+                    light: { primary: '#c2410c', secondary: '#ea580c', tertiary: '#f97316' },
+                    dark: { primary: '#fdba74', secondary: '#fb923c', tertiary: '#f97316' }
+                }
             },
             green: {
                 name: '綠色',
-                colors: ['#d1fae5', '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857']
+                colors: ['#d1fae5', '#6ee7b7', '#34d399', '#10b981', '#059669', '#047857'],
+                textColors: {
+                    light: { primary: '#047857', secondary: '#059669', tertiary: '#10b981' },
+                    dark: { primary: '#6ee7b7', secondary: '#34d399', tertiary: '#10b981' }
+                }
             },
             teal: {
                 name: '青綠',
-                colors: ['#ccfbf1', '#5eead4', '#2dd4bf', '#14b8a6', '#0d9488', '#0f766e']
+                colors: ['#ccfbf1', '#5eead4', '#2dd4bf', '#14b8a6', '#0d9488', '#0f766e'],
+                textColors: {
+                    light: { primary: '#0f766e', secondary: '#0d9488', tertiary: '#14b8a6' },
+                    dark: { primary: '#5eead4', secondary: '#2dd4bf', tertiary: '#14b8a6' }
+                }
             },
             pink: {
                 name: '粉紅',
-                colors: ['#fce7f3', '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d']
+                colors: ['#fce7f3', '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#be185d'],
+                textColors: {
+                    light: { primary: '#be185d', secondary: '#db2777', tertiary: '#ec4899' },
+                    dark: { primary: '#f9a8d4', secondary: '#f472b6', tertiary: '#ec4899' }
+                }
             }
         };
 
@@ -1512,6 +1546,15 @@
             theme.colors.forEach((color, index) => {
                 root.style.setProperty(`--status-${index + 1}`, color);
             });
+
+            // 檢測當前是否為深色模式
+            const isDarkMode = document.body.classList.contains('dark-theme');
+            const textColors = isDarkMode ? theme.textColors.dark : theme.textColors.light;
+
+            // 更新文字顏色變數
+            root.style.setProperty('--theme-text-primary', textColors.primary);
+            root.style.setProperty('--theme-text-secondary', textColors.secondary);
+            root.style.setProperty('--theme-text-tertiary', textColors.tertiary);
 
             // 更新UI顯示
             document.getElementById('current-color-name').textContent = theme.name;
@@ -1563,6 +1606,10 @@
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
             updateThemeButton(isDark);
             console.log('主題已切換:', isDark ? '深色' : '淺色');
+
+            // 切換明暗模式時，重新應用顏色主題以更新文字顏色
+            const currentTheme = localStorage.getItem('colorTheme') || 'blue';
+            applyColorTheme(currentTheme, false);
         }
 
         function updateThemeButton(isDark) {
