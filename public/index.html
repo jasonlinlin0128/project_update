@@ -2156,19 +2156,20 @@
                     projectsInStatus.forEach(project => {
                         const card = document.createElement('div');
                         const borderColor = { '高': 'border-red-500', '中': 'border-yellow-500', '低': 'border-green-500' }[project.priority] || 'border-gray-300';
-                        card.className = `bg-white p-4 rounded-lg shadow-md border-l-4 ${borderColor} project-card`;
+                        card.className = `p-4 rounded-lg shadow-md border-l-4 ${borderColor} project-card`;
+                        card.style.backgroundColor = 'var(--status-1)';
 
                         // 根據配置動態構建卡片內容
-                        let cardContent = `<h3 class="font-bold text-gray-800">${project.name}</h3>`;
+                        let cardContent = `<h3 class="font-bold" style="color: var(--theme-text-primary);">${project.name}</h3>`;
 
                         // 部門
                         if (fieldConfig.department) {
-                            cardContent += `<p class="text-sm text-gray-500 mt-1">${project.department}</p>`;
+                            cardContent += `<p class="text-sm mt-1" style="color: var(--theme-text-secondary);">${project.department}</p>`;
                         }
 
                         // 時間
                         if (fieldConfig.startTime || fieldConfig.dueDate) {
-                            cardContent += `<div class="text-xs text-gray-400 mt-2">`;
+                            cardContent += `<div class="text-xs mt-2" style="color: var(--theme-text-tertiary);">`;
                             if (fieldConfig.startTime) cardContent += `<span>始: ${project.startTime}</span>`;
                             if (fieldConfig.startTime && fieldConfig.dueDate) cardContent += ` | `;
                             if (fieldConfig.dueDate) cardContent += `<span>終: ${project.dueDate}</span>`;
@@ -2182,7 +2183,7 @@
                             if (fieldConfig.comments) {
                                 const commentCount = project.comments ? project.comments.length : 0;
                                 if (commentCount > 0) {
-                                    cardContent += `<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full"><i class="fas fa-comment mr-1"></i>${commentCount}</span>`;
+                                    cardContent += `<span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background-color: var(--status-2); color: var(--theme-text-primary);"><i class="fas fa-comment mr-1"></i>${commentCount}</span>`;
                                 } else {
                                     cardContent += `<span></span>`; // 佔位
                                 }
@@ -2200,11 +2201,11 @@
                             cardContent += `
                                 <div class="mt-2">
                                     <div class="flex justify-between items-center mb-1">
-                                        <span class="text-sm font-medium text-gray-700">進度</span>
-                                        <span class="text-sm font-medium text-gray-700">${project.progress}%</span>
+                                        <span class="text-sm font-medium" style="color: var(--theme-text-primary);">進度</span>
+                                        <span class="text-sm font-medium" style="color: var(--theme-text-primary);">${project.progress}%</span>
                                     </div>
-                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${project.progress}%"></div>
+                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                                        <div class="h-2.5 rounded-full" style="width: ${project.progress}%; background-color: var(--status-4);"></div>
                                     </div>
                                 </div>
                             `;
@@ -3872,7 +3873,7 @@
                 // 編輯和刪除按鈕（只有非只讀模式才顯示）
                 const editDeleteButtons = !isReadOnly ? `
                     <div class="flex space-x-2 ml-4">
-                        <button onclick="editSharing(${s.id}); event.stopPropagation();" class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs hover:bg-blue-200">
+                        <button onclick="editSharing(${s.id}); event.stopPropagation();" class="px-2 py-1 rounded text-xs hover:opacity-80" style="background-color: var(--status-2); color: var(--theme-text-primary);">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button onclick="deleteSharing(${s.id}); event.stopPropagation();" class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs hover:bg-red-200">
@@ -3904,8 +3905,8 @@
                                 </div>
                                 ${isReadOnly ? `
                                     <div class="mt-3">
-                                        <input type="text" id="sharing-comment-${s.id}" placeholder="輸入您的評論..." class="w-full p-2 border rounded text-sm">
-                                        <button onclick="addSharingComment(${s.id})" class="mt-2 bg-blue-600 text-white px-4 py-1 rounded text-sm hover:bg-blue-700">
+                                        <input type="text" id="sharing-comment-${s.id}" placeholder="輸入您的評論..." class="w-full p-2 border dark:border-gray-600 rounded text-sm dark:bg-gray-700 dark:text-gray-200">
+                                        <button onclick="addSharingComment(${s.id})" class="mt-2 text-white px-4 py-1 rounded text-sm hover:opacity-90" style="background-color: var(--status-4);">
                                             <i class="fas fa-paper-plane mr-1"></i>送出評論
                                         </button>
                                     </div>
@@ -4161,26 +4162,26 @@
                                         ${event.type === 'external' ? '外部活動' : '內部活動'}
                                     </span>
                                     ${!isReadOnly ? `
-                                        <button onclick="editEvent(${event.id})" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
+                                        <button onclick="editEvent(${event.id})" class="px-3 py-1 rounded text-sm hover:opacity-80" style="background-color: var(--status-2); color: var(--theme-text-primary);">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button onclick="deleteEvent(${event.id})" class="bg-red-100 text-red-800 px-3 py-1 rounded text-sm">
+                                        <button onclick="deleteEvent(${event.id})" class="bg-red-100 text-red-800 px-3 py-1 rounded text-sm hover:bg-red-200">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     ` : ''}
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">活動概述：</h4>
+                                <h4 class="font-semibold mb-2" style="color: var(--theme-text-primary);">活動概述：</h4>
                                 <p class="text-gray-600 dark:text-gray-300">${event.summary}</p>
                             </div>
                             <div class="mb-4">
-                                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">主要學習與收穫：</h4>
+                                <h4 class="font-semibold mb-2" style="color: var(--theme-text-primary);">主要學習與收穫：</h4>
                                 <ul class="list-disc list-inside space-y-1">${learningsHtml}</ul>
                             </div>
                             ${event.files && event.files.length > 0 ? `
                             <div>
-                                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">相關資料：</h4>
+                                <h4 class="font-semibold mb-2" style="color: var(--theme-text-primary);">相關資料：</h4>
                                 <div class="flex flex-wrap">${filesHtml}</div>
                             </div>` : ''}
                         </div>
@@ -4375,16 +4376,16 @@
                 return `
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">${contact.companyName}</div>
+                            <div class="text-sm font-medium" style="color: var(--theme-text-primary);">${contact.companyName}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 dark:text-gray-100">${contact.contactPerson}</div>
+                            <div class="text-sm" style="color: var(--theme-text-primary);">${contact.contactPerson}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 dark:text-gray-100">${contact.date}</div>
+                            <div class="text-sm" style="color: var(--theme-text-primary);">${contact.date}</div>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900 dark:text-gray-100 max-w-xs">${contact.topic}</div>
+                            <div class="text-sm max-w-xs" style="color: var(--theme-text-primary);">${contact.topic}</div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex flex-wrap">${filesHtml}</div>
@@ -4392,7 +4393,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center space-x-2">
                                 ${!isReadOnly ? `
-                                    <button onclick="editContact(${contact.id})" class="text-blue-600 hover:text-blue-800">
+                                    <button onclick="editContact(${contact.id})" style="color: var(--status-4);" class="hover:opacity-80">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button onclick="deleteContact(${contact.id})" class="text-red-600 hover:text-red-800">
@@ -4418,7 +4419,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--theme-text-primary);">操作</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700" style="background-color: var(--status-1);">
                             ${tableRows}
                         </tbody>
                     </table>
