@@ -3748,14 +3748,14 @@
             // 安全檢查：確保 sharingSessions 已初始化
             if (!sharingSessions || !Array.isArray(sharingSessions)) {
                 console.warn('分享會資料尚未載入');
-                container.innerHTML = '<div class="text-center text-gray-500 py-8">資料載入中...</div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8">資料載入中...</div>';
                 return;
             }
 
             // 如果資料為空，顯示友善提示
             if (sharingSessions.length === 0) {
                 console.log('📝 分享會資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 py-8 bg-teal-50 rounded-lg p-12"><i class="fas fa-comments text-6xl text-teal-300 mb-4"></i><p class="text-xl font-semibold text-gray-700 mb-2">尚無分享會資料</p><p class="text-gray-500">點擊上方「新增分享會」按鈕開始建立您的第一場分享會</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 bg-teal-50 dark:bg-gray-800 rounded-lg p-12"><i class="fas fa-comments text-6xl text-teal-300 mb-4"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無分享會資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增分享會」按鈕開始建立您的第一場分享會</p></div>';
                 return;
             }
 
@@ -3781,8 +3781,8 @@
 
             let upcomingHtml = upcoming.length > 0 ? upcoming.map(s => {
                 const scheduleHtml = (s.schedule && Array.isArray(s.schedule))
-                    ? s.schedule.map(item => `<li class="text-gray-600">${item}</li>`).join('')
-                    : '<li class="text-gray-400">議程資料未設定</li>';
+                    ? s.schedule.map(item => `<li class="text-gray-600 dark:text-gray-300">${item}</li>`).join('')
+                    : '<li class="text-gray-400 dark:text-gray-500">議程資料未設定</li>';
                 const editDeleteButtons = !isReadOnly ? `
                     <div class="space-x-2">
                         <button onclick="editSharing(${s.id})" class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm">
@@ -3803,12 +3803,12 @@
                             ${editDeleteButtons}
                         </div>
                         <div>
-                            <h4 class="font-semibold text-gray-800 mb-2">議程安排：</h4>
+                            <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">議程安排：</h4>
                             <ul class="list-disc list-inside space-y-1">${scheduleHtml}</ul>
                         </div>
                     </div>
                 `;
-            }).join('') : '<p class="text-gray-500">目前沒有已排程的分享會。</p>';
+            }).join('') : '<p class="text-gray-500 dark:text-gray-400">目前沒有已排程的分享會。</p>';
 
             const pastHtml = past.map(s => {
                 const content = (s.schedule && Array.isArray(s.schedule)) ? s.schedule.map(item => {
@@ -3817,10 +3817,10 @@
                             <i class="fas fa-link mr-2"></i>連結</a></li>`;
                     }
                     if (/\.(pdf|pptx|zip|jpg)/i.test(item)) {
-                        return `<li><i class="fas fa-file mr-2 text-gray-400"></i>${item}</li>`;
+                        return `<li><i class="fas fa-file mr-2 text-gray-400 dark:text-gray-500"></i>${item}</li>`;
                     }
                     return `<li>${item}</li>`;
-                }).join('') : '<li class="text-gray-400">議程資料未設定</li>';
+                }).join('') : '<li class="text-gray-400 dark:text-gray-500">議程資料未設定</li>';
 
                 // 編輯和刪除按鈕（只有非只讀模式才顯示）
                 const editDeleteButtons = !isReadOnly ? `
@@ -3835,23 +3835,23 @@
                 ` : '';
 
                 return `
-                    <details class="p-4 border-b last:border-b-0">
-                        <summary class="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <details class="p-4 border-b dark:border-gray-700 last:border-b-0">
+                        <summary class="flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded">
                             <div class="flex-1">
-                                <p class="text-sm text-gray-500">${s.date}</p>
-                                <p class="font-semibold text-gray-700">${s.theme}</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">${s.date}</p>
+                                <p class="font-semibold text-gray-700 dark:text-gray-200">${s.theme}</p>
                             </div>
                             <div class="flex items-center">
                                 ${editDeleteButtons}
-                                <i class="fas fa-chevron-right summary-icon text-gray-400 ml-2"></i>
+                                <i class="fas fa-chevron-right summary-icon text-gray-400 dark:text-gray-500 ml-2"></i>
                             </div>
                         </summary>
-                        <div class="mt-4 pl-4 border-l-2 border-gray-200">
-                            <ul class="list-disc list-inside space-y-1 text-gray-600 mb-4">${content}</ul>
+                        <div class="mt-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-300 mb-4">${content}</ul>
 
                             <!-- 評論區塊 -->
-                            <div class="mt-4 pt-4 border-t border-gray-200">
-                                <h4 class="font-semibold text-gray-700 mb-3"><i class="fas fa-comments mr-2"></i>主管評論</h4>
+                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <h4 class="font-semibold text-gray-700 dark:text-gray-200 mb-3"><i class="fas fa-comments mr-2"></i>主管評論</h4>
                                 <div id="sharing-comments-${s.id}" class="space-y-2 mb-3">
                                     ${renderSharingComments(s.comments || [])}
                                 </div>
@@ -3872,17 +3872,17 @@
             // 搜尋結果提示
             const totalResults = upcoming.length + past.length;
             const searchResultsHtml = sharingSearchTerm
-                ? `<div class="mb-4 text-sm text-gray-600 bg-teal-50 p-3 rounded-lg">
+                ? `<div class="mb-4 text-sm text-gray-600 dark:text-gray-300 bg-teal-50 dark:bg-gray-800 p-3 rounded-lg">
                      找到 ${totalResults} 筆符合「${sharingSearchTerm}」的結果
                    </div>`
                 : '';
 
             container.innerHTML = `
                 ${searchResultsHtml}
-                <h2 class="text-xl font-bold text-gray-800 mb-4">即將舉行的分享會</h2>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">即將舉行的分享會</h2>
                 ${upcomingHtml}
-                <h2 class="text-xl font-bold text-gray-800 mt-10 mb-4">過往分享會紀錄</h2>
-                <div class="border rounded-lg bg-gray-50">${pastHtml}</div>
+                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mt-10 mb-4">過往分享會紀錄</h2>
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">${pastHtml}</div>
             `;
         }
 
@@ -4003,7 +4003,7 @@
         // 分享會評論功能
         function renderSharingComments(comments) {
             if (!comments || comments.length === 0) {
-                return '<p class="text-sm text-gray-400 text-center py-2">尚無評論</p>';
+                return '<p class="text-sm text-gray-400 dark:text-gray-500 text-center py-2">尚無評論</p>';
             }
 
             return comments.map(comment => {
@@ -4012,14 +4012,14 @@
                 const isManager = comment.author === '主管';
 
                 return `
-                    <div class="p-3 rounded-lg ${isManager ? 'bg-red-50 border border-red-200' : 'bg-gray-50 border border-gray-200'}">
+                    <div class="p-3 rounded-lg ${isManager ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}">
                         <div class="flex justify-between items-start mb-1">
-                            <span class="font-semibold text-sm ${isManager ? 'text-red-800' : 'text-gray-800'}">
+                            <span class="font-semibold text-sm ${isManager ? 'text-red-800 dark:text-red-400' : 'text-gray-800 dark:text-gray-100'}">
                                 <i class="fas fa-user-circle mr-1"></i>${comment.author}
                             </span>
-                            <span class="text-xs text-gray-500">${dateStr}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">${dateStr}</span>
                         </div>
-                        <p class="text-sm ${isManager ? 'text-red-700' : 'text-gray-700'}">${comment.text}</p>
+                        <p class="text-sm ${isManager ? 'text-red-700 dark:text-red-300' : 'text-gray-700 dark:text-gray-200'}">${comment.text}</p>
                     </div>
                 `;
             }).join('');
@@ -4067,14 +4067,14 @@
             // 安全檢查：確保 eventsAttended 已初始化
             if (!eventsAttended || !Array.isArray(eventsAttended)) {
                 console.warn('活動資料尚未載入');
-                container.innerHTML = '<div class="text-center text-gray-500 py-8">資料載入中...</div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8">資料載入中...</div>';
                 return;
             }
 
             // 如果資料為空，顯示友善提示
             if (eventsAttended.length === 0) {
                 console.log('📝 活動資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 py-8 bg-orange-50 rounded-lg p-12"><i class="fas fa-calendar-alt text-6xl text-orange-300 mb-4"></i><p class="text-xl font-semibold text-gray-700 mb-2">尚無活動資料</p><p class="text-gray-500">點擊上方「新增活動」按鈕開始記錄您的第一個活動</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 bg-orange-50 dark:bg-gray-800 rounded-lg p-12"><i class="fas fa-calendar-alt text-6xl text-orange-300 mb-4"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無活動資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增活動」按鈕開始記錄您的第一個活動</p></div>';
                 return;
             }
 
@@ -4088,11 +4088,11 @@
 
                 const eventsHtml = events.map(event => {
                     const learningsHtml = (event.learnings && Array.isArray(event.learnings))
-                        ? event.learnings.map(learning => `<li class="text-gray-600">${learning}</li>`).join('')
-                        : '<li class="text-gray-400">學習心得未設定</li>';
+                        ? event.learnings.map(learning => `<li class="text-gray-600 dark:text-gray-300">${learning}</li>`).join('')
+                        : '<li class="text-gray-400 dark:text-gray-500">學習心得未設定</li>';
                     const filesHtml = event.files && Array.isArray(event.files) ? event.files.map(file => {
                         if (file.link === '#' || !file.link) {
-                            return `<span class="inline-block bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm mr-2 mb-2">
+                            return `<span class="inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-sm mr-2 mb-2">
                                 <i class="fas fa-file mr-1"></i>${file.name}
                             </span>`;
                         } else {
@@ -4103,11 +4103,11 @@
                     }).join('') : '';
 
                     return `
-                        <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 rounded-lg shadow-sm">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <h3 class="text-xl font-bold text-gray-800">${event.eventName}</h3>
-                                    <p class="text-gray-500 mt-1">${event.date}</p>
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">${event.eventName}</h3>
+                                    <p class="text-gray-500 dark:text-gray-400 mt-1">${event.date}</p>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <span class="bg-${event.type === 'external' ? 'blue' : 'green'}-100 text-${event.type === 'external' ? 'blue' : 'green'}-800 px-3 py-1 rounded-full text-sm font-semibold">
@@ -4124,16 +4124,16 @@
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <h4 class="font-semibold text-gray-800 mb-2">活動概述：</h4>
-                                <p class="text-gray-600">${event.summary}</p>
+                                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">活動概述：</h4>
+                                <p class="text-gray-600 dark:text-gray-300">${event.summary}</p>
                             </div>
                             <div class="mb-4">
-                                <h4 class="font-semibold text-gray-800 mb-2">主要學習與收穫：</h4>
+                                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">主要學習與收穫：</h4>
                                 <ul class="list-disc list-inside space-y-1">${learningsHtml}</ul>
                             </div>
                             ${event.files && event.files.length > 0 ? `
                             <div>
-                                <h4 class="font-semibold text-gray-800 mb-2">相關資料：</h4>
+                                <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">相關資料：</h4>
                                 <div class="flex flex-wrap">${filesHtml}</div>
                             </div>` : ''}
                         </div>
@@ -4142,7 +4142,7 @@
 
                 return `
                     <section>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">${title}</h2>
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-700">${title}</h2>
                         <div class="space-y-6">${eventsHtml}</div>
                     </section>
                 `;
@@ -4299,14 +4299,14 @@
             // 安全檢查：確保 businessContacts 已初始化
             if (!businessContacts || !Array.isArray(businessContacts)) {
                 console.warn('企業接洽資料尚未載入');
-                container.innerHTML = '<div class="text-center text-gray-500 py-8">資料載入中...</div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8">資料載入中...</div>';
                 return;
             }
 
             // 如果資料為空，顯示友善提示
             if (businessContacts.length === 0) {
                 console.log('📝 企業接洽資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 py-8 bg-green-50 rounded-lg p-12"><i class="fas fa-building text-6xl text-green-300 mb-4"></i><p class="text-xl font-semibold text-gray-700 mb-2">尚無企業接洽資料</p><p class="text-gray-500">點擊上方「新增企業接洽」按鈕開始記錄您的第一筆接洽記錄</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 bg-green-50 dark:bg-gray-800 rounded-lg p-12"><i class="fas fa-building text-6xl text-green-300 mb-4"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無企業接洽資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增企業接洽」按鈕開始記錄您的第一筆接洽記錄</p></div>';
                 return;
             }
 
@@ -4315,7 +4315,7 @@
             const tableRows = contacts.map(contact => {
                 const filesHtml = contact.files && contact.files.length > 0 ? contact.files.map(file => {
                     if (file.link === '#' || !file.link) {
-                        return `<span class="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs mr-1 mb-1">
+                        return `<span class="inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded text-xs mr-1 mb-1">
                             <i class="fas fa-file mr-1"></i>${file.name}
                         </span>`;
                     } else {
@@ -4323,21 +4323,21 @@
                             <i class="fas fa-download mr-1"></i>${file.name}
                         </a>`;
                     }
-                }).join('') : '<span class="text-sm text-gray-400">無</span>';
+                }).join('') : '<span class="text-sm text-gray-400 dark:text-gray-500">無</span>';
 
                 return `
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">${contact.companyName}</div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">${contact.companyName}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${contact.contactPerson}</div>
+                            <div class="text-sm text-gray-900 dark:text-gray-100">${contact.contactPerson}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">${contact.date}</div>
+                            <div class="text-sm text-gray-900 dark:text-gray-100">${contact.date}</div>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-gray-900 max-w-xs">${contact.topic}</div>
+                            <div class="text-sm text-gray-900 dark:text-gray-100 max-w-xs">${contact.topic}</div>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex flex-wrap">${filesHtml}</div>
@@ -4351,7 +4351,7 @@
                                     <button onclick="deleteContact(${contact.id})" class="text-red-600 hover:text-red-800">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                ` : '<span class="text-sm text-gray-400">-</span>'}
+                                ` : '<span class="text-sm text-gray-400 dark:text-gray-500">-</span>'}
                             </div>
                         </td>
                     </tr>
@@ -4360,18 +4360,18 @@
 
             container.innerHTML = `
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">企業名稱</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">聯絡人</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">接洽日期</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">洽談主題</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">相關資料</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">企業名稱</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">聯絡人</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">接洽日期</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">洽談主題</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">相關資料</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">操作</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             ${tableRows}
                         </tbody>
                     </table>
