@@ -71,18 +71,7 @@
             --card-bg: rgba(30, 41, 59, 0.85);
             --input-bg: rgba(15, 23, 42, 0.6);
 
-            /* Status Colors for Dark Theme - same as light */
-            --status-1: #dbeafe;
-            --status-2: #93c5fd;
-            --status-3: #60a5fa;
-            --status-4: #3b82f6;
-            --status-5: #2563eb;
-            --status-6: #1d4ed8;
-
-            /* Theme Text Colors for Dark Mode */
-            --theme-text-primary: #93c5fd;    /* 主文字（淺藍） */
-            --theme-text-secondary: #60a5fa;  /* 次要文字（中藍） */
-            --theme-text-tertiary: #3b82f6;   /* 第三文字（深藍） */
+            /* 移除硬編碼的主題顏色，讓 JavaScript 完全控制 */
         }
 
         /* Glassmorphism - Gradient Background with Theme Support */
@@ -505,27 +494,27 @@
                         <div class="grid grid-cols-3 gap-3">
                             <button onclick="setColorTheme('blue')" class="color-theme-option" data-theme="blue">
                                 <div class="w-full h-12 rounded-lg bg-gradient-to-br from-indigo-300 to-indigo-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Indigo</span>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">靛藍色</span>
                             </button>
                             <button onclick="setColorTheme('purple')" class="color-theme-option" data-theme="purple">
                                 <div class="w-full h-12 rounded-lg bg-gradient-to-br from-violet-300 to-violet-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Violet</span>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">紫羅蘭</span>
                             </button>
                             <button onclick="setColorTheme('orange')" class="color-theme-option" data-theme="orange">
                                 <div class="w-full h-12 rounded-lg bg-gradient-to-br from-amber-300 to-amber-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Amber</span>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">琥珀色</span>
                             </button>
                             <button onclick="setColorTheme('green')" class="color-theme-option" data-theme="green">
                                 <div class="w-full h-12 rounded-lg bg-gradient-to-br from-emerald-300 to-emerald-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Emerald</span>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">翡翠綠</span>
                             </button>
                             <button onclick="setColorTheme('teal')" class="color-theme-option" data-theme="teal">
                                 <div class="w-full h-12 rounded-lg bg-gradient-to-br from-cyan-300 to-cyan-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Cyan</span>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">青藍色</span>
                             </button>
                             <button onclick="setColorTheme('pink')" class="color-theme-option" data-theme="pink">
                                 <div class="w-full h-12 rounded-lg bg-gradient-to-br from-rose-300 to-rose-600"></div>
-                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">Rose</span>
+                                <span class="text-xs mt-1 text-gray-700 dark:text-gray-300">玫瑰紅</span>
                             </button>
                         </div>
                     </div>
@@ -1472,7 +1461,7 @@
         // ===== 顏色主題配置 =====
         const COLOR_THEMES = {
             blue: {
-                name: 'Indigo',
+                name: '靛藍色',
                 colors: ['#e0e7ff', '#c7d2fe', '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5'],
                 textColors: {
                     light: { primary: '#3730a3', secondary: '#4f46e5', tertiary: '#6366f1' },
@@ -1480,7 +1469,7 @@
                 }
             },
             purple: {
-                name: 'Violet',
+                name: '紫羅蘭',
                 colors: ['#ede9fe', '#ddd6fe', '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed'],
                 textColors: {
                     light: { primary: '#6d28d9', secondary: '#7c3aed', tertiary: '#8b5cf6' },
@@ -1488,7 +1477,7 @@
                 }
             },
             orange: {
-                name: 'Amber',
+                name: '琥珀色',
                 colors: ['#fef3c7', '#fde68a', '#fcd34d', '#fbbf24', '#f59e0b', '#d97706'],
                 textColors: {
                     light: { primary: '#b45309', secondary: '#d97706', tertiary: '#f59e0b' },
@@ -1496,7 +1485,7 @@
                 }
             },
             green: {
-                name: 'Emerald',
+                name: '翡翠綠',
                 colors: ['#d1fae5', '#a7f3d0', '#6ee7b7', '#34d399', '#10b981', '#059669'],
                 textColors: {
                     light: { primary: '#047857', secondary: '#059669', tertiary: '#10b981' },
@@ -1504,7 +1493,7 @@
                 }
             },
             teal: {
-                name: 'Cyan',
+                name: '青藍色',
                 colors: ['#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2'],
                 textColors: {
                     light: { primary: '#0e7490', secondary: '#0891b2', tertiary: '#06b6d4' },
@@ -1512,7 +1501,7 @@
                 }
             },
             pink: {
-                name: 'Rose',
+                name: '玫瑰紅',
                 colors: ['#ffe4e6', '#fecdd3', '#fda4af', '#fb7185', '#f43f5e', '#e11d48'],
                 textColors: {
                     light: { primary: '#be123c', secondary: '#e11d48', tertiary: '#f43f5e' },
@@ -3803,7 +3792,7 @@
             // 如果資料為空，顯示友善提示
             if (sharingSessions.length === 0) {
                 console.log('📝 分享會資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-comments text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無分享會資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增分享會」按鈕開始建立您的第一場分享會</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-comments text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold mb-2" style="color: var(--theme-text-primary);">尚無分享會資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增分享會」按鈕開始建立您的第一場分享會</p></div>';
                 return;
             }
 
@@ -3851,7 +3840,7 @@
                             ${editDeleteButtons}
                         </div>
                         <div>
-                            <h4 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">議程安排：</h4>
+                            <h4 class="font-semibold mb-2" style="color: var(--theme-text-primary);">議程安排：</h4>
                             <ul class="list-disc list-inside space-y-1">${scheduleHtml}</ul>
                         </div>
                     </div>
@@ -3887,7 +3876,7 @@
                         <summary class="flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded">
                             <div class="flex-1">
                                 <p class="text-sm text-gray-500 dark:text-gray-400">${s.date}</p>
-                                <p class="font-semibold text-gray-700 dark:text-gray-200">${s.theme}</p>
+                                <p class="font-semibold" style="color: var(--theme-text-primary);">${s.theme}</p>
                             </div>
                             <div class="flex items-center">
                                 ${editDeleteButtons}
@@ -3899,7 +3888,7 @@
 
                             <!-- 評論區塊 -->
                             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <h4 class="font-semibold text-gray-700 dark:text-gray-200 mb-3"><i class="fas fa-comments mr-2"></i>主管評論</h4>
+                                <h4 class="font-semibold mb-3" style="color: var(--theme-text-primary);"><i class="fas fa-comments mr-2"></i>主管評論</h4>
                                 <div id="sharing-comments-${s.id}" class="space-y-2 mb-3">
                                     ${renderSharingComments(s.comments || [])}
                                 </div>
@@ -3927,9 +3916,9 @@
 
             container.innerHTML = `
                 ${searchResultsHtml}
-                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">即將舉行的分享會</h2>
+                <h2 class="text-xl font-bold mb-4" style="color: var(--theme-text-primary);">即將舉行的分享會</h2>
                 ${upcomingHtml}
-                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 mt-10 mb-4">過往分享會紀錄</h2>
+                <h2 class="text-xl font-bold mt-10 mb-4" style="color: var(--theme-text-primary);">過往分享會紀錄</h2>
                 <div class="border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">${pastHtml}</div>
             `;
         }
@@ -4062,12 +4051,12 @@
                 return `
                     <div class="p-3 rounded-lg ${isManager ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}">
                         <div class="flex justify-between items-start mb-1">
-                            <span class="font-semibold text-sm ${isManager ? 'text-red-800 dark:text-red-400' : 'text-gray-800 dark:text-gray-100'}">
+                            <span class="font-semibold text-sm ${isManager ? 'text-red-800 dark:text-red-400' : ''}" ${!isManager ? 'style="color: var(--theme-text-primary);"' : ''}>
                                 <i class="fas fa-user-circle mr-1"></i>${comment.author}
                             </span>
                             <span class="text-xs text-gray-500 dark:text-gray-400">${dateStr}</span>
                         </div>
-                        <p class="text-sm ${isManager ? 'text-red-700 dark:text-red-300' : 'text-gray-700 dark:text-gray-200'}">${comment.text}</p>
+                        <p class="text-sm ${isManager ? 'text-red-700 dark:text-red-300' : ''}" ${!isManager ? 'style="color: var(--theme-text-secondary);"' : ''}>${comment.text}</p>
                     </div>
                 `;
             }).join('');
@@ -4122,7 +4111,7 @@
             // 如果資料為空，顯示友善提示
             if (eventsAttended.length === 0) {
                 console.log('📝 活動資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-calendar-alt text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無活動資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增活動」按鈕開始記錄您的第一個活動</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-calendar-alt text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold mb-2" style="color: var(--theme-text-primary);">尚無活動資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增活動」按鈕開始記錄您的第一個活動</p></div>';
                 return;
             }
 
@@ -4190,7 +4179,7 @@
 
                 return `
                     <section>
-                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-700">${title}</h2>
+                        <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-700" style="color: var(--theme-text-primary);">${title}</h2>
                         <div class="space-y-6">${eventsHtml}</div>
                     </section>
                 `;
@@ -4354,7 +4343,7 @@
             // 如果資料為空，顯示友善提示
             if (businessContacts.length === 0) {
                 console.log('📝 企業接洽資料庫為空');
-                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-building text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">尚無企業接洽資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增企業接洽」按鈕開始記錄您的第一筆接洽記錄</p></div>';
+                container.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8 rounded-lg p-12" style="background-color: var(--status-1);"><i class="fas fa-building text-6xl mb-4" style="color: var(--status-3);"></i><p class="text-xl font-semibold mb-2" style="color: var(--theme-text-primary);">尚無企業接洽資料</p><p class="text-gray-500 dark:text-gray-400">點擊上方「新增企業接洽」按鈕開始記錄您的第一筆接洽記錄</p></div>';
                 return;
             }
 
