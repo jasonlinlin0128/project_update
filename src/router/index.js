@@ -38,6 +38,12 @@ const routes = [
     meta: { title: '企業接洽' }
   },
   {
+    path: '/diagnostics',
+    name: 'Diagnostics',
+    component: () => import('@/views/DiagnosticsView.vue'),
+    meta: { title: 'Firebase 診斷' }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFoundView.vue'),
