@@ -6,6 +6,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
       <input v-model="newItem.title" placeholder="事項名稱" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
       <input v-model="newItem.frequency" placeholder="頻率 (如: 每週)" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+      <input v-model="newItem.assignee" placeholder="負責人" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
       <input v-model="newItem.status" placeholder="狀態" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
       <button @click="addItem" :disabled="isLoading" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center">
         <span v-if="isLoading">處理中...</span>
@@ -29,6 +30,7 @@
             <template v-if="editingId === item.id">
               <td class="py-3 px-6"><input v-model="editForm.title" class="border p-1 rounded w-full"></td>
               <td class="py-3 px-6"><input v-model="editForm.frequency" class="border p-1 rounded w-full"></td>
+              <td class="py-3 px-6"><input v-model="editForm.assignee" class="border p-1 rounded w-full" placeholder="負責人"></td>
               <td class="py-3 px-6"><input v-model="editForm.status" class="border p-1 rounded w-full"></td>
               <td class="py-3 px-6 text-center">
                 <button @click="updateItem(item.id)" class="bg-green-500 text-white px-3 py-1 rounded mr-2 hover:bg-green-600">儲存</button>
@@ -37,7 +39,10 @@
             </template>
             <template v-else>
               <td class="py-3 px-6 font-medium">{{ item.title }}</td>
-              <td class="py-3 px-6">{{ item.frequency }}</td>
+              <td class="py-3 px-6">
+                <div>{{ item.frequency }}</div>
+                <div class="text-xs text-gray-500">{{ item.assignee }}</div>
+              </td>
               <td class="py-3 px-6">
                 <span :class="{'bg-green-200 text-green-600': item.status === '正常', 'bg-yellow-200 text-yellow-600': item.status !== '正常'}" class="py-1 px-3 rounded-full text-xs">
                   {{ item.status }}
@@ -66,7 +71,7 @@ export default {
       isLoading: false,
       editingId: null,
       editForm: {},
-      newItem: { title: '', frequency: '', status: '正常' }
+      newItem: { title: '', frequency: '', assignee: '', status: '正常' }
     }
   },
   async mounted() {
@@ -87,7 +92,7 @@ export default {
       this.isLoading = true;
       try {
         await addDoc(collection(db, "routines"), this.newItem);
-        this.newItem = { title: '', frequency: '', status: '正常' };
+        this.newItem = { title: '', frequency: '', assignee: '', status: '正常' };
         await this.fetchItems();
       } finally {
         this.isLoading = false;

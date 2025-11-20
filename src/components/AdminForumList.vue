@@ -7,6 +7,8 @@
       <input v-model="newItem.name" placeholder="論壇/分享會名稱" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
       <input v-model="newItem.date" type="date" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
       <input v-model="newItem.role" placeholder="擔任角色" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+      <input v-model="newItem.speaker" placeholder="主講人" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+      <input v-model="newItem.link" placeholder="相關連結" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none md:col-span-4">
       <button @click="addItem" :disabled="isLoading" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center">
         <span v-if="isLoading">處理中...</span>
         <span v-else>新增紀錄</span>
@@ -28,8 +30,14 @@
           <tr v-for="item in items" :key="item.id" class="border-b border-gray-200 hover:bg-gray-50">
             <template v-if="editingId === item.id">
               <td class="py-3 px-6"><input v-model="editForm.date" type="date" class="border p-1 rounded w-full"></td>
-              <td class="py-3 px-6"><input v-model="editForm.name" class="border p-1 rounded w-full"></td>
-              <td class="py-3 px-6"><input v-model="editForm.role" class="border p-1 rounded w-full"></td>
+              <td class="py-3 px-6">
+                <input v-model="editForm.name" class="border p-1 rounded w-full mb-1" placeholder="名稱">
+                <input v-model="editForm.link" class="border p-1 rounded w-full text-xs" placeholder="連結">
+              </td>
+              <td class="py-3 px-6">
+                <input v-model="editForm.role" class="border p-1 rounded w-full mb-1" placeholder="角色">
+                <input v-model="editForm.speaker" class="border p-1 rounded w-full text-xs" placeholder="主講人">
+              </td>
               <td class="py-3 px-6 text-center">
                 <button @click="updateItem(item.id)" class="bg-green-500 text-white px-3 py-1 rounded mr-2 hover:bg-green-600">儲存</button>
                 <button @click="cancelEdit" class="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500">取消</button>
@@ -37,8 +45,14 @@
             </template>
             <template v-else>
               <td class="py-3 px-6">{{ item.date }}</td>
-              <td class="py-3 px-6 font-medium">{{ item.name }}</td>
-              <td class="py-3 px-6">{{ item.role }}</td>
+              <td class="py-3 px-6 font-medium">
+                {{ item.name }}
+                <a v-if="item.link" :href="item.link" target="_blank" class="text-blue-500 hover:underline text-xs block truncate max-w-[150px]">{{ item.link }}</a>
+              </td>
+              <td class="py-3 px-6">
+                <div>{{ item.role }}</div>
+                <div v-if="item.speaker" class="text-xs text-gray-500">講者: {{ item.speaker }}</div>
+              </td>
               <td class="py-3 px-6 text-center">
                 <button @click="startEdit(item)" class="text-blue-500 hover:text-blue-700 mr-3"><i class="fas fa-edit"></i> 編輯</button>
                 <button @click="deleteItem(item.id)" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i> 刪除</button>
@@ -62,7 +76,7 @@ export default {
       isLoading: false,
       editingId: null,
       editForm: {},
-      newItem: { name: '', date: '', role: '' }
+      newItem: { name: '', date: '', role: '', speaker: '', link: '' }
     }
   },
   async mounted() {
@@ -83,7 +97,7 @@ export default {
       this.isLoading = true;
       try {
         await addDoc(collection(db, "forums"), this.newItem);
-        this.newItem = { name: '', date: '', role: '' };
+        this.newItem = { name: '', date: '', role: '', speaker: '', link: '' };
         await this.fetchItems();
       } finally {
         this.isLoading = false;

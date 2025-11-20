@@ -7,6 +7,7 @@
       <input v-model="newItem.name" placeholder="活動名稱" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
       <input v-model="newItem.date" type="date" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
       <input v-model="newItem.location" placeholder="地點" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+      <input v-model="newItem.organizer" placeholder="主辦單位" class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
       <button @click="addItem" :disabled="isLoading" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center">
         <span v-if="isLoading">處理中...</span>
         <span v-else>新增活動</span>
@@ -28,7 +29,10 @@
           <tr v-for="item in items" :key="item.id" class="border-b border-gray-200 hover:bg-gray-50">
             <template v-if="editingId === item.id">
               <td class="py-3 px-6"><input v-model="editForm.date" type="date" class="border p-1 rounded w-full"></td>
-              <td class="py-3 px-6"><input v-model="editForm.name" class="border p-1 rounded w-full"></td>
+              <td class="py-3 px-6">
+                <input v-model="editForm.name" class="border p-1 rounded w-full mb-1" placeholder="名稱">
+                <input v-model="editForm.organizer" class="border p-1 rounded w-full text-xs" placeholder="主辦單位">
+              </td>
               <td class="py-3 px-6"><input v-model="editForm.location" class="border p-1 rounded w-full"></td>
               <td class="py-3 px-6 text-center">
                 <button @click="updateItem(item.id)" class="bg-green-500 text-white px-3 py-1 rounded mr-2 hover:bg-green-600">儲存</button>
@@ -37,7 +41,10 @@
             </template>
             <template v-else>
               <td class="py-3 px-6">{{ item.date }}</td>
-              <td class="py-3 px-6 font-medium">{{ item.name }}</td>
+              <td class="py-3 px-6 font-medium">
+                {{ item.name }}
+                <div v-if="item.organizer" class="text-xs text-gray-500">{{ item.organizer }}</div>
+              </td>
               <td class="py-3 px-6">{{ item.location }}</td>
               <td class="py-3 px-6 text-center">
                 <button @click="startEdit(item)" class="text-blue-500 hover:text-blue-700 mr-3"><i class="fas fa-edit"></i> 編輯</button>
@@ -62,7 +69,7 @@ export default {
       isLoading: false,
       editingId: null,
       editForm: {},
-      newItem: { name: '', date: '', location: '' }
+      newItem: { name: '', date: '', location: '', organizer: '' }
     }
   },
   async mounted() {
@@ -83,7 +90,7 @@ export default {
       this.isLoading = true;
       try {
         await addDoc(collection(db, "events"), this.newItem);
-        this.newItem = { name: '', date: '', location: '' };
+        this.newItem = { name: '', date: '', location: '', organizer: '' };
         await this.fetchItems();
       } finally {
         this.isLoading = false;

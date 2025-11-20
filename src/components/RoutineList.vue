@@ -21,7 +21,16 @@
               </svg>
             </div>
           </div>
-          <span class="text-gray-700 font-medium">{{ item.name }}</span>
+          <div class="flex-grow">
+            <div class="text-gray-700 font-medium">{{ item.name || item.title }}</div>
+            <div class="text-xs text-gray-500 flex items-center mt-1">
+              <span class="bg-blue-100 text-blue-600 px-2 py-0.5 rounded mr-2" v-if="item.frequency">{{ item.frequency }}</span>
+              <span v-if="item.assignee">👤 {{ item.assignee }}</span>
+            </div>
+          </div>
+          <span :class="{'text-green-600': item.status === '正常', 'text-yellow-600': item.status !== '正常'}" class="text-xs font-bold px-2 py-1 bg-gray-100 rounded">
+            {{ item.status }}
+          </span>
         </li>
       </ul>
     </div>

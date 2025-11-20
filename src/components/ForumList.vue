@@ -17,12 +17,23 @@
           <div class="absolute top-4 left-0 w-1 h-8 bg-green-400 rounded-r"></div>
           <div class="ml-2">
             <div class="text-xs text-green-600 font-bold mb-1 uppercase tracking-wide">Topic</div>
-            <div class="text-gray-800 font-medium text-lg">{{ item.topic }}</div>
-            <div class="mt-2 flex items-center text-sm text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {{ item.date }}
+            <div class="text-gray-800 font-medium text-lg">
+              <a v-if="item.link" :href="item.link" target="_blank" class="hover:text-green-600 hover:underline">{{ item.name || item.topic }}</a>
+              <span v-else>{{ item.name || item.topic }}</span>
+            </div>
+            <div class="mt-2 flex flex-wrap items-center text-sm text-gray-500 gap-3">
+              <span class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {{ item.date }}
+              </span>
+              <span v-if="item.speaker" class="flex items-center bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs border border-green-100">
+                🎤 {{ item.speaker }}
+              </span>
+              <span v-if="item.role" class="flex items-center bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs">
+                👤 {{ item.role }}
+              </span>
             </div>
           </div>
         </li>
