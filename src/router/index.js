@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/Home.vue'
 import AdminView from '../views/Admin.vue'
 import LoginView from '../views/Login.vue'
-import { auth } from '../firebase'
+// import { auth } from '../firebase'
 
 const routes = [
   {
@@ -29,14 +29,14 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const currentUser = auth.currentUser
+  // const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  // const currentUser = auth.currentUser
 
-  if (requiresAuth && !currentUser) {
-    next('/login')
-  } else {
-    next()
-  }
+  // if (requiresAuth && !currentUser) {
+  //   next('/login')
+  // } else {
+  next()
+  // }
 })
 
 export default router
