@@ -14,6 +14,23 @@
       </button>
     </div>
 
+    <!-- Search and Filter -->
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+      <div class="relative w-full md:w-64">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </span>
+        <input v-model="searchQuery" type="text" placeholder="搜尋事項..." class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none w-full">
+      </div>
+      <select v-model="statusFilter" class="py-2 px-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-600 w-full md:w-auto">
+        <option value="">所有狀態</option>
+        <option value="正常">正常</option>
+        <option value="異常">異常</option>
+      </select>
+    </div>
+
     <!-- List -->
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
@@ -26,7 +43,7 @@
           </tr>
         </thead>
         <tbody class="text-gray-600 text-sm font-light">
-          <tr v-for="item in items" :key="item.id" class="border-b border-gray-200 hover:bg-gray-50">
+          <tr v-for="item in filteredItems" :key="item.id" class="border-b border-gray-200 hover:bg-gray-50">
             <template v-if="editingId === item.id">
               <td class="py-3 px-6"><input v-model="editForm.title" class="border p-1 rounded w-full"></td>
               <td class="py-3 px-6"><input v-model="editForm.frequency" class="border p-1 rounded w-full"></td>
@@ -71,7 +88,19 @@ export default {
       isLoading: false,
       editingId: null,
       editForm: {},
-      newItem: { title: '', frequency: '', assignee: '', status: '正常' }
+      newItem: { title: '', frequency: '', assignee: '', status: '正常' },
+      searchQuery: '',
+      statusFilter: ''
+    }
+  },
+  computed: {
+    filteredItems() {
+      return this.items.filter(item => {
+        const matchesSearch = item.title.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+                              (item.assignee && item.assignee.toLowerCase().includes(this.searchQuery.toLowerCase()));
+        const matchesStatus = this.statusFilter ? item.status === this.statusFilter : true;
+        return matchesSearch && matchesStatus;
+      });
     }
   },
   async mounted() {
