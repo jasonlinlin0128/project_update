@@ -31,7 +31,8 @@ const routes = [
   {
     path: '/routines',
     name: 'RoutineTracker',
-    component: RoutineTrackerView
+    component: RoutineTrackerView,
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -45,7 +46,7 @@ router.beforeEach((to, from, next) => {
   const currentUser = auth.currentUser
 
   if (requiresAuth && !currentUser) {
-    next('/login')
+    next({ name: 'Login', query: { redirect: to.fullPath } })
   } else {
     next()
   }

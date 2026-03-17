@@ -36,6 +36,14 @@
             </div>
           </div>
 
+          <!-- Remember Me Checkbox -->
+          <div class="flex items-center">
+            <input id="remember-me" name="remember-me" type="checkbox" v-model="rememberMe" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+            <label for="remember-me" class="ml-2 block text-sm text-gray-900">
+              記住我（下次不用重新登入）
+            </label>
+          </div>
+
           <div>
             <button type="submit" :disabled="isLoading" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
               <span v-if="isLoading">登入中...</span>
@@ -54,7 +62,7 @@
 
 <script>
 import { auth } from '../firebase'
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
 
 export default {
   name: 'LoginView',
@@ -63,7 +71,8 @@ export default {
       email: '',
       password: '',
       isLoading: false,
-      error: ''
+      error: '',
+      rememberMe: true // 預設勾選記住我
     }
   },
   methods: {
@@ -71,8 +80,12 @@ export default {
       this.isLoading = true;
       this.error = '';
       try {
+        // 根據 rememberMe 設定持久化方式
+        const persistence = this.rememberMe ? browserLocalPersistence : browserSessionPersistence;
+        await setPersistence(auth, persistence);
+        
         await signInWithEmailAndPassword(auth, this.email, this.password);
-        this.$router.push('/admin');
+        this.$router.push(this.$route.query.redirect || '/routines');
       } catch (err) {
         console.error(err);
         this.error = '登入失敗，請檢查 Email 和密碼。';
@@ -85,8 +98,12 @@ export default {
       this.error = '';
       const provider = new GoogleAuthProvider();
       try {
+        // 根據 rememberMe 設定持久化方式
+        const persistence = this.rememberMe ? browserLocalPersistence : browserSessionPersistence;
+        await setPersistence(auth, persistence);
+        
         await signInWithPopup(auth, provider);
-        this.$router.push('/admin');
+        this.$router.push(this.$route.query.redirect || '/routines');
       } catch (err) {
         console.error(err);
         this.error = 'Google 登入失敗: ' + err.message;
@@ -97,3 +114,4 @@ export default {
   }
 }
 </script>
+

@@ -42,7 +42,7 @@
           <h2 class="text-lg font-bold text-gray-800 mb-2">管理例行公事</h2>
           <p class="text-gray-500 text-sm mb-6">新增、編輯、刪除例行公事項目請到管理後台</p>
           <router-link
-            to="/login"
+            to="/admin"
             class="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-indigo-700 transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
