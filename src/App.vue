@@ -1,28 +1,11 @@
 <template>
-  <div>
-    <h1>公司專案動態儀表板</h1>
-    <ProjectTable/>
+  <div id="app" class="font-sans text-gray-900 antialiased bg-gray-100 min-h-screen">
+    <router-view/>
   </div>
 </template>
 
 <script>
-import ProjectTable from './components/ProjectTable.vue'
-
 export default {
-  name: 'App',
-  components:{
-     ProjectTable 
-  }
+  name: 'App'
 }
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>

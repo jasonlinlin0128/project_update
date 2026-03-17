@@ -1,4 +1,4 @@
-# project_update
+# Project Update Dashboard
 
 ## Project setup
 ```
