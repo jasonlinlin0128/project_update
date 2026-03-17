@@ -1,78 +1,78 @@
 <template>
-  <div class="pb-24">
-    <!-- Header -->
-    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 px-4 pt-6 pb-8 text-white">
-      <div class="text-sm opacity-75 mb-1">{{ todayLabel }}</div>
-      <div class="text-2xl font-bold mb-4">今天的例行公事</div>
-      <div class="bg-white/20 rounded-xl p-3">
-        <div class="flex justify-between text-sm mb-2">
-          <span>今日進度</span>
+  <div>
+    <!-- Progress summary card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6 flex items-center gap-5">
+      <div class="flex-1">
+        <div class="flex justify-between text-sm text-gray-500 mb-2">
+          <span class="font-medium text-gray-700">今日進度</span>
           <span>{{ completedCount }} / {{ todayItems.length }} 完成</span>
         </div>
-        <div class="bg-white/30 rounded-full h-2">
+        <div class="bg-gray-100 rounded-full h-3">
           <div
-            class="bg-white rounded-full h-2 transition-all duration-500"
+            class="bg-indigo-500 rounded-full h-3 transition-all duration-500"
             :style="{ width: progressPercent + '%' }"
           ></div>
         </div>
       </div>
+      <div class="text-center flex-shrink-0">
+        <div class="text-3xl font-extrabold text-indigo-600">{{ progressPercent }}%</div>
+        <div class="text-xs text-gray-400 mt-0.5">完成率</div>
+      </div>
     </div>
 
-    <!-- List -->
-    <div class="px-4 -mt-4 space-y-3">
-      <!-- Loading -->
-      <div v-if="loading" class="flex justify-center py-8">
-        <div class="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-      </div>
+    <!-- Loading -->
+    <div v-if="loading" class="flex justify-center py-16">
+      <div class="w-10 h-10 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+    </div>
 
-      <!-- Empty -->
-      <div v-else-if="todayItems.length === 0" class="bg-white rounded-2xl shadow-sm p-8 text-center text-gray-400 mt-4">
-        <div class="text-4xl mb-2">🎉</div>
-        <p>今天沒有例行公事！</p>
-      </div>
+    <!-- Empty -->
+    <div v-else-if="todayItems.length === 0" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+      <div class="text-5xl mb-3">🎉</div>
+      <p class="text-gray-400">今天沒有例行公事！</p>
+    </div>
 
-      <!-- Items -->
+    <!-- Items grid -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div
-        v-else
         v-for="item in sortedTodayItems"
         :key="item.id"
-        class="bg-white rounded-2xl shadow-sm overflow-hidden"
-        :class="isCompleted(item) ? 'opacity-60' : ''"
+        class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200"
+        :class="isCompleted(item) ? 'opacity-70' : ''"
       >
-        <div class="p-4 flex items-center gap-3">
-          <!-- Status indicator -->
+        <!-- Card header -->
+        <div class="p-5 flex items-start gap-4">
           <div
-            class="w-3 h-3 rounded-full flex-shrink-0"
+            class="w-3 h-3 rounded-full flex-shrink-0 mt-1.5"
             :style="{ backgroundColor: item.color || '#6366f1' }"
           ></div>
 
-          <!-- Content -->
           <div class="flex-1 min-w-0">
             <div
-              class="font-semibold text-gray-800 truncate"
+              class="font-semibold text-gray-800"
               :class="isCompleted(item) ? 'line-through text-gray-400' : ''"
             >
               {{ item.title }}
             </div>
-            <div class="text-xs text-gray-400 mt-0.5">
-              <span v-if="item.startTime">{{ item.startTime }}{{ item.endTime ? ' – ' + item.endTime : '' }} · </span>
-              <span>{{ frequencyLabel(item) }}</span>
+            <div class="flex flex-wrap items-center gap-2 mt-1.5">
+              <span v-if="item.startTime" class="text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
+                🕐 {{ item.startTime }}{{ item.endTime ? ' – ' + item.endTime : '' }}
+              </span>
+              <span class="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">{{ frequencyLabel(item) }}</span>
+              <span
+                v-if="isActive(item) && !isCompleted(item)"
+                class="text-xs bg-indigo-100 text-indigo-600 font-semibold px-2 py-0.5 rounded-full"
+              >⚡ 進行中</span>
             </div>
           </div>
-
-          <!-- Status badge -->
-          <span
-            v-if="isActive(item) && !isCompleted(item)"
-            class="text-xs bg-indigo-100 text-indigo-600 font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-          >進行中</span>
 
           <!-- Complete button -->
           <button
             @click="toggleComplete(item)"
-            class="w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
+            class="flex-shrink-0 w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all"
             :class="isCompleted(item)
-              ? 'bg-green-500 border-green-500 text-white'
-              : 'border-gray-300 hover:border-indigo-400'"
+              ? 'bg-green-500 border-green-500 text-white shadow-sm'
+              : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'"
+            :title="isCompleted(item) ? '點擊取消完成' : '標記為完成'"
           >
             <svg v-if="isCompleted(item)" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
@@ -81,13 +81,14 @@
         </div>
 
         <!-- Note area (shown when completed) -->
-        <div v-if="isCompleted(item)" class="px-4 pb-4">
+        <div v-if="isCompleted(item)" class="px-5 pb-4 border-t border-gray-50 pt-3">
+          <label class="text-xs text-gray-400 font-medium block mb-1.5">完成備註（選填）</label>
           <textarea
             :value="getNote(item)"
             @change="saveNote(item, $event.target.value)"
-            placeholder="加個備註（選填）..."
+            placeholder="記錄一下今天的狀況..."
             rows="2"
-            class="w-full text-sm border border-gray-100 rounded-xl px-3 py-2 bg-gray-50 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-200 text-gray-600"
+            class="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 bg-gray-50 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300 text-gray-600 transition"
           ></textarea>
         </div>
       </div>
@@ -108,18 +109,13 @@ export default {
     return {
       loading: true,
       allRoutines: [],
-      completions: {}  // key: routineId, value: { note, completedAt, ... }
+      completions: {}
     }
   },
   computed: {
     todayStr() {
       const d = new Date()
       return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
-    },
-    todayLabel() {
-      return new Date().toLocaleDateString('zh-TW', {
-        year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
-      })
     },
     todayItems() {
       const today = new Date()

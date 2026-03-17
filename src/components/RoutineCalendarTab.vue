@@ -1,25 +1,34 @@
 <template>
-  <div class="pb-24">
-    <!-- Header -->
-    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 px-4 pt-6 pb-8 text-white">
-      <div class="text-2xl font-bold">{{ currentYear }}年 {{ currentMonth + 1 }}月</div>
-      <div class="flex gap-4 mt-2 text-sm opacity-85">
-        <span>✅ 本月完成 {{ monthCompletedCount }} 項</span>
-        <span>📊 平均 {{ monthAvgPercent }}%</span>
+  <div>
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center gap-3">
+        <div class="p-2 bg-green-50 rounded-xl"><span class="text-2xl">✅</span></div>
+        <div>
+          <p class="text-xs text-gray-500 font-medium">本月完成</p>
+          <p class="text-2xl font-bold text-gray-800">{{ monthCompletedCount }} 項</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center gap-3">
+        <div class="p-2 bg-indigo-50 rounded-xl"><span class="text-2xl">📊</span></div>
+        <div>
+          <p class="text-xs text-gray-500 font-medium">每日平均完成率</p>
+          <p class="text-2xl font-bold text-indigo-600">{{ monthAvgPercent }}%</p>
+        </div>
       </div>
     </div>
 
     <!-- Calendar card -->
-    <div class="mx-4 -mt-4 bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
       <!-- Month nav -->
-      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <button @click="prevMonth" class="p-1.5 rounded-full hover:bg-gray-100 transition">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <button @click="prevMonth" class="p-2 rounded-full hover:bg-gray-100 transition">
           <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
         </button>
-        <span class="font-semibold text-gray-700">{{ currentYear }}年 {{ currentMonth + 1 }}月</span>
-        <button @click="nextMonth" class="p-1.5 rounded-full hover:bg-gray-100 transition">
+        <span class="font-bold text-gray-700 text-base">{{ currentYear }}年 {{ currentMonth + 1 }}月</span>
+        <button @click="nextMonth" class="p-2 rounded-full hover:bg-gray-100 transition">
           <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
@@ -32,22 +41,23 @@
       </div>
 
       <!-- Days grid -->
-      <div class="grid grid-cols-7 gap-y-1 p-2">
+      <div class="grid grid-cols-7 gap-y-1 p-3">
         <div
           v-for="(cell, i) in calendarCells"
           :key="i"
           @click="cell.inMonth && selectDate(cell.date)"
-          class="flex flex-col items-center py-1 rounded-lg transition cursor-pointer"
+          class="flex flex-col items-center py-1.5 rounded-xl transition"
           :class="[
-            cell.inMonth ? 'hover:bg-gray-50' : 'opacity-0 pointer-events-none',
-            isToday(cell.date) ? 'font-bold' : ''
+            cell.inMonth ? 'cursor-pointer hover:bg-indigo-50' : 'opacity-0 pointer-events-none',
+            selectedDate && cell.inMonth && isSameDay(cell.date, selectedDate) ? 'bg-indigo-50' : ''
           ]"
         >
           <span
-            class="text-sm w-7 h-7 flex items-center justify-center rounded-full"
-            :class="isToday(cell.date) ? 'bg-indigo-600 text-white' : 'text-gray-700'"
+            class="text-sm w-8 h-8 flex items-center justify-center rounded-full font-medium"
+            :class="isToday(cell.date)
+              ? 'bg-indigo-600 text-white font-bold'
+              : 'text-gray-700'"
           >{{ cell.day }}</span>
-          <!-- Completion bar -->
           <div
             v-if="cell.inMonth && getDayStats(cell.date).total > 0"
             class="w-5 h-1.5 rounded-full mt-0.5"
@@ -58,31 +68,37 @@
       </div>
 
       <!-- Legend -->
-      <div class="flex gap-4 px-4 py-3 border-t border-gray-50 text-xs text-gray-500">
-        <span class="flex items-center gap-1"><span class="w-3 h-1.5 bg-green-400 rounded-full inline-block"></span>全部完成</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-1.5 bg-amber-400 rounded-full inline-block"></span>部分完成</span>
-        <span class="flex items-center gap-1"><span class="w-3 h-1.5 bg-red-400 rounded-full inline-block"></span>未完成</span>
+      <div class="flex gap-4 px-5 py-3 border-t border-gray-50 text-xs text-gray-500">
+        <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 bg-green-400 rounded-full inline-block"></span>全部完成</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 bg-amber-400 rounded-full inline-block"></span>部分完成</span>
+        <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 bg-red-400 rounded-full inline-block"></span>未完成</span>
       </div>
     </div>
 
     <!-- Selected day detail -->
-    <div v-if="selectedDate" class="mx-4 mt-3 bg-white rounded-2xl shadow-sm p-4">
-      <div class="font-semibold text-gray-700 mb-3">
-        {{ selectedDate.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'short' }) }} 完成紀錄
-      </div>
-      <div v-if="loading" class="text-gray-400 text-sm text-center py-2">載入中...</div>
-      <div v-else-if="selectedDayItems.length === 0" class="text-gray-400 text-sm text-center py-2">當天無例行公事</div>
-      <div v-else class="space-y-2">
+    <div v-if="selectedDate" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <h3 class="font-bold text-gray-800 mb-4">
+        {{ selectedDate.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'short' }) }}
+        <span class="text-sm font-normal text-gray-400 ml-2">完成紀錄</span>
+      </h3>
+      <div v-if="loading" class="text-gray-400 text-sm text-center py-4">載入中...</div>
+      <div v-else-if="selectedDayItems.length === 0" class="text-gray-400 text-sm text-center py-4">當天無例行公事</div>
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div
           v-for="item in selectedDayItems"
           :key="item.id"
-          class="flex items-center gap-3 text-sm"
+          class="flex items-start gap-3 p-3 rounded-xl border"
+          :class="isCompletedOn(item, selectedDate) ? 'border-green-100 bg-green-50' : 'border-gray-100 bg-gray-50'"
         >
-          <span class="text-base">{{ isCompletedOn(item, selectedDate) ? '✅' : '⬜' }}</span>
-          <span :class="isCompletedOn(item, selectedDate) ? 'text-gray-600' : 'text-gray-400'">
-            {{ item.startTime ? item.startTime + ' ' : '' }}{{ item.title }}
-          </span>
-          <span v-if="getNoteOn(item, selectedDate)" class="text-gray-400 text-xs truncate flex-1">— {{ getNoteOn(item, selectedDate) }}</span>
+          <span class="text-lg flex-shrink-0 mt-0.5">{{ isCompletedOn(item, selectedDate) ? '✅' : '⬜' }}</span>
+          <div class="min-w-0">
+            <p class="text-sm font-medium" :class="isCompletedOn(item, selectedDate) ? 'text-gray-700' : 'text-gray-400'">
+              {{ item.startTime ? item.startTime + '  ' : '' }}{{ item.title }}
+            </p>
+            <p v-if="getNoteOn(item, selectedDate)" class="text-xs text-gray-400 mt-0.5 truncate">
+              {{ getNoteOn(item, selectedDate) }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -101,7 +117,7 @@ export default {
       currentDate: new Date(),
       selectedDate: null,
       allRoutines: [],
-      completionsByDate: {}  // key: 'YYYY-M-D', value: { routineId: { note, ... } }
+      completionsByDate: {}
     }
   },
   computed: {
@@ -143,7 +159,6 @@ export default {
   async mounted() {
     await this.fetchRoutines()
     await this.fetchMonthCompletions()
-    // Default: select today
     this.selectedDate = new Date()
     this.selectedDate.setHours(0, 0, 0, 0)
   },
@@ -192,6 +207,10 @@ export default {
       const t = new Date()
       return date.getDate() === t.getDate() && date.getMonth() === t.getMonth() && date.getFullYear() === t.getFullYear()
     },
+    isSameDay(a, b) {
+      if (!a || !b) return false
+      return a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()
+    },
     getDayStats(date) {
       if (!date) return { total: 0, completed: 0, percent: 0 }
       const d = new Date(date); d.setHours(0, 0, 0, 0)
@@ -236,7 +255,7 @@ export default {
       const map = {}
       snap.docs.forEach(d => {
         const data = d.data()
-        const key = data.date  // stored as 'YYYY-M-D'
+        const key = data.date
         if (!map[key]) map[key] = {}
         map[key][data.routineId] = data
       })
