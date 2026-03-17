@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/Home.vue'
 import AdminView from '../views/Admin.vue'
 import LoginView from '../views/Login.vue'
+import ReadOnlyView from '../views/ReadOnlyView.vue'
+import RoutineTrackerView from '../views/RoutineTracker.vue'
 import { auth } from '../firebase'
 
 const routes = [
@@ -20,6 +22,16 @@ const routes = [
     name: 'Admin',
     component: AdminView,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/view/:token',
+    name: 'ReadOnlyView',
+    component: ReadOnlyView
+  },
+  {
+    path: '/routines',
+    name: 'RoutineTracker',
+    component: RoutineTrackerView
   }
 ]
 
@@ -40,3 +52,4 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
+
