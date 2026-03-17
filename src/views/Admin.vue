@@ -1,50 +1,18 @@
 <template>
-  <div class="min-h-screen bg-gray-50 font-sans flex">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-lg fixed h-full z-10 hidden md:flex flex-col transition-all duration-300">
-      <div class="p-6 border-b border-gray-100 flex items-center justify-center">
-        <h1 class="text-2xl font-bold text-primary-600 flex items-center">
-          <span class="bg-primary-100 p-2 rounded-lg mr-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-          </span>
-          Admin
-        </h1>
-      </div>
-      
-      <nav class="flex-grow p-4 space-y-2 overflow-y-auto">
-        <button 
-          v-for="tab in tabs" 
-          :key="tab.id" 
-          @click="activeTab = tab.id"
-          :class="['w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium', activeTab === tab.id ? 'bg-primary-50 text-primary-600 shadow-sm' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900']"
-        >
-          <span class="mr-3" v-html="tab.icon"></span>
-          {{ tab.name }}
-        </button>
-      </nav>
-
-      <div class="p-4 border-t border-gray-100">
-        <router-link to="/" class="flex items-center px-4 py-3 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-colors mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-          返回首頁
-        </router-link>
-        <button @click="logout" class="w-full flex items-center px-4 py-3 text-red-500 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          登出
-        </button>
-      </div>
-    </aside>
+  <div class="flex h-screen bg-gray-50 font-sans">
+    <!-- Sidebar (Desktop) -->
+    <AdminSidebar
+      :active-tab="activeTab"
+      :tabs="tabs"
+      @change-tab="handleTabChange"
+      @logout="logout"
+      class="hidden md:flex"
+    />
 
     <!-- Mobile Header -->
-    <div class="md:hidden fixed w-full bg-white z-20 shadow-sm px-4 py-3 flex justify-between items-center">
-      <h1 class="text-lg font-bold text-gray-800">管理後台</h1>
-      <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-600 focus:outline-none">
+    <div class="md:hidden fixed w-full bg-[#2B2D2E] z-20 shadow-sm px-4 py-3 flex justify-between items-center text-white">
+      <h1 class="text-lg font-bold">Jason's Workspace</h1>
+      <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-300 focus:outline-none">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
         </svg>
@@ -53,47 +21,41 @@
 
     <!-- Mobile Menu Overlay -->
     <div v-if="mobileMenuOpen" class="fixed inset-0 z-30 bg-black bg-opacity-50 md:hidden" @click="mobileMenuOpen = false"></div>
-    <div :class="['fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out md:hidden', mobileMenuOpen ? 'translate-x-0' : '-translate-x-full']">
-      <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-        <h1 class="text-xl font-bold text-primary-600">Admin</h1>
-        <button @click="mobileMenuOpen = false" class="text-gray-500">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <nav class="p-4 space-y-2">
-        <button 
-          v-for="tab in tabs" 
-          :key="tab.id" 
-          @click="activeTab = tab.id; mobileMenuOpen = false"
-          :class="['w-full flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-medium', activeTab === tab.id ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50']"
-        >
-          <span class="mr-3" v-html="tab.icon"></span>
-          {{ tab.name }}
-        </button>
-        <div class="border-t border-gray-100 my-2 pt-2">
-          <router-link to="/" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-xl">返回首頁</router-link>
-          <button @click="logout" class="w-full flex items-center px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl">登出</button>
-        </div>
-      </nav>
+    <div :class="['fixed inset-y-0 left-0 z-40 w-64 bg-[#2B2D2E] shadow-xl transform transition-transform duration-300 ease-in-out md:hidden', mobileMenuOpen ? 'translate-x-0' : '-translate-x-full']">
+      <AdminSidebar :activeTab="activeTab" :tabs="tabs" @change-tab="handleTabChange($event); mobileMenuOpen = false" @logout="logout" />
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 md:ml-64 p-6 pt-20 md:pt-6 transition-all duration-300">
-      <div class="max-w-5xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8 flex justify-between items-end">
-          <div>
-            <h2 class="text-3xl font-bold text-gray-800">{{ currentTabName }}</h2>
-            <p class="text-gray-500 mt-1">管理您的{{ currentTabName }}資料</p>
-          </div>
-          <div class="hidden md:block text-sm text-gray-400">
-            {{ currentDate }}
+    <main class="flex-1 md:ml-0 p-0 transition-all duration-300 flex flex-col h-screen overflow-hidden">
+      <!-- Top Bar (Breadcrumbs & Actions) -->
+      <header class="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0">
+        <span class="font-medium text-gray-800">{{ currentTabName }}</span>
+        <div class="flex items-center space-x-4">
+          <GlobalSearch @select="handleSearchSelect" class="hidden md:block" />
+          <ThemeToggle />
+          <button class="text-gray-400 hover:text-gray-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </button>
+          <div class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">
+            J
           </div>
         </div>
+      </header>
 
-        <!-- Dynamic Content -->
+      <!-- View Tabs (List, Board, etc.) -->
+      <div class="h-12 border-b border-gray-200 flex items-center px-6 bg-white shrink-0 space-x-6">
+        <button class="flex items-center h-full border-b-2 border-blue-500 text-blue-600 text-sm font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+          List
+        </button>
+      </div>
+
+      <!-- Content Area -->
+      <div class="flex-1 overflow-y-auto bg-gray-50 p-6">
         <transition name="fade" mode="out-in">
           <component :is="activeComponent" />
         </transition>
@@ -103,24 +65,34 @@
 </template>
 
 <script>
+import AdminSidebar from '../components/AdminSidebar.vue'
 import AdminDashboardHome from '../components/AdminDashboardHome.vue'
 import AdminProjectList from '../components/AdminProjectList.vue'
 import AdminRoutineList from '../components/AdminRoutineList.vue'
 import AdminForumList from '../components/AdminForumList.vue'
 import AdminEventList from '../components/AdminEventList.vue'
 import AdminCoordinationList from '../components/AdminCoordinationList.vue'
+import AdminMeetingList from '../components/AdminMeetingList.vue'
+import AdminNotificationSettings from '../components/AdminNotificationSettings.vue'
+import ThemeToggle from '../components/ThemeToggle.vue'
+import GlobalSearch from '../components/GlobalSearch.vue'
 import { auth } from '../firebase'
 import { signOut } from "firebase/auth";
 
 export default {
   name: 'AdminView',
   components: {
+    AdminSidebar,
     AdminDashboardHome,
     AdminProjectList,
     AdminRoutineList,
     AdminForumList,
     AdminEventList,
-    AdminCoordinationList
+    AdminCoordinationList,
+    AdminMeetingList,
+    AdminNotificationSettings,
+    ThemeToggle,
+    GlobalSearch
   },
   data() {
     return {
@@ -162,6 +134,18 @@ export default {
           name: '活動接洽', 
           component: 'AdminCoordinationList',
           icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>'
+        },
+        { 
+          id: 'meetings', 
+          name: '內部會議', 
+          component: 'AdminMeetingList',
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>'
+        },
+        { 
+          id: 'notifications', 
+          name: '通知設定', 
+          component: 'AdminNotificationSettings',
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>'
         }
       ]
     }
@@ -180,12 +164,32 @@ export default {
     }
   },
   methods: {
+    handleTabChange(tabId) {
+      if (tabId === 'routines') {
+        this.$router.push('/routines')
+      } else {
+        this.activeTab = tabId
+      }
+    },
     async logout() {
       try {
         await signOut(auth);
         this.$router.push('/login');
       } catch (error) {
         console.error("Logout failed", error);
+      }
+    },
+    handleSearchSelect({ type }) {
+      // Navigate to the appropriate tab based on search result type
+      const tabMap = {
+        projects: 'projects',
+        routines: 'routines',
+        forums: 'forums',
+        events: 'events',
+        coordination: 'coordination'
+      };
+      if (tabMap[type]) {
+        this.activeTab = tabMap[type];
       }
     }
   }

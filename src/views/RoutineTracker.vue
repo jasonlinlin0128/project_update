@@ -4,11 +4,11 @@
     <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg mb-8">
       <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <!-- Back link -->
-        <router-link to="/" class="inline-flex items-center gap-1 text-indigo-200 hover:text-white text-sm transition mb-3">
+        <router-link to="/admin" class="inline-flex items-center gap-1 text-indigo-200 hover:text-white text-sm transition mb-3">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
-          返回儀表板
+          返回後台
         </router-link>
         <h1 class="text-3xl font-extrabold tracking-tight mb-1">例行公事追蹤器</h1>
         <p class="text-indigo-200 text-sm">{{ todayLabel }}</p>
