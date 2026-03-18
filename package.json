@@ -11,9 +11,11 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "chart.js": "^4.5.1",
     "core-js": "^3.8.3",
     "firebase": "^12.3.0",
+    "firebase-admin": "^12.7.0",
     "vue": "^3.2.13",
     "vue-chartjs": "^5.3.3",
     "vue-router": "^4.6.3"

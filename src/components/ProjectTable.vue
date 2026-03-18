@@ -47,7 +47,7 @@
           </tr>
         </thead>
         <tbody class="text-gray-700 text-sm">
-          <tr v-for="p in filteredProjects" :key="p.id" class="border-b border-gray-100 hover:bg-purple-50 transition duration-150">
+          <tr v-for="p in filteredProjects" :key="p.id" @click="viewProject(p)" class="border-b border-gray-100 hover:bg-purple-50 transition duration-150 cursor-pointer">
             <td class="py-4 px-6 font-bold text-gray-800">
               {{ p.name }}
               <div v-if="p.description" class="text-xs text-gray-400 font-normal mt-1">{{ p.description }}</div>
@@ -86,7 +86,7 @@
 
     <!-- Mobile Card View -->
     <div class="md:hidden p-4 space-y-4">
-      <div v-for="p in filteredProjects" :key="p.id" class="bg-white border border-gray-100 rounded-lg shadow-sm p-4 hover:shadow-md transition">
+      <div v-for="p in filteredProjects" :key="p.id" @click="viewProject(p)" class="bg-white border border-gray-100 rounded-lg shadow-sm p-4 hover:shadow-md transition cursor-pointer">
         <div class="flex justify-between items-start mb-3">
           <div>
             <h4 class="font-bold text-gray-800 text-lg">{{ p.name }}</h4>
@@ -121,16 +121,30 @@
         </div>
       </div>
     </div>
+
+    <!-- Project Detail Modal -->
+    <ProjectDetailModal 
+      v-if="showModal" 
+      :project="selectedProject" 
+      @close="showModal = false" 
+    />
   </div>
 </template>
 <script>
 import { db } from '../firebase'
 import { collection, getDocs } from "firebase/firestore";
+import ProjectDetailModal from './ProjectDetailModal.vue'
+
 export default {
+  components: {
+    ProjectDetailModal
+  },
   data(){ return { 
     projects:[],
     searchQuery: '',
-    statusFilter: ''
+    statusFilter: '',
+    showModal: false,
+    selectedProject: null
   }},
   computed: {
     filteredProjects() {
@@ -146,6 +160,12 @@ export default {
   async mounted(){
     const querySnapshot = await getDocs(collection(db, "projects"));
     this.projects = querySnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+  },
+  methods: {
+    viewProject(project) {
+      this.selectedProject = project;
+      this.showModal = true;
+    }
   }
 }
 </script>

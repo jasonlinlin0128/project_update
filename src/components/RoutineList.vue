@@ -47,7 +47,19 @@ export default {
   },
   async mounted() {
     const querySnapshot = await getDocs(collection(db, "routines"));
-    this.items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    this.items = querySnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(item => {
+        // 如果沒有結束日期，顯示
+        if (!item.endDate) return true;
+        // 如果結束日期 >= 今天，顯示
+        const endDate = new Date(item.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        return endDate >= today;
+      });
   }
 }
 </script>

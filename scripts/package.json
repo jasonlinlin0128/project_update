@@ -1,0 +1,9 @@
+{
+  "name": "sync-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scripts for syncing data between Firestore and local storage",
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}

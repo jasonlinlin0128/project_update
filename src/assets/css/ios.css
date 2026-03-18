@@ -1,0 +1,430 @@
+/* ============================================
+   iOS 16/17 Design System
+   Modern Apple Design Language
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* === CSS Variables === */
+:root {
+    /* iOS Colors - Light Mode */
+    --ios-system-blue: #007AFF;
+    --ios-system-green: #34C759;
+    --ios-system-indigo: #5856D6;
+    --ios-system-orange: #FF9500;
+    --ios-system-pink: #FF2D55;
+    --ios-system-purple: #AF52DE;
+    --ios-system-red: #FF3B30;
+    --ios-system-teal: #5AC8FA;
+    --ios-system-yellow: #FFCC00;
+
+    /* iOS Grays */
+    --ios-gray: #8E8E93;
+    --ios-gray-2: #AEAEB2;
+    --ios-gray-3: #C7C7CC;
+    --ios-gray-4: #D1D1D6;
+    --ios-gray-5: #E5E5EA;
+    --ios-gray-6: #F2F2F7;
+
+    /* Background Colors */
+    --ios-bg-primary: #FFFFFF;
+    --ios-bg-secondary: #F2F2F7;
+    --ios-bg-tertiary: #FFFFFF;
+    --ios-bg-grouped: #F2F2F7;
+
+    /* Label Colors */
+    --ios-label-primary: #000000;
+    --ios-label-secondary: rgba(60, 60, 67, 0.6);
+    --ios-label-tertiary: rgba(60, 60, 67, 0.3);
+
+    /* Separator */
+    --ios-separator: rgba(60, 60, 67, 0.29);
+    --ios-separator-opaque: #C6C6C8;
+
+    /* Fill Colors - for input backgrounds */
+    --ios-fill-primary: rgba(120, 120, 128, 0.2);
+    --ios-fill-secondary: rgba(120, 120, 128, 0.16);
+    --ios-fill-tertiary: rgba(118, 118, 128, 0.12);
+
+    /* Shadows */
+    --ios-shadow-small: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --ios-shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --ios-shadow-large: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+    /* Border Radius */
+    --ios-radius-sm: 8px;
+    --ios-radius-md: 12px;
+    --ios-radius-lg: 16px;
+    --ios-radius-xl: 20px;
+
+    /* Spacing */
+    --ios-space-xs: 4px;
+    --ios-space-sm: 8px;
+    --ios-space-md: 16px;
+    --ios-space-lg: 24px;
+    --ios-space-xl: 32px;
+
+    /* Typography */
+    --ios-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* === Global Styles === */
+body {
+    font-family: var(--ios-font);
+    background-color: var(--ios-bg-grouped);
+    color: var(--ios-label-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* === iOS Card Styles === */
+.ios-card {
+    background: var(--ios-bg-primary);
+    border-radius: var(--ios-radius-lg);
+    box-shadow: var(--ios-shadow-medium);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ios-card:hover {
+    box-shadow: var(--ios-shadow-large);
+    transform: translateY(-2px);
+}
+
+.ios-card-header {
+    padding: var(--ios-space-lg);
+    border-bottom: 0.5px solid var(--ios-separator);
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+    backdrop-filter: blur(20px);
+}
+
+.ios-card-body {
+    padding: var(--ios-space-lg);
+}
+
+/* === iOS Button Styles === */
+.ios-btn {
+    font-family: var(--ios-font);
+    font-size: 17px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: var(--ios-radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.ios-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.ios-btn:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+.ios-btn-primary {
+    background: var(--ios-system-blue);
+    color: white;
+}
+
+.ios-btn-primary:hover {
+    background: #0051D5;
+    transform: scale(1.02);
+}
+
+.ios-btn-primary:active {
+    transform: scale(0.98);
+}
+
+.ios-btn-secondary {
+    background: var(--ios-fill-tertiary);
+    color: var(--ios-system-blue);
+}
+
+.ios-btn-secondary:hover {
+    background: var(--ios-fill-secondary);
+}
+
+.ios-btn-success {
+    background: var(--ios-system-green);
+    color: white;
+}
+
+.ios-btn-success:hover {
+    background: #28A745;
+}
+
+.ios-btn-sm {
+    font-size: 15px;
+    padding: 8px 16px;
+    border-radius: var(--ios-radius-sm);
+}
+
+.ios-btn-lg {
+    font-size: 19px;
+    padding: 16px 32px;
+    border-radius: var(--ios-radius-lg);
+}
+
+/* === iOS Input Styles === */
+.ios-input {
+    font-family: var(--ios-font);
+    font-size: 17px;
+    padding: 12px 16px;
+    border: none;
+    border-radius: var(--ios-radius-md);
+    background: var(--ios-fill-tertiary);
+    color: var(--ios-label-primary);
+    transition: all 0.2s ease;
+    width: 100%;
+    outline: none;
+}
+
+.ios-input:focus {
+    background: var(--ios-fill-secondary);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.ios-input::placeholder {
+    color: var(--ios-label-tertiary);
+}
+
+/* === iOS Table Styles === */
+.ios-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.ios-table thead tr {
+    background: var(--ios-bg-secondary);
+}
+
+.ios-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ios-label-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 0.5px solid var(--ios-separator);
+}
+
+.ios-table tbody tr {
+    background: white;
+    transition: background-color 0.15s ease;
+}
+
+.ios-table tbody tr:hover {
+    background: var(--ios-bg-secondary);
+}
+
+.ios-table tbody tr:not(:last-child) {
+    border-bottom: 0.5px solid var(--ios-separator);
+}
+
+.ios-table tbody td {
+    padding: 16px;
+    font-size: 17px;
+    color: var(--ios-label-primary);
+}
+
+/* === iOS Status Badge === */
+.ios-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.08px;
+}
+
+.ios-status-blue {
+    background: rgba(0, 122, 255, 0.15);
+    color: var(--ios-system-blue);
+}
+
+.ios-status-green {
+    background: rgba(52, 199, 89, 0.15);
+    color: var(--ios-system-green);
+}
+
+.ios-status-orange {
+    background: rgba(255, 149, 0, 0.15);
+    color: var(--ios-system-orange);
+}
+
+.ios-status-red {
+    background: rgba(255, 59, 48, 0.15);
+    color: var(--ios-system-red);
+}
+
+.ios-status-purple {
+    background: rgba(175, 82, 222, 0.15);
+    color: var(--ios-system-purple);
+}
+
+.ios-status-gray {
+    background: rgba(142, 142, 147, 0.15);
+    color: var(--ios-gray);
+}
+
+/* === iOS Typography === */
+.ios-title-1 {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 41px;
+    letter-spacing: 0.37px;
+    color: var(--ios-label-primary);
+}
+
+.ios-title-2 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 34px;
+    letter-spacing: 0.36px;
+    color: var(--ios-label-primary);
+}
+
+.ios-title-3 {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 28px;
+    letter-spacing: 0.35px;
+    color: var(--ios-label-primary);
+}
+
+.ios-headline {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 22px;
+    letter-spacing: -0.41px;
+    color: var(--ios-label-primary);
+}
+
+.ios-body {
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 22px;
+    letter-spacing: -0.41px;
+    color: var(--ios-label-primary);
+}
+
+.ios-caption {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 18px;
+    letter-spacing: -0.08px;
+    color: var(--ios-label-secondary);
+}
+
+/* === Frosted Glass Effect === */
+.ios-frosted {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* === iOS List Item === */
+.ios-list-item {
+    background: white;
+    padding: 16px;
+    border-bottom: 0.5px solid var(--ios-separator);
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+}
+
+.ios-list-item:hover {
+    background: var(--ios-bg-secondary);
+}
+
+.ios-list-item:active {
+    background: var(--ios-fill-tertiary);
+}
+
+/* === iOS Form Group === */
+.ios-form-group {
+    background: white;
+    border-radius: var(--ios-radius-lg);
+    overflow: hidden;
+    margin-bottom: var(--ios-space-md);
+}
+
+.ios-form-group .ios-input {
+    border-radius: 0;
+    background: white;
+    border-bottom: 0.5px solid var(--ios-separator);
+}
+
+.ios-form-group .ios-input:last-child {
+    border-bottom: none;
+}
+
+.ios-form-group .ios-input:focus {
+    background: var(--ios-fill-tertiary);
+    position: relative;
+    z-index: 1;
+}
+
+/* === iOS Icon Button === */
+.ios-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    color: var(--ios-system-blue);
+}
+
+.ios-icon-btn:hover {
+    background: var(--ios-fill-tertiary);
+}
+
+.ios-icon-btn:active {
+    background: var(--ios-fill-secondary);
+}
+
+/* === iOS Divider === */
+.ios-divider {
+    height: 0.5px;
+    background: var(--ios-separator);
+    margin: var(--ios-space-md) 0;
+}
+
+/* === Smooth Animations === */
+* {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === iOS Hover Actions === */
+.ios-hover-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+tr:hover .ios-hover-actions {
+    opacity: 1;
+}

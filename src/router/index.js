@@ -5,6 +5,15 @@ import LoginView from '../views/Login.vue'
 import ReadOnlyView from '../views/ReadOnlyView.vue'
 import RoutineTrackerView from '../views/RoutineTracker.vue'
 import { auth } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
+
+// 等待 Firebase Auth 初始化完成（解決硬重整時 currentUser 為 null 的 race condition）
+const authReady = new Promise(resolve => {
+  const unsubscribe = onAuthStateChanged(auth, user => {
+    unsubscribe()
+    resolve(user)
+  })
+})
 
 const routes = [
   {
@@ -33,6 +42,12 @@ const routes = [
     name: 'RoutineTracker',
     component: RoutineTrackerView,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/journal',
+    name: 'JournalChat',
+    component: () => import('../views/JournalChat.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -41,9 +56,9 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const currentUser = auth.currentUser
+  const currentUser = await authReady
 
   if (requiresAuth && !currentUser) {
     next({ name: 'Login', query: { redirect: to.fullPath } })

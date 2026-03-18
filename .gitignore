@@ -23,3 +23,9 @@ pnpm-debug.log*
 *.sw?
 
 .vercel
+
+# Firebase service account (sensitive credentials)
+scripts/firebase-service-account.json
+
+# Firebase CLI cache
+.firebase/
