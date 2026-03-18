@@ -11,7 +11,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
+    "@google/generative-ai": "^0.24.1",
     "chart.js": "^4.5.1",
     "core-js": "^3.8.3",
     "firebase": "^12.3.0",

@@ -1,10 +1,8 @@
-const Anthropic = require('@anthropic-ai/sdk')
+const { GoogleGenerativeAI } = require('@google/generative-ai')
 const admin = require('firebase-admin')
 
 // Initialize Firebase Admin once (serverless functions may reuse the instance)
 if (!admin.apps.length) {
-  // FIREBASE_SERVICE_ACCOUNT env var: JSON string of the service account key
-  // Set in Vercel Dashboard → Environment Variables
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}')
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -89,9 +87,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY
-    })
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
     const today = date || new Date().toLocaleDateString('zh-TW', {
       timeZone: 'Asia/Taipei',
@@ -100,25 +96,29 @@ module.exports = async function handler(req, res) {
       day: '2-digit'
     }).replace(/\//g, '-')
 
-    const systemPrompt = action === 'save'
+    const systemInstruction = action === 'save'
       ? SAVE_SYSTEM_PROMPT.replace(/\{\{DATE\}\}/g, today)
       : JOURNAL_SYSTEM_PROMPT
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 2048,
-      system: systemPrompt,
-      messages
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction
     })
 
-    return res.status(200).json({
-      content: response.content[0].text,
-      usage: response.usage
-    })
+    // Gemini uses 'user' and 'model' roles (not 'assistant')
+    const contents = messages.map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }))
+
+    const result = await model.generateContent({ contents })
+    const text = result.response.text()
+
+    return res.status(200).json({ content: text })
   } catch (error) {
-    console.error('Claude API error:', error)
+    console.error('Gemini API error:', error)
     return res.status(500).json({
-      error: 'Failed to call Claude API',
+      error: 'Failed to call Gemini API',
       details: error.message
     })
   }
